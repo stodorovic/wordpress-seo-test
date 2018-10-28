@@ -84,6 +84,7 @@ WPSEO_Options::get_instance();
 
 		$post_id       = $this->factory->post->create();
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 2, 1 );
+		var_dump( $sitemap_links );
 		$this->assertContains( get_permalink( $post_id ), $sitemap_links[1] );
 
 		update_option( 'show_on_front', 'posts' );
