@@ -474,7 +474,7 @@ class WPSEO_Options {
 
 		$ms_option = self::get_option( 'wpseo_ms' );
 
-		return array_merge( $option, $ms_option );
+		return array_merge( $option, (array) $ms_option );
 	}
 
 	/**
