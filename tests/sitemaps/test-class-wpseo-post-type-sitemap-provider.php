@@ -70,7 +70,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		$post_id       = $this->factory->post->create();
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 1, 1 );
-		$this->assertContains( get_permalink( $post_id ), $sitemap_links[1] );
+		$this->assertContains( get_permalink( $post_id ), $sitemap_links[0] );
 
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $front_page->ID );
