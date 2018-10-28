@@ -141,7 +141,7 @@ class WPSEO_Options {
 	 * @static
 	 * @return  array  Array of option names
 	 */
-	public static function get_option_names() {
+	public static function get_optio 	n_names() {
 		static $option_names = array();
 
 		if ( $option_names === array() ) {
@@ -184,7 +184,7 @@ class WPSEO_Options {
 		foreach ( $option_names as $option_name ) {
 			if ( isset( self::$option_instances[ $option_name ] ) ) {
 				$option  = self::get_option( $option_name );
-				$options = array_merge( $options, $option );
+				$options = array_merge( $options, (array) $option );
 			}
 		}
 
