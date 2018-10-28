@@ -37,58 +37,6 @@ jobs:
       env: WP_VERSION=master
     - php: nightly
       env: WP_VERSION=master
-    - stage: 🚀 deployment
-      name: "Deploy to S3"
-      if: branch = deploy # Only build when on the `deploy` branch, this functionality is not used yet and is taking a long time to complete.
-      env: SC_ATTR=wordpress-seo
-      before_script: skip
-      script: grunt artifact
-      install:
-        - yarn global add grunt-cli
-        - yarn install
-      deploy:
-        skip_cleanup: true
-        provider: s3
-        access_key_id: AKIAJRNLQAPRL5UKDJKQ
-        secret_access_key:
-          secure: TE13B5MDyw16DxEIRpbXPtxb1LZAzi8jdCU4FZuTzNsdVaowlAXUEFFB+g8uapoQhJKqvZrwvrpqifRPhH0tcRlJ5Z0A+qWp8WhiFGmipp3gJBblacviAIvswGzKFN8+DgQVwHSKpzk3ZjEkDkH/KYq6OTYPL/g5oRwsjI0Ug9w=
-        bucket: yoast-seo-builds
-        region: us-east-1
-        local-dir: artifact
-        upload-dir: $TRAVIS_BRANCH
-        on:
-          repo: Yoast/wordpress-seo
-          all_branches: true
-    - stage: 🚀 deployment
-      name: "Deploy to Yoast-dist"
-      install:
-        - yarn global add grunt-cli
-        - yarn install
-      before_script: skip
-      script:
-        - grunt set-version -new-version=$TRAVIS_TAG
-        - grunt update-version
-        - grunt artifact
-        - grunt composer-artifact
-      if: tag IS present
-      before_install:
-        - nvm install node
-        - curl -o- -L https://yarnpkg.com/install.sh | bash
-        - export PATH=$HOME/.yarn/bin:$PATH
-        - openssl aes-256-cbc -K $encrypted_06a9c1b95cfa_key -iv $encrypted_06a9c1b95cfa_iv -in ./deploy_keys/travis_dist_id_rsa.enc -out ./deploy_keys/travis_dist_id_rsa -d
-        - chmod 600 ./deploy_keys/travis_dist_id_rsa
-        - eval $(ssh-agent -s)
-        - ssh-add ./deploy_keys/travis_dist_id_rsa
-
-       # If the commit was tagged, create an artifact and push it to the distribution github
-      deploy:
-        skip_cleanup: true
-        provider: script
-        script: bash scripts/deploy_to_dist.sh $TRAVIS_TAG wordpress-seo
-        on:
-          tags: true
-          repo: $TRAVIS_REPO_SLUG
-          all_branches: true
 
   allow_failures:
     # Allow failures for unstable builds.
@@ -173,20 +121,6 @@ before_script:
 - locale -a
 
 script:
-# JavaScript checks
-- |
-  if [[ "$CHECKJS" == "1" ]]; then
-    travis_fold start "JavaScript.check" && travis_time_start
-    grunt check:js
-    travis_time_finish && travis_fold end "JavaScript.check"
-  fi
-# JavaScript tests
-- |
-  if [[ "$CHECKJS" == "1" ]]; then
-    travis_fold start "JavaScript.tests" && travis_time_start
-    yarn test
-    travis_time_finish && travis_fold end "JavaScript.tests"
-  fi
 # PHP Linting
 - |
   if [[ "$PHPLINT" == "1" ]]; then
@@ -227,6 +161,4 @@ after_script:
 - if [[ "$COVERAGE" == "1" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
 
 notifications:
-  slack:
-    secure: W3StABr+AdcdQawTObK4nbsnn5nLrTTtZfVpD/GEN6gvSOQcykbGEC5+ceYg0jn5b4StDyCiTo5blEsrpVICFpYKc44+ogah+qaGRUfVRS/rpOvn4AueXTWn4JxhZzuxqKMiTmyW+MQG0uYM7sk7Q5S+15jj6ilkj4QATaBVNbY=
   email: false
