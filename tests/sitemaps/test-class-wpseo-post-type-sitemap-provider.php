@@ -50,10 +50,11 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_get_sitemap_links() {
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
+		echo "Start test_get_sitemap_links() #1\n";
 
 		$current_show_on_front  = get_option( 'show_on_front' );
-		$current_page_on_front  = get_option( 'page_on_front' );
-		$current_page_for_posts = get_option( 'page_for_posts' );
+		$current_page_on_front  = (int) get_option( 'page_on_front' );
+		$current_page_for_posts = (int) get_option( 'page_for_posts' );
 
 		$front_page = $this->factory()->post->create( array( 'post_type' => 'page' ) );
 		$posts_page = $this->factory()->post->create( array( 'post_type' => 'page' ) );
@@ -62,6 +63,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		update_option( 'page_on_front', $front_page->ID );
 		update_option( 'page_for_posts', 0 );
 		$sitemap_provider->reset();
+		echo "Start test_get_sitemap_links() #2\n";
 
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'page', 1, 1 );
 		$this->assertContains( get_permalink( $front_page->ID ), $sitemap_links[0] );
@@ -74,6 +76,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		update_option( 'page_on_front', $front_page->ID );
 		update_option( 'page_for_posts', $posts_page->ID );
 		$sitemap_provider->reset();
+		echo "Start test_get_sitemap_links() #3\n";
 
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'page', 1, 1 );
 		$this->assertContains( get_permalink( $front_page->ID ), $sitemap_links[0] );
@@ -98,7 +101,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		$post_id       = $this->factory->post->create();
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 1, 1 );
-		$this->assertContains( get_permalink( $post_id+1 ), $sitemap_links[1] );
+		$this->assertContains( get_permalink( $post_id ), $sitemap_links[0] );
 
 		update_option( 'show_on_front', $current_show_on_front );
 		update_option( 'page_for_posts', $current_page_for_posts );
