@@ -104,6 +104,7 @@ WPSEO_Options::get_instance();
 		update_option( 'show_on_front', $current_show_on_front );
 		update_option( 'page_for_posts', $current_page_for_posts );
 		update_option( 'page_on_front', $current_page_on_front );
+		$sitemap_provider->reset();
 	}
 
 	/**

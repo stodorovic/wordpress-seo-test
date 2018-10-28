@@ -40,6 +40,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	protected function get_page_on_front_id() {
 		if ( ! isset( self::$page_on_front_id ) ) {
 			self::$page_on_front_id = (int) get_option( 'page_on_front' );
+			var_dump( self::$page_on_front_id );
 		}
 
 		return self::$page_on_front_id;
@@ -53,6 +54,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	protected function get_page_for_posts_id() {
 		if ( ! isset( self::$page_for_posts_id ) ) {
 			self::$page_for_posts_id = (int) get_option( 'page_for_posts' );
+			var_dump( self::$page_for_posts_id );
 		}
 
 		return self::$page_for_posts_id;
