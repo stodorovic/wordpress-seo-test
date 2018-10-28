@@ -1,0 +1,14 @@
+		$current_page_for_posts = get_option( 'page_for_posts' );
+		$current_show_on_front  = get_option( 'show_on_front' );
+
+		$home_page = $this->factory()->post->create_and_get( array( 'post_type' => 'page' ) );
+
+		update_option( 'show_on_front', 'page' );
+		update_option( 'page_for_posts', $home_page->ID );
+
+		$this->go_to( get_permalink( $home_page ) );
+		$this->assertTrue( $this->frontend_page_type->is_simple_page() );
+		$this->assertEquals( $home_page->ID, $this->frontend_page_type->get_simple_page_id() );
+
+		update_option( 'show_on_front', $current_show_on_front );
+		update_option( 'page_for_posts', $current_page_for_posts );
