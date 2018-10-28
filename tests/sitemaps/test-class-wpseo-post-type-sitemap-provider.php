@@ -51,9 +51,6 @@ WPSEO_Options::get_instance();
 	 */
 	public function test_get_sitemap_links() {
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
-		$sitemap_provider->reset();
-
-		echo "Start test_get_sitemap_links() #1\n";
 
 		$current_show_on_front  = get_option( 'show_on_front' );
 		$current_page_on_front  = (int) get_option( 'page_on_front' );
@@ -61,14 +58,11 @@ WPSEO_Options::get_instance();
 
 		$front_page = $this->factory()->post->create_and_get( array( 'post_type' => 'page' ) );
 		$posts_page = $this->factory()->post->create_and_get( array( 'post_type' => 'page' ) );
-		echo "Start test_get_sitemap_links() #1.1\n";
 
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $front_page->ID );
 		update_option( 'page_for_posts', 0 );
-		echo "Start test_get_sitemap_links() #1.2\n";
 		$sitemap_provider->reset();
-		echo "Start test_get_sitemap_links() #2\n";
 
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'page', 1, 1 );
 		$this->assertContains( get_permalink( $front_page->ID ), $sitemap_links[0] );
@@ -81,7 +75,6 @@ WPSEO_Options::get_instance();
 		update_option( 'page_on_front', $front_page->ID );
 		update_option( 'page_for_posts', $posts_page->ID );
 		$sitemap_provider->reset();
-		echo "Start test_get_sitemap_links() #3\n";
 
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'page', 1, 1 );
 		$this->assertContains( get_permalink( $front_page->ID ), $sitemap_links[0] );
@@ -90,7 +83,7 @@ WPSEO_Options::get_instance();
 		$this->assertContains( get_permalink( $posts_page->ID ), $sitemap_links[0] );
 
 		$post_id       = $this->factory->post->create();
-		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 1, 1 );
+		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 2, 1 );
 		$this->assertContains( get_permalink( $post_id ), $sitemap_links[1] );
 
 		update_option( 'show_on_front', 'posts' );
@@ -105,8 +98,8 @@ WPSEO_Options::get_instance();
 		$this->assertContains( get_post_type_archive_link( 'post' ), $sitemap_links[0] );
 
 		$post_id       = $this->factory->post->create();
-		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 1, 1 );
-		$this->assertContains( get_permalink( $post_id ), $sitemap_links[0] );
+		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 2, 1 );
+		$this->assertContains( get_permalink( $post_id ), $sitemap_links[1] );
 
 		update_option( 'show_on_front', $current_show_on_front );
 		update_option( 'page_for_posts', $current_page_for_posts );
