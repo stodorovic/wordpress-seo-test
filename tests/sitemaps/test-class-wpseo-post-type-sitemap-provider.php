@@ -23,7 +23,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		self::$class_instance = new WPSEO_Post_Type_Sitemap_Provider();
+		self::$class_instance = new WPSEO_Post_Type_Sitemap_Provider_Double();
 	}
 
 	/**
@@ -58,6 +58,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $home_page->ID );
+		self::$class_instance->reset();
 
 		$sitemap_links = self::$class_instance->get_sitemap_links( 'page', 1, 1 );
 		$this->assertContains( get_permalink( $home_page->ID ), $sitemap_links[0] );
