@@ -50,6 +50,8 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_get_sitemap_links() {
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
+		$sitemap_provider->reset();
+
 		echo "Start test_get_sitemap_links() #1\n";
 
 		$current_show_on_front  = get_option( 'show_on_front' );

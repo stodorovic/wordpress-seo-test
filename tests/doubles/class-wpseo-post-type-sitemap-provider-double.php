@@ -14,6 +14,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Double extends WPSEO_Post_Type_Sitemap_Pr
 	 * Reset "cashed" page ids.
 	 */
 	public function reset() {
+		WPSEO_Options::get_instance();
 		unset( self::$page_on_front_id );
 		unset( self::$page_for_posts_id );
 	}
