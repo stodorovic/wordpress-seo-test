@@ -141,7 +141,7 @@ class WPSEO_Options {
 	 * @static
 	 * @return  array  Array of option names
 	 */
-	public static function get_optio 	n_names() {
+	public static function get_option_names() {
 		static $option_names = array();
 
 		if ( $option_names === array() ) {
