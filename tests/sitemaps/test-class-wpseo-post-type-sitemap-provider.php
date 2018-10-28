@@ -56,12 +56,14 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$current_page_on_front  = (int) get_option( 'page_on_front' );
 		$current_page_for_posts = (int) get_option( 'page_for_posts' );
 
-		$front_page = $this->factory()->post->create( array( 'post_type' => 'page' ) );
-		$posts_page = $this->factory()->post->create( array( 'post_type' => 'page' ) );
+		$front_page = $this->factory()->post->create_and_get( array( 'post_type' => 'page' ) );
+		$posts_page = $this->factory()->post->create_and_get( array( 'post_type' => 'page' ) );
+		echo "Start test_get_sitemap_links() #1.1\n";
 
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $front_page->ID );
 		update_option( 'page_for_posts', 0 );
+		echo "Start test_get_sitemap_links() #1.2\n";
 		$sitemap_provider->reset();
 		echo "Start test_get_sitemap_links() #2\n";
 
