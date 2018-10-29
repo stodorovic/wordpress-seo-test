@@ -16,8 +16,15 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 	 * @return void
 	 */
 	public function register_hooks() {
+		if ( ! $this->is_woo_activated() ) {
+			return;
+		}
+
 		add_filter( 'wpseo_frontend_page_type_simple_page_id', array( $this, 'get_page_id' ) );
-		add_filter( 'wpseo_sitemap_page_for_post_type_archive', array( $this, 'get_page_id_for_sitemap' ), 10, 2 );
+	}
+
+	private function is_woo_activated() {
+		return class_exists( 'WooCommerce', false );
 	}
 
 	/**
