@@ -43,6 +43,11 @@ jobs:
     - php: nightly
     - env: WP_VERSION=master
 
+# Git clone depth
+# By default Travis CI clones repositories to a depth of 50 commits
+git:
+  depth: 1
+
 cache:
   yarn: true
   directories:

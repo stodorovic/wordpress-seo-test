@@ -42,3 +42,5 @@ if ( PHP_VERSION_ID <= 53000 ) {
 else {
 	require_once dirname( WPSEO_TESTS_PATH ) . '/vendor/autoload.php';
 }
+
+WPSEO_Options::get_instance();
