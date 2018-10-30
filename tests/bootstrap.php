@@ -43,4 +43,5 @@ else {
 	require_once dirname( WPSEO_TESTS_PATH ) . '/vendor/autoload.php';
 }
 
+define( 'WPSEO_VERSION', '9.1RC2' );
 WPSEO_Options::get_instance();
