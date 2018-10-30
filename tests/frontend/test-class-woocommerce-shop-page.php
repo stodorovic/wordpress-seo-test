@@ -18,7 +18,7 @@ class WPSEO_WooCommerce_Shop_Page_Test extends WPSEO_UnitTestCase {
 	public function test_get_shop_page_id() {
 		$woocommerce_shop_page = new WPSEO_WooCommerce_Shop_Page();
 
-		$this->assertEquals( -10, $woocommerce_shop_page->get_shop_page_id() );
+		$this->assertEquals( -1, $woocommerce_shop_page->get_shop_page_id() );
 	}
 
 	/**
@@ -29,7 +29,7 @@ class WPSEO_WooCommerce_Shop_Page_Test extends WPSEO_UnitTestCase {
 	public function test_is_shop_page() {
 		$woocommerce_shop_page = new WPSEO_WooCommerce_Shop_Page();
 
-		$this->assertEquals( true, $woocommerce_shop_page->is_shop_page() );
+		$this->assertEquals( false, $woocommerce_shop_page->is_shop_page() );
 	}
 
 	/**
