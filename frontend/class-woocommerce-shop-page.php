@@ -11,10 +11,11 @@
 class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 
 	/**
-	 * @var int Holds shop page id.
+	 * @var int Holds the shop page id.
 	 */
 	protected static $shop_page_id;
-	/*
+
+	/**
 	 * @var bool Is current page the shop page?
 	 */
 	protected static $is_shop_page;
