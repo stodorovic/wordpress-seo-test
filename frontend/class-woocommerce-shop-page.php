@@ -16,7 +16,7 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 
 		if ( $this->is_woo_activated() ) {
 			$this->shop_page_exists = $this->get_shop_page_id() > 0;
-		}		
+		}
 	}
 	
 	/**
@@ -62,11 +62,18 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 	 * @return bool Whether the current page is the WooCommerce shop page.
 	 */
 	public function is_shop_page() {
-		if ( $this->shop_page_exists ) {
-			return is_shop() && ! is_search();
+		static $is_shop_page;
+
+		if ( isset( $is_shop_page ) ) {
+			return $is_shop_page;
 		}
 
-		return false;
+		$is_shop_page = false;
+		if ( $this->shop_page_exists ) {
+			$is_shop_page = is_shop() && ! is_search();
+		}
+
+		return $is_shop_page;
 	}
 
 	/**
