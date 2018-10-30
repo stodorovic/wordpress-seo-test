@@ -14,16 +14,10 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 	 * @var int Holds shop page id.
 	 */
 	protected static $shop_page_id;
-	protected static $is_shop_page;
-
-	/**
-	 * Class constructor
+	/*
+	 * @var bool Is current page the shop page?
 	 */
-/*	public function __construct() {
-		if ( $this->is_woo_activated() ) {
-			$this->shop_page_exists = $this->get_shop_page_id() > 0;
-		}
-	}*/
+	protected static $is_shop_page;
 
 	/**
 	 * Registers the hooks
