@@ -10,19 +10,34 @@
  */
 class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 
+	protected $shop_page_exists = false;
+
+	public function __construct() {
+		parent::__construct();
+		
+		if ( $this->is_woo_activated() ) {
+			$this->shop_page_exists = $this->get_shop_page_id() > 0;
+		}		
+	}
+	
 	/**
 	 * Registers the hooks
 	 *
 	 * @return void
 	 */
 	public function register_hooks() {
-		if ( ! $this->is_woo_activated() ) {
+		if ( ! $this->shop_page_exists ) {
 			return;
 		}
 
 		add_filter( 'wpseo_frontend_page_type_simple_page_id', array( $this, 'get_page_id' ) );
 	}
 
+	/**
+	 * Check whether woocommerce plugin is active.
+	 *
+	 * @return bool
+	 */
 	private function is_woo_activated() {
 		return class_exists( 'WooCommerce', false );
 	}
@@ -43,28 +58,12 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 	}
 
 	/**
-	 * Returns the ID of the WooCommerce shop page when product's archive is requested.
-	 *
-	 * @param int    $page_id   The page id.
-	 * @param string $post_type The post type of the archive.
-	 *
-	 * @return int The Page ID of the shop.
-	 */
-	public function get_page_id_for_sitemap( $page_id, $post_type ) {
-		if ( 'product' !== $post_type ) {
-			return $page_id;
-		}
-
-		return $this->get_shop_page_id();
-	}
-
-	/**
 	 * Checks if the current page is the shop page.
 	 *
 	 * @return bool Whether the current page is the WooCommerce shop page.
 	 */
 	public function is_shop_page() {
-		if ( function_exists( 'is_shop' ) && function_exists( 'wc_get_page_id' ) ) {
+		if ( $this->shop_page_exists ) {
 			return is_shop() && ! is_search();
 		}
 
