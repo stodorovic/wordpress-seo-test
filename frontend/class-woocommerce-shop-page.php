@@ -13,8 +13,7 @@ class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 	protected $shop_page_exists = false;
 
 	public function __construct() {
-		parent::__construct();
-		
+
 		if ( $this->is_woo_activated() ) {
 			$this->shop_page_exists = $this->get_shop_page_id() > 0;
 		}		
