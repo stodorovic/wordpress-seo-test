@@ -10,15 +10,20 @@
  */
 class WPSEO_WooCommerce_Shop_Page implements WPSEO_WordPress_Integration {
 
+        /**
+	 * @var bool Holds the flag if shop page is set.
+	 */
 	protected $shop_page_exists = false;
 
+        /**
+         * Class constructor
+	 */
 	public function __construct() {
-
 		if ( $this->is_woo_activated() ) {
 			$this->shop_page_exists = $this->get_shop_page_id() > 0;
 		}
 	}
-	
+
 	/**
 	 * Registers the hooks
 	 *
