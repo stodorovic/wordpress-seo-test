@@ -16,7 +16,7 @@ else {
 }
 
 $GLOBALS['wp_tests_options'] = array(
-	'active_plugins' => array( 'wordpress-seo/wp-seo.php' ),
+	'active_plugins' => array( 'wordpress-seo-test/wp-seo.php' ),
 );
 
 if ( false !== getenv( 'WP_TESTS_DIR' ) ) {
@@ -45,4 +45,5 @@ else {
 
 define( 'WPSEO_VERSION', '9.1RC2' );
 define( 'WPSEO_FILE', WP_PLUGIN_DIR . '/wordpress-seo-test/wp-seo.php' );
+define( 'WPSEO_PATH', WP_PLUGIN_DIR . '/wordpress-seo-test/' );
 WPSEO_Options::get_instance();
