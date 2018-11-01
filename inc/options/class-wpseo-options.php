@@ -184,7 +184,7 @@ class WPSEO_Options {
 		foreach ( $option_names as $option_name ) {
 			if ( isset( self::$option_instances[ $option_name ] ) ) {
 				$option  = self::get_option( $option_name );
-				$options = array_merge( $options, (array) $option );
+				$options = array_merge( $options, $option );
 			}
 		}
 
@@ -474,7 +474,7 @@ class WPSEO_Options {
 
 		$ms_option = self::get_option( 'wpseo_ms' );
 
-		return array_merge( $option, (array) $ms_option );
+		return array_merge( $option, $ms_option );
 	}
 
 	/**
