@@ -44,4 +44,5 @@ else {
 }
 
 define( 'WPSEO_VERSION', '9.1RC2' );
+define( 'WPSEO_FILE', WP_PLUGIN_DIR . '/wordpress-seo-test/wp-seo.php' );
 WPSEO_Options::get_instance();
