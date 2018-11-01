@@ -5,8 +5,8 @@
  * @package WPSEO\Tests
  */
 
-//echo 'Welcome to the Yoast SEO Test Suite' . PHP_EOL;
-//echo 'Version: 1.0' . PHP_EOL . PHP_EOL;
+echo 'Welcome to the Yoast SEO Test Suite' . PHP_EOL;
+echo 'Version: 1.0' . PHP_EOL . PHP_EOL;
 
 if ( false !== getenv( 'WP_PLUGIN_DIR' ) ) {
 	define( 'WP_PLUGIN_DIR', getenv( 'WP_PLUGIN_DIR' ) );
@@ -42,8 +42,3 @@ if ( PHP_VERSION_ID <= 53000 ) {
 else {
 	require_once dirname( WPSEO_TESTS_PATH ) . '/vendor/autoload.php';
 }
-
-define( 'WPSEO_VERSION', '9.1RC2' );
-define( 'WPSEO_FILE', WP_PLUGIN_DIR . '/wordpress-seo-test/wp-seo.php' );
-define( 'WPSEO_PATH', WP_PLUGIN_DIR . '/wordpress-seo-test/' );
-WPSEO_Options::get_instance();
