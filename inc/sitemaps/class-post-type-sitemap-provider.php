@@ -389,7 +389,8 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 				$home_url = $this->get_url(
 					$this->get_page_on_front_id()
 				);
-			} else {
+			}
+			else {
 				$home_url = array(
 					'loc' => $this->get_home_url(),
 					'mod' => '',
