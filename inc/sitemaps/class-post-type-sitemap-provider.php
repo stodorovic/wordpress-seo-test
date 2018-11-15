@@ -392,8 +392,8 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			}
 
 			$links[]     = array(
-				'loc' => isset( $home_url['loc'] ) ? $home_url['loc'] : $this->get_home_url();
-				'mod' => isset( $home_url['mod'] ) ? $home_url['mod'] : '';
+				'loc' => isset( $home_url['loc'] ) ? $home_url['loc'] : $this->get_home_url(),
+				'mod' => isset( $home_url['mod'] ) ? $home_url['mod'] : '',
 
 				// Deprecated, kept for backwards data compat. R.
 				'chf' => 'daily',
