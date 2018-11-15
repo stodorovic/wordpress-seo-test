@@ -386,19 +386,18 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 		if ( $post_type === 'page' ) {
 
+			$front_page = array( 'loc' => $this->get_home_url() );
+
 			$post = $this->get_page_on_front_id() ? get_post( $this->get_page_on_front_id() ) : null;
 			if ( $post ) {
-				$home_url = $this->get_url( $post );
+				$front_page = $this->get_url( $post );
 			}
 
-			$links[]     = array(
-				'loc' => isset( $home_url['loc'] ) ? $home_url['loc'] : $this->get_home_url(),
-				'mod' => isset( $home_url['mod'] ) ? $home_url['mod'] : '',
+			// Deprecated, kept for backwards data compat. R.
+			$front_page['chf'] = 'daily';
+			$front_page['pri'] = 1;
 
-				// Deprecated, kept for backwards data compat. R.
-				'chf' => 'daily',
-				'pri' => 1,
-			);
+			$links[] = $front_page;
 		}
 		elseif ( $post_type !== 'page' ) {
 			/**
