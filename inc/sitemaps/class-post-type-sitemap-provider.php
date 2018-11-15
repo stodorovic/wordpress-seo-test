@@ -386,14 +386,13 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 		if ( $post_type === 'page' ) {
 
+			$home_url = array(
+				'loc' => $this->get_home_url(),
+				'mod' => '',
+			);
+
 			if ( $this->get_page_on_front_id() ) {
 				$home_url = $this->get_url( get_post( $this->get_page_on_front_id() ) );
-			}
-			else {
-				$home_url = array(
-					'loc' => $this->get_home_url(),
-					'mod' => '',
-				);
 			}
 
 			$links[]     = array(
