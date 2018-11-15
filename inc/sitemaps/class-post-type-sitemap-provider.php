@@ -220,8 +220,11 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			return $links;
 		}
 
-		$stacked_urls     = array();
 		$posts_to_exclude = $this->get_excluded_posts();
+
+		if ( $post_type === 'page' && $this->get_page_on_front_id() ) {
+			$posts_to_exclude[] = $this->get_page_on_front_id();
+		}
 
 		while ( $total > $offset ) {
 
@@ -258,16 +261,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 				 */
 				$url = apply_filters( 'wpseo_sitemap_entry', $url, 'post', $post );
 
-				if ( empty( $url ) ) {
-					continue;
+				if ( ! empty( $url ) ) {
+					$links[] = $url;
 				}
-
-				if ( $post->ID === $this->get_page_for_posts_id() || $post->ID === $this->get_page_on_front_id() ) {
-
-					array_unshift( $links, $url );
-					continue;
-				}
-				$links[] = $url;
 			}
 
 			unset( $post, $url );
@@ -324,7 +320,11 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		 *
 		 * @api array $posts_to_exclude The posts to exclude.
 		 */
-		$excluded_posts_ids = apply_filters( 'wpseo_exclude_from_sitemap_by_post_ids', array() );
+		$excluded_posts_ids = apply_filters(
+			'wpseo_exclude_from_sitemap_by_post_ids',
+			$this->get_page_for_posts_id() ? array( $this->get_page_for_posts_id() ) : array()
+		);
+
 		if ( ! is_array( $excluded_posts_ids ) || $excluded_posts_ids === array() ) {
 			return array();
 		}
@@ -381,58 +381,46 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 */
 	protected function get_first_links( $post_type ) {
 
-		$links = array();
+		$links       = array();
+		$archive_url = false;
 
-		$needs_archive = true;
+		if ( $post_type === 'page' ) {
+			if ( $this->get_page_on_front_id() ) {
+				$home_url = $this->get_url(
+					$this->get_page_on_front_id()
+				);
+			} else {
+				$home_url = array(
+					'loc' => $this->get_home_url(),
+					'mod' => '',
+				);
+			}
 
-		if ( ! $this->get_page_on_front_id() && ( $post_type === 'post' || $post_type === 'page' ) ) {
-
-			$links[] = array(
-				'loc' => $this->get_home_url(),
-
-				// Deprecated, kept for backwards data compat. R.
-				'chf' => 'daily',
-				'pri' => 1,
-			);
-
-			$needs_archive = false;
-		}
-		elseif ( $this->get_page_on_front_id() && $post_type === 'post' && $this->get_page_for_posts_id() ) {
-
-			$page_for_posts_url = get_permalink( $this->get_page_for_posts_id() );
-
-			$links[] = array(
-				'loc' => $page_for_posts_url,
+			$links[]     = array(
+				'loc' => $home_url['loc'],
+				'mod' => $home_url['mod'],
 
 				// Deprecated, kept for backwards data compat. R.
 				'chf' => 'daily',
 				'pri' => 1,
 			);
-
-			$needs_archive = false;
 		}
-
-		if ( ! $needs_archive ) {
-			return $links;
+		else {
+			/**
+			 * Filter the URL Yoast SEO uses in the XML sitemap for this post type archive.
+			 *
+			 * @param string $archive_url The URL of this archive
+			 * @param string $post_type   The post type this archive is for.
+			 */
+			$archive_url = apply_filters(
+				'wpseo_sitemap_post_type_archive_link',
+				$this->get_post_type_archive_link( $post_type ),
+				$post_type
+			);
 		}
-
-		$archive_url = $this->get_post_type_archive_link( $post_type );
-
-		/**
-		 * Filter the URL Yoast SEO uses in the XML sitemap for this post type archive.
-		 *
-		 * @param string $archive_url The URL of this archive
-		 * @param string $post_type   The post type this archive is for.
-		 */
-		$archive_url = apply_filters( 'wpseo_sitemap_post_type_archive_link', $archive_url, $post_type );
 
 		if ( $archive_url ) {
-			/**
-			 * Filter the priority of the URL Yoast SEO uses in the XML sitemap.
-			 *
-			 * @param float  $priority  The priority for this URL, ranging from 0 to 1
-			 * @param string $post_type The post type this archive is for.
-			 */
+
 			$links[] = array(
 				'loc' => $archive_url,
 				'mod' => WPSEO_Sitemaps::get_last_modified_gmt( $post_type ),
@@ -466,9 +454,23 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			return false;
 		}
 
-		$archive_url = get_post_type_archive_link( $post_type );
+		/**
+		 * Filter the page which is dedicated to this post type archive.
+		 *
+		 * @param string $post_id   The post_id of the page.
+		 * @param string $post_type The post type this archive is for.
+		 */
+		$post_id = (int) apply_filters(
+			'wpseo_sitemap_page_for_post_type_archive',
+			( 'post' === $post_type ) ? $this->get_page_for_posts_id() : ( -1 ),
+			$post_type
+		);
 
-		return $archive_url;
+		if ( $post_id > 0 && WPSEO_Meta::get_value( 'meta-robots-noindex', $post_id ) === '1' ) {
+			return false;
+		}
+
+		return get_post_type_archive_link( $post_type );
 	}
 
 	/**
