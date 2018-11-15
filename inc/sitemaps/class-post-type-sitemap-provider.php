@@ -385,10 +385,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		$archive_url = false;
 
 		if ( $post_type === 'page' ) {
+
 			if ( $this->get_page_on_front_id() ) {
-				$home_url = $this->get_url(
-					$this->get_page_on_front_id()
-				);
+				$home_url = $this->get_url( get_post( $this->get_page_on_front_id() ) );
 			}
 			else {
 				$home_url = array(
