@@ -386,8 +386,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 		if ( $post_type === 'page' ) {
 
-			if ( $this->get_page_on_front_id() ) {
-				$home_url = $this->get_url( get_post( $this->get_page_on_front_id() ) );
+			$post = $this->get_page_on_front_id() ? get_post( $this->get_page_on_front_id() ) : null;
+			if ( $post ) {
+				$home_url = $this->get_url( $post );
 			}
 
 			$links[]     = array(
@@ -399,7 +400,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 				'pri' => 1,
 			);
 		}
-		else {
+		elseif ( $post_type !== 'page' ) {
 			/**
 			 * Filter the URL Yoast SEO uses in the XML sitemap for this post type archive.
 			 *
