@@ -15,7 +15,7 @@
 class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 
 	/**
-	 * Registers all hooks to WordPress
+	 * Registers all hooks to WordPress.
 	 *
 	 * @return void
 	 */
@@ -33,7 +33,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	public function handle_404( $handled ) {
 
 		if ( is_feed() ) {
-			return $this->is_feed_invalid( $handled );
+			return $this->is_feed_404( $handled );
 		}
 
 		return $handled;
@@ -47,21 +47,21 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	 *
 	 * @return bool True if it's 404.
 	 */
-	private function is_feed_invalid( $handled ) {
+	private function is_feed_404( $handled ) {
 		global $wp_query;
 
-		// Don't 404 for these queries if they matched an object.
-		if ( ( is_author() || is_tag() || is_category() || is_tax() || is_post_type_archive() )
-			&& get_queried_object()
-		) {
-			return $handled;
-		}
-
-		// Don't 404 if query contains posts.
+		// Don't 404 if the query contains posts.
 		if ( $wp_query->posts ) {
 			return $handled;
 		}
 
+		// Don't 404 for these queries if they matched an object.
+		$is_archive = is_author() || is_tag() || is_category() || is_tax() || is_post_type_archive();
+		if ( $is_archive && get_queried_object() ) {
+			return $handled;
+		}
+
+		// Guess it's time to 404.
 		$wp_query->is_feed = false;
 		$this->set_404();
 
@@ -77,8 +77,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 		global $wp_query;
 
 		// Overwrite Content-Type header if it needs.
-		$headers = function_exists( 'headers_list' ) ? headers_list() : array();
-		if ( ! headers_sent() && preg_grep( '`^Content-Type: `', $headers ) ) {
+		if ( ! headers_sent() && preg_grep( '`^Content-Type: `', headers_list() ) ) {
 			header( 'Content-Type: ' . get_bloginfo( 'html_type' ) . '; charset=' . get_bloginfo( 'charset' ), true );
 		}
 
