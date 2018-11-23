@@ -26,9 +26,9 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	/**
 	 * Handle 404.
 	 *
-	 * @param boolean $handled Whether we've handled the request.
+	 * @param bool $handled Whether we've handled the request.
 	 *
-	 * @return bool True if it should be 404.
+	 * @return bool True if it's 404.
 	 */
 	public function handle_404( $handled ) {
 
@@ -42,26 +42,20 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	/**
 	 * If there are no posts in a feed, make it 404 instead of sending an empty RSS feed.
 	 *
-	 * @param boolean $handled Whether we've handled the request.
 	 * @global WP_Query $wp_query
+	 *
+	 * @param bool $handled Whether we've handled the request.
 	 *
 	 * @return bool True if it's 404.
 	 */
 	private function is_feed_404( $handled ) {
 		global $wp_query;
 
-		// Don't 404 if the query contains posts.
-		if ( $wp_query->posts ) {
+		// Don't 404 if the query contains posts or if it matched an object.
+		if ( $wp_query->posts || get_queried_object() ) {
 			return $handled;
 		}
 
-		// Don't 404 for these queries if they matched an object.
-		$is_archive = is_author() || is_tag() || is_category() || is_tax() || is_post_type_archive();
-		if ( $is_archive && get_queried_object() ) {
-			return $handled;
-		}
-
-		// Guess it's time to 404.
 		$wp_query->is_feed = false;
 		$this->set_404();
 
@@ -69,16 +63,18 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	}
 
 	/**
-	 * Sets the 404 status.
+	 * Sets the 404 status code.
+	 *
+	 * @global WP_Query $wp_query
 	 *
 	 * @return void
 	 */
 	private function set_404() {
 		global $wp_query;
 
-		// Overwrite Content-Type header if it needs.
-		if ( ! headers_sent() && preg_grep( '`^Content-Type: `', headers_list() ) ) {
-			header( 'Content-Type: ' . get_bloginfo( 'html_type' ) . '; charset=' . get_bloginfo( 'charset' ), true );
+		// Overwrite Content-Type header.
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: ' . get_option( 'html_type' ) . '; charset=' . get_option( 'blog_charset' ), true );
 		}
 
 		$wp_query->set_404();
