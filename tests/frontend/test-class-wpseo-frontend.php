@@ -505,13 +505,15 @@ Page 3/3
 		$this->go_to( get_bloginfo( 'rdf_url' ) );
 		//$GLOBALS['wp_query']->is_feed = true;
 		//rdf_url
+		
+		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
 
 		// Test if input was changed.
 		$expected_string = 'Some RSS before text';
 		WPSEO_Options::set( 'rssbefore', $expected_string );
 		WPSEO_Options::set( 'rssafter', '' );
 
-var_dump( self::$class_instance->embed_rss( $input, 'full' ) );
+//var_dump( self::$class_instance->embed_rss( $input, 'full' ) );
 
 		$expected = wpautop( $expected_string ) . $input;
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input, 'full' ) );
