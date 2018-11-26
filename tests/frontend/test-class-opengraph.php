@@ -860,7 +860,7 @@ remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and
 	}
 	
 	public function wp_check_filetype_and_ext( $f, $file, $filename, $mimes ) {
-		fwrite( STDERR, var_export( $attach_id, true ) );
+		fwrite( STDERR, var_export( $f, true ) );
 		fwrite( STDERR, var_export( $filename, true ) );
 		return $f;
 		
