@@ -395,6 +395,7 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 		$class_instance->opengraph();
 
 		$image = wp_get_attachment_url( $attach_id );
+		fwrite( STDERR, var_export( $image, true ) );
 		$opengraph_image = new WPSEO_OpenGraph_Image( $image, $class_instance );
                 $opengraph_image->show();
 
