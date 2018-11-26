@@ -851,9 +851,11 @@ EXPECTED;
 			'tmp_name' => $featured_image,
 		);
 
-		add_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
+		/*add_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
 		remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
+*/
+		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, 0 );
 
 		return $attach_id;
 	}
