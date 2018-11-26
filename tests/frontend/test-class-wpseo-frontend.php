@@ -511,7 +511,7 @@ Page 3/3
 		//$this->go_to( get_post_comments_feed_link( $post_id ) );
 		$this->go_to( get_feed_link() );
 		
-		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		//fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
 
 		// Test if input was changed.
 		$expected_string = 'Some RSS before text';

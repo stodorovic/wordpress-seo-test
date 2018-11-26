@@ -849,6 +849,8 @@ EXPECTED;
 			'tmp_name' => $featured_image,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
+fwrite( STDERR, var_export( $attach_id, true ) );
+fwrite( STDERR, var_export( $file_array, true ) );
 
 		return $attach_id;
 	}
