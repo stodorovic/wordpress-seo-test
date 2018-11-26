@@ -487,6 +487,9 @@ Page 3/3
 	 * @covers WPSEO_Frontend::embed_rss
 	 */
 	public function test_embed_rss() {
+		$wp_query_orig = $GLOBALS['wp_query'];
+		$GLOBALS['wp_query']->is_feed = true;	
+			
 		$input = 'Some other content';
 
 		// Go to home (non-feed).
@@ -508,6 +511,8 @@ var_dump( self::$class_instance->embed_rss( $input, 'full' ) );
 
 		$expected = wpautop( $expected_string ) . $input;
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input, 'full' ) );
+
+		$GLOBALS['wp_query'] = $wp_query_orig;
 	}
 
 	/**
