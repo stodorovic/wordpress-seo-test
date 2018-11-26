@@ -5,6 +5,11 @@
  * @package WPSEO\Tests
  */
 
+// Disable xdebug backtrace.
+if ( function_exists( 'xdebug_disable' ) ) {
+	xdebug_disable();
+}
+
 echo 'Welcome to the Yoast SEO Test Suite' . PHP_EOL;
 echo 'Version: 1.0' . PHP_EOL . PHP_EOL;
 
@@ -14,6 +19,11 @@ if ( false !== getenv( 'WP_PLUGIN_DIR' ) ) {
 else {
 	define( 'WP_PLUGIN_DIR', dirname( dirname( dirname( __FILE__ ) ) ) );
 }
+
+if ( ! defined( 'YOAST_SEO_INDEXABLES' ) ) {
+	define( 'YOAST_SEO_INDEXABLES', true );
+}
+
 
 $GLOBALS['wp_tests_options'] = array(
 	'active_plugins' => array( 'wordpress-seo-test/wp-seo.php' ),

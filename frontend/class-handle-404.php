@@ -24,7 +24,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	}
 
 	/**
-	 * Handle 404.
+	 * Handle the 404 status code.
 	 *
 	 * @param bool $handled Whether we've handled the request.
 	 *
