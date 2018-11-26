@@ -848,11 +848,21 @@ EXPECTED;
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
 		);
+
+add_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 defined('ALLOW_UNFILTERED_UPLOADS') || define('ALLOW_UNFILTERED_UPLOADS', true);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
 fwrite( STDERR, var_export( $attach_id, true ) );
 fwrite( STDERR, var_export( $file_array, true ) );
+remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 
 		return $attach_id;
+	}
+	
+	public function wp_check_filetype_and_ext( $f, $file, $filename, $mimes ) {
+		fwrite( STDERR, var_export( $attach_id, true ) );
+		fwrite( STDERR, var_export( $filename, true ) );
+		return $f;
+		
 	}
 }
