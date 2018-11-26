@@ -395,9 +395,11 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 		$class_instance->opengraph();
 
 		$image = wp_get_attachment_url( $attach_id );
-		fwrite( STDERR, var_export( $image, true ) );
+
 		$opengraph_image = new WPSEO_OpenGraph_Image( $image, $class_instance );
                 $opengraph_image->show();
+
+		fwrite( STDERR, var_export( $opengraph_image->get_images(), true ) );
 
 		$output = ob_get_clean();
 
@@ -847,6 +849,10 @@ EXPECTED;
 	 */
 	private function create_featured_image( $image, $post_id ) {
 
+		$attach_id = $this->factory->attachment->create_upload_object( $image );
+
+		return $attach_id;
+
 		$basename       = basename( $image );
 		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
@@ -863,7 +869,7 @@ EXPECTED;
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
 		remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 */
-		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, 0 );
+		$attach_id = $this->factory->attachment->create_upload_object( $image, 0 );
 
 		return $attach_id;
 	}
