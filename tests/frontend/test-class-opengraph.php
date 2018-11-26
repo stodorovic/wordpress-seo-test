@@ -865,7 +865,7 @@ remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and
 		$ext             = 'png';
 		$type            = 'image/png';
 		$proper_filename = $filename;
-		return compact( 'ext', 'type', 'proper_filename' )
+		return compact( 'ext', 'type', 'proper_filename' );
 		
 	}
 }
