@@ -33,7 +33,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	public function handle_404( $handled ) {
 
 		if ( is_feed() ) {
-			return $this->is_feed_404( $handled );
+			//return $this->is_feed_404( $handled );
 		}
 
 		return $handled;
