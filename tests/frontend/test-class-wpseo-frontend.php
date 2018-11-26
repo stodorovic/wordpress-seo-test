@@ -504,6 +504,8 @@ Page 3/3
 		WPSEO_Options::set( 'rssbefore', $expected_string );
 		WPSEO_Options::set( 'rssafter', '' );
 
+var_dump( self::$class_instance->embed_rss( $input, 'full' ) );
+
 		$expected = wpautop( $expected_string ) . $input;
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input, 'full' ) );
 	}
