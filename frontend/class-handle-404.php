@@ -49,10 +49,10 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	 * @return bool True if it's 404.
 	 */
 	private function is_feed_404( $handled ) {
-		global $wp_query, $wp, $wp_rewrite;
+		global $wp_query;
 
 		// Don't 404 if the query contains posts or if it matched an object.
-		if ( $wp_query->posts || $wp_query->get_queried_object() ) {
+		if ( $wp_query->posts || $wp_query->get_queried_object() || $wp_query->is_home() ) {
 			return $handled;
 		}
 
@@ -68,9 +68,12 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	}
 
 	/**
-	 * Is it main feed.
+	 * Determine whether this is the main feed.
 	 *
-	 * @return bool True if it's main feed.
+	 * @global WP         $wp         Current WordPress environment instance.
+	 * @global WP_Rewrite $wp_rewrite The WordPress rewrite class.
+	 *
+	 * @return bool Whether or not the request is the main feed.
 	 */
 	private function is_main_feed() {
 		global $wp, $wp_rewrite;
