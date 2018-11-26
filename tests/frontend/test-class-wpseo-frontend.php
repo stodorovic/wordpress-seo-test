@@ -502,11 +502,13 @@ Page 3/3
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input ) );
 
 		// Go to feed.
-		$this->set_permalink_structure( '/%postname%/' );
+		/*$this->set_permalink_structure( '/%postname%/' );
 		$this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
-		$this->go_to( '/feed/' );
+		$this->go_to( '/feed/' );*/
 		//$GLOBALS['wp_query']->is_feed = true;
 		//rdf_url
+		$post_id = $this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
+		$this->go_to( get_post_comments_feed_link( $post_id ) );
 		
 		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
 
