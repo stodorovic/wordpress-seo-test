@@ -95,6 +95,7 @@ before_script:
     curl -s http://api.wordpress.org/core/version-check/1.7/ > /tmp/wp-latest.json
     WP_VERSION=$(grep -o '"version":"[^"]*' /tmp/wp-latest.json | sed 's/"version":"//')
   fi
+- echo "extension = fileinfo.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
 - PLUGIN_SLUG=$(basename $(pwd))
 - export WP_DEVELOP_DIR=/tmp/wordpress/
 - git clone --depth=1 --branch="$WP_VERSION" git://develop.git.wordpress.org/ /tmp/wordpress
