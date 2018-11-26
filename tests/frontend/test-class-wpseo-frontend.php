@@ -502,8 +502,9 @@ Page 3/3
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input ) );
 
 		// Go to feed.
-		$this->go_to( get_bloginfo( 'rss2_url' ) );
-		$GLOBALS['wp_query']->is_feed = true;
+		$this->go_to( get_bloginfo( 'rdf_url' ) );
+		//$GLOBALS['wp_query']->is_feed = true;
+		//rdf_url
 
 		// Test if input was changed.
 		$expected_string = 'Some RSS before text';
