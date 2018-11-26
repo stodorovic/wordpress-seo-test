@@ -32,7 +32,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	 */
 	public function handle_404( $handled ) {
 
-		if ( is_feed() ) {
+		if ( is_feed() && ! is_comment_feed() ) {
 			return $this->is_feed_404( $handled );
 		}
 
@@ -49,10 +49,15 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	 * @return bool True if it's 404.
 	 */
 	private function is_feed_404( $handled ) {
-		global $wp_query;
+		global $wp_query, $wp, $wp_rewrite;
 
 		// Don't 404 if the query contains posts or if it matched an object.
-		if ( $wp_query->posts || get_queried_object() || is_home() ) {
+		if ( $wp_query->posts || $wp_query->get_queried_object() ) {
+			return $handled;
+		}
+
+		// Don't 404 if it's main feed.
+		if ( ! $wp_query->is_archive() && ! $wp_query->is_singular() && $this->is_main_feed() ) {
 			return $handled;
 		}
 
@@ -60,6 +65,26 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 		$this->set_404();
 
 		return true;
+	}
+
+	/**
+	 * Is it main feed.
+	 *
+	 * @return bool True if it's main feed.
+	 */
+	private function is_main_feed() {
+		global $wp, $wp_rewrite;
+
+		if ( empty( $wp->query_string ) && empty( $wp_rewrite->feeds ) ) {
+			return false;
+		}
+
+		$feed_regex = '(' . implode( '|', array_map( 'trim', $wp_rewrite->feeds ) ) . ')';
+		if ( preg_match( '`^feed=' . $feed_regex . '$`', $wp->query_string ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

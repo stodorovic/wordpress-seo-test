@@ -507,8 +507,9 @@ Page 3/3
 		$this->go_to( '/feed/' );*/
 		//$GLOBALS['wp_query']->is_feed = true;
 		//rdf_url
-		$post_id = $this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
-		$this->go_to( get_post_comments_feed_link( $post_id ) );
+		//$post_id = $this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
+		//$this->go_to( get_post_comments_feed_link( $post_id ) );
+		$this->go_to( get_feed_link() );
 		
 		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
 
