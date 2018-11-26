@@ -382,6 +382,8 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 		$image     = '/assets/yoast.png';
 		$attach_id = $this->create_featured_image( $image, $post_id );
 
+		fwrite( STDERR, var_export( $attach_id, true ) );
+		
 		update_post_meta( $post_id, '_thumbnail_id', $attach_id );
 
 		$this->go_to( get_permalink( $post_id ) );
