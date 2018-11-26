@@ -848,6 +848,7 @@ EXPECTED;
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
 		);
+defined('ALLOW_UNFILTERED_UPLOADS') || define('ALLOW_UNFILTERED_UPLOADS', true);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
 fwrite( STDERR, var_export( $attach_id, true ) );
 fwrite( STDERR, var_export( $file_array, true ) );
