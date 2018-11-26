@@ -394,8 +394,13 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 
 		$class_instance->opengraph();
 
+		$image = wp_get_attachment_url( $attach_id );
+		$opengraph_image = new WPSEO_OpenGraph_Image( $image, $class_instance );
+                $opengraph_image->show();
+
 		$output = ob_get_clean();
 
+                
 		list( $src )     = wp_get_attachment_image_src( $attach_id, 'full' );
 		$expected_output = '<meta property="og:image" content="' . $src . '" />';
 
@@ -848,10 +853,10 @@ EXPECTED;
 
 		copy( $source_image, $featured_image ); // Prevent original from deletion.
 
-		$file_array = array(
+		/*$file_array = array(
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
-		);
+		);*/
 
 		/*add_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
