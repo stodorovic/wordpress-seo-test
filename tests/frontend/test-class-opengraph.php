@@ -292,7 +292,7 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_image_IS_SINGULAR_and_HAS_open_graph_image() {
 		$post_id = $this->factory->post->create();
-		$image   = get_site_url() . '/wp-content/plugins/wordpress-seo/tests/assets/small.png';
+		$image   = get_site_url() . '/wp-content/plugins/wordpress-seo-test/tests/assets/small.png';
 
 		$this->go_to( get_permalink( $post_id ) );
 
@@ -319,11 +319,11 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 	public function test_image_IS_SINGULAR_and_HAS_open_graph_image_AND_HAS_content_images() {
 		$post_id = $this->factory->post->create(
 			array(
-				'post_content' => '<img class="alignnone size-medium wp-image-490" src="' . get_site_url() . '/wp-content/plugins/wordpress-seo/tests/yoast.png" />',
+				'post_content' => '<img class="alignnone size-medium wp-image-490" src="' . get_site_url() . '/wp-content/plugins/wordpress-seo-test/tests/yoast.png" />',
 			)
 		);
 
-		$image = get_site_url() . '/wp-content/plugins/wordpress-seo/tests/assets/small.png';
+		$image = get_site_url() . '/wp-content/plugins/wordpress-seo-test/tests/assets/small.png';
 
 		$this->go_to( get_permalink( $post_id ) );
 
@@ -337,7 +337,7 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 
 		$output = ob_get_clean();
 
-		$expected_output = '<meta property="og:image" content="' . get_site_url() . '/wp-content/plugins/wordpress-seo/tests/yoast.png" />';
+		$expected_output = '<meta property="og:image" content="' . get_site_url() . '/wp-content/plugins/wordpress-seo-test/tests/yoast.png" />';
 
 		$this->assertNotContains( $expected_output, $output );
 	}
