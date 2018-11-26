@@ -503,6 +503,7 @@ Page 3/3
 
 		// Go to feed.
 		$this->go_to( get_bloginfo( 'rss2_url' ) );
+		$GLOBALS['wp_query']->is_feed = true;
 
 		// Test if input was changed.
 		$expected_string = 'Some RSS before text';
