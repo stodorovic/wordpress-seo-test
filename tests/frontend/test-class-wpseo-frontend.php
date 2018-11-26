@@ -488,7 +488,9 @@ Page 3/3
 	 */
 	public function test_embed_rss() {
 		$wp_query_orig = $GLOBALS['wp_query'];
-		$GLOBALS['wp_query']->is_feed = true;	
+		$GLOBALS['wp_query']->is_feed = true;
+		
+		$this->assertEquals( true, is_feed() );
 			
 		$input = 'Some other content';
 
