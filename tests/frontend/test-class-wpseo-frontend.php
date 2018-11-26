@@ -502,7 +502,8 @@ Page 3/3
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input ) );
 
 		// Go to feed.
-		$this->go_to( home_url( '?feed=feed' ) );
+		$this->set_permalink_structure( '/%year%/%postname%/' );
+		$this->go_to( '/feed/' );
 		//$GLOBALS['wp_query']->is_feed = true;
 		//rdf_url
 		
