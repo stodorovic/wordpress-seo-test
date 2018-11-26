@@ -502,7 +502,7 @@ Page 3/3
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input ) );
 
 		// Go to feed.
-		$this->go_to( get_bloginfo( 'rdf_url' ) );
+		$this->go_to( get_bloginfo( 'comments_rss2_url' ) );
 		//$GLOBALS['wp_query']->is_feed = true;
 		//rdf_url
 		
