@@ -8,7 +8,7 @@
 /**
  * Exposes the protected functions of the WPSEO Handle 404 class for testing.
  */
-class Expose_WPSEO_Twitter extends WPSEO_Handle_404 {
+class Expose_WPSEO_Handle_404 extends WPSEO_Handle_404 {
 
 	public function is_feed_404() {
 		return parent::is_feed_404();
