@@ -427,6 +427,7 @@ class WPSEO_OpenGraph_Image {
 	 */
 	private function set_attachment_page_image() {
 		$post_id = $this->get_post_id();
+		fwrite( STDERR, var_export( $post_id, true ) );
 		if ( wp_attachment_is_image( $post_id ) ) {
 			$this->add_image_by_id( $post_id );
 		}
