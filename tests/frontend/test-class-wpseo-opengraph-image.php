@@ -536,7 +536,8 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 			'tmp_name' => $featured_image,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );*/
-		$attach_id = $this->factory->attachment->create_upload_object( $image );
+		$source_image   = dirname( __FILE__ ) . '/..' . $image;
+		$attach_id = $this->factory->attachment->create_upload_object( $image, $post_id );
 
 		$file       = get_attached_file( $attach_id );
 		wp_generate_attachment_metadata( $attach_id, $file );

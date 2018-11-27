@@ -851,7 +851,7 @@ EXPECTED;
 	
 		$source_image = dirname( __FILE__ ) . '/..' . $image;
 		
-		$attach_id = $this->factory->attachment->create_upload_object( $source_image );
+		$attach_id = $this->factory->attachment->create_upload_object( $source_image, $post_id );
 
 		return $attach_id;
 
@@ -871,7 +871,7 @@ EXPECTED;
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
 		remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
 */
-		$attach_id = $this->factory->attachment->create_upload_object( $image, 0 );
+		$attach_id = $this->factory->attachment->create_upload_object( $image, $post_id );
 
 		return $attach_id;
 	}
