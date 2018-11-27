@@ -265,18 +265,20 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		$image           = '/assets/yoast.png';
 		$rand            = wp_rand( 1000, 9999 );
 		$basename        = str_replace( '.png', '-attachment-test-' . $rand . '.png', basename( $image ) );
-		$upload_dir      = wp_upload_dir();
+		//$upload_dir      = wp_upload_dir();
 		$source_image    = dirname( __FILE__ ) . '/..' . $image;
-		$full_image_path = $upload_dir['path'] . '/' . $basename;
+		$full_image_path = get_temp_dir() . $basename;
 
 		copy( $source_image, $full_image_path ); // Prevent original from deletion.
 
-		$file_array = array(
+		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, $post_id );
+		
+/*		$file_array = array(
 			'name'     => $basename,
 			'tmp_name' => $full_image_path,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
-		$filename   = basename( get_attached_file( $attach_id ) );
+		$filename   = basename( get_attached_file( $attach_id ) );*/
 
 		$this->go_to( get_permalink( $attach_id ) );
 
@@ -420,6 +422,11 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 
 		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, $post_id );
 
+		return array(
+			'image' => wp_get_attachment_url( $attach_id ),
+			'id'    => $attach_id,
+		);
+
 /*		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
 		$featured_image = $upload_dir['path'] . '/' . $basename;
@@ -436,10 +443,6 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		$attached_image = wp_get_attachment_url( $attach_id );
 		//$upload_dir['url'] . '/' . basename( $file );
 
-		return array(
-			'image' => $attached_image,
-			'id'    => $attach_id,
-		);
 	}
 
 	/**
