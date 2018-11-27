@@ -90,9 +90,6 @@ class WPSEO_OpenGraph_Image {
 
 		$this->opengraph = $opengraph;
 
-		// Class for determine the current page type.
-		//$this->frontend_page_type = new WPSEO_Frontend_Page_Type();
-
 		if ( ! empty( $image ) && is_string( $image ) ) {
 			$this->add_image_by_url( $image );
 		}
@@ -102,12 +99,16 @@ class WPSEO_OpenGraph_Image {
 		}
 	}
 
-	private function frontend_page_type() {
-		if ( isset( $this->frontend_page_type ) ) {
-			// Class for determine the current page type.
+	/**
+	 * Gets the class for determine the current page type.
+	 *
+	 * @return WPSEO_Frontend_Page_Type
+	 */
+	private function get_frontend_page_type() {
+		if ( ! isset( $this->frontend_page_type ) ) {
 			$this->frontend_page_type = new WPSEO_Frontend_Page_Type();
 		}
-		
+
 		return $this->frontend_page_type;
 	}
 
@@ -560,7 +561,7 @@ class WPSEO_OpenGraph_Image {
 			case is_attachment():
 				$this->set_attachment_page_image();
 				break;
-			case $this->frontend_page_type()->is_simple_page():
+			case $this->get_frontend_page_type()->is_simple_page():
 				$this->set_singular_image();
 				break;
 			case is_category():
@@ -674,7 +675,7 @@ class WPSEO_OpenGraph_Image {
 	 * @return int The post ID.
 	 */
 	protected function get_post_id( $post_id = null ) {
-		return $this->frontend_page_type()->get_simple_page_id();
+		return $this->get_frontend_page_type()->get_simple_page_id();
 	}
 
 	/**
