@@ -82,7 +82,7 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 			return false;
 		}
 
-		if ( array_diff( array_keys( $wp->query_vars ), array( 'feed' ) ) && ! $wp_query->is_comment_feed() ) {
+		if ( array_keys( $wp->query_vars ) !== array( 'feed' ) && ! $wp_query->is_comment_feed() ) {
 			return false;
 		}
 
