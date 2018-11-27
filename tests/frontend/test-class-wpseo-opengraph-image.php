@@ -524,7 +524,7 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 	 */
 	private function create_featured_image( $image, $post_id ) {
 
-		$basename       = basename( $image );
+/*		$basename       = basename( $image );
 		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
 		$featured_image = $upload_dir['path'] . '/' . $basename;
@@ -535,7 +535,9 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
 		);
-		$attach_id  = media_handle_sideload( $file_array, $post_id );
+		$attach_id  = media_handle_sideload( $file_array, $post_id );*/
+		$attach_id = $this->factory->attachment->create_upload_object( $image );
+
 		$file       = get_attached_file( $attach_id );
 		wp_generate_attachment_metadata( $attach_id, $file );
 		update_post_meta( $post_id, '_thumbnail_id', $attach_id );
@@ -544,7 +546,8 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		return array(
 			'id'   => $attach_id,
 			'path' => $file,
-			'url'  => $upload_dir['url'] . '/' . basename( $file ),
+			'url'  => wp_get_attachment_url( $attach_id );
+			//'url'  => $upload_dir['url'] . '/' . basename( $file ),
 		);
 	}
 

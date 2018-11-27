@@ -848,8 +848,10 @@ EXPECTED;
 	 * @return int
 	 */
 	private function create_featured_image( $image, $post_id ) {
-
-		$attach_id = $this->factory->attachment->create_upload_object( $image );
+	
+		$source_image = dirname( __FILE__ ) . '/..' . $image;
+		
+		$attach_id = $this->factory->attachment->create_upload_object( $source_image );
 
 		return $attach_id;
 
