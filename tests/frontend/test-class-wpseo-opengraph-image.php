@@ -469,6 +469,8 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 			->setMethods( array( 'add_image' ) )
 			->getMock();
 
+		$opengraph_image->init_frontend_page_type();
+
 		$opengraph_image
 			->expects( $this->once() )
 			->method( 'add_image' )
