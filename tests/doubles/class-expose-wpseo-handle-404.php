@@ -10,8 +10,8 @@
  */
 class Expose_WPSEO_Handle_404 extends WPSEO_Handle_404 {
 
-	public function is_feed_404() {
-		return parent::is_feed_404();
+	public function is_feed_404( $handled ) {
+		return parent::is_feed_404( $handled );
 	}
 
 	public function is_main_feed() {
