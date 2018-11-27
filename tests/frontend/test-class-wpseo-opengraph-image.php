@@ -281,9 +281,11 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		$filename   = basename( get_attached_file( $attach_id ) );*/
 
 		$this->go_to( get_permalink( $attach_id ) );
+		fwrite( STDERR, var_export( get_permalink( $attach_id ), true ) );
 
 		$class_instance = $this->setup_class();
 
+$class_instance->set_images();
 		fwrite( STDERR, var_export( $class_instance->get_images(), true ) );
 		$this->assertEquals( $this->sample_full_file_array( wp_get_attachment_url( $attach_id ), $attach_id ), $class_instance->get_images() );
 
