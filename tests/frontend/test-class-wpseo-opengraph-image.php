@@ -271,7 +271,7 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 
 		copy( $source_image, $full_image_path ); // Prevent original from deletion.
 
-		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, $post_id );
+		$attach_id = $this->factory->attachment->create_upload_object( $full_image_path, $post_id );
 		
 /*		$file_array = array(
 			'name'     => $basename,
