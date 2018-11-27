@@ -284,7 +284,7 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 
 		$class_instance = $this->setup_class();
 
-		$this->assertEquals( $this->sample_full_file_array( $upload_dir['url'] . '/' . $filename, $attach_id ), $class_instance->get_images() );
+		$this->assertEquals( $this->sample_full_file_array( wp_get_attachment_url( $attach_id ), $attach_id ), $class_instance->get_images() );
 
 		wp_delete_file( get_attached_file( $attach_id ) );
 	}
