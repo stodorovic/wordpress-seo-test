@@ -546,7 +546,7 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		return array(
 			'id'   => $attach_id,
 			'path' => $file,
-			'url'  => wp_get_attachment_url( $attach_id );
+			'url'  => wp_get_attachment_url( $attach_id ),
 			//'url'  => $upload_dir['url'] . '/' . basename( $file ),
 		);
 	}
