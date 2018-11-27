@@ -413,7 +413,14 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 			$basename = $use_name;
 		}
 
-		$upload_dir     = wp_upload_dir();
+		$source_image   = dirname( __FILE__ ) . '/..' . $image;
+		$featured_image = get_temp_dir() . $basename;
+
+		copy( $source_image, $featured_image );
+
+		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, $post_id );
+
+/*		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
 		$featured_image = $upload_dir['path'] . '/' . $basename;
 		copy( $source_image, $featured_image ); // Prevent original from deletion.
@@ -423,10 +430,11 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 			'tmp_name' => $featured_image,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
-
+*/
 		// Get the image URL so we can add it in the post content.
-		$file           = get_attached_file( $attach_id );
-		$attached_image = $upload_dir['url'] . '/' . basename( $file );
+		//$file           = get_attached_file( $attach_id );
+		$attached_image = wp_get_attachment_url( $attach_id );
+		//$upload_dir['url'] . '/' . basename( $file );
 
 		return array(
 			'image' => $attached_image,
