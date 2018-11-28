@@ -114,16 +114,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
-		// Delete category and tag.
+		// Delete category and go to category feed.
 		wp_delete_term( $category->term_id, 'category' );
-		wp_delete_term( $tag->term_id, 'tag' );
-
-		// Go to category feed.
 		$this->go_to( $cat_link );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 
-		// Go to tag feed.
+		// Delete tag and go to tag feed.
+		wp_delete_term( $tag->term_id, 'tag' );
 		$this->go_to( $tag_link );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
