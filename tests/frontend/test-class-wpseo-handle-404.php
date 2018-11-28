@@ -92,6 +92,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $cat_link );
 		
 		fwrite( STDERR, var_export( $cat_link, true ) );
+		fwrite( STDERR, var_export( $tag_link, true ) );
 		$this->assertTrue( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
