@@ -64,7 +64,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-		$this->assertFalse( self::$class_instance->is_feed_404() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete post.
 		wp_delete_post( $post->ID );
@@ -72,7 +72,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to post comments feed.
 		$this->go_to( $feed_link );
 
-		$this->assertTrue( self::$class_instance->is_feed_404() );
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
 
 	/**
