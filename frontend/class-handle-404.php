@@ -48,43 +48,16 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 	 *
 	 * @return bool True if it's 404.
 	 */
-	protected function is_feed_404( $handled ) {
+	private function is_feed_404( $handled ) {
 		global $wp_query;
 
-		// Don't 404 if the query contains post(s) or an object.
-		if ( $wp_query->posts || $wp_query->get_queried_object() ) {
-			return $handled;
-		}
-
-		// Don't 404 if it's main feed or search feed.
-		if ( $this->is_main_feed() || $wp_query->is_search() ) {
+		// Don't 404 if the query contains posts or if it matched an object.
+		if ( $wp_query->posts || get_queried_object() ) {
 			return $handled;
 		}
 
 		$wp_query->is_feed = false;
 		$this->set_404();
-
-		return true;
-	}
-
-	/**
-	 * Determine whether this is the main feed.
-	 *
-	 * @global WP       $wp
-	 * @global WP_Query $wp_query
-	 *
-	 * @return bool Whether or not the request is the main feed.
-	 */
-	protected function is_main_feed() {
-		global $wp, $wp_query;
-
-		if ( $wp_query->is_archive() || $wp_query->is_singular() || $wp_query->is_search() ) {
-			return false;
-		}
-
-		if ( array_keys( $wp->query_vars ) !== array( 'feed' ) && ! $wp_query->is_comment_feed() ) {
-			return false;
-		}
 
 		return true;
 	}

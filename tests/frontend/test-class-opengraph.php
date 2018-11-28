@@ -382,8 +382,6 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 		$image     = '/assets/yoast.png';
 		$attach_id = $this->create_featured_image( $image, $post_id );
 
-		//fwrite( STDERR, var_export( $attach_id, true ) );
-		
 		update_post_meta( $post_id, '_thumbnail_id', $attach_id );
 
 		$this->go_to( get_permalink( $post_id ) );
@@ -394,23 +392,13 @@ class WPSEO_OpenGraph_Test extends WPSEO_UnitTestCase {
 
 		$class_instance->opengraph();
 
-		$image = wp_get_attachment_url( $attach_id );
-
-		$opengraph_image = new WPSEO_OpenGraph_Image( $image, $class_instance );
-                $opengraph_image->show();
-
-		fwrite( STDERR, var_export( $opengraph_image->get_images(), true ) );
-
 		$output = ob_get_clean();
 
-                
 		list( $src )     = wp_get_attachment_image_src( $attach_id, 'full' );
 		$expected_output = '<meta property="og:image" content="' . $src . '" />';
 
 		wp_delete_attachment( $attach_id, true );
 
-		fwrite( STDERR, var_export( $output, true ) );
-		
 		$this->assertContains( $expected_output, $output );
 	}
 
@@ -848,12 +836,6 @@ EXPECTED;
 	 * @return int
 	 */
 	private function create_featured_image( $image, $post_id ) {
-	
-		$source_image = dirname( __FILE__ ) . '/..' . $image;
-		
-		$attach_id = $this->factory->attachment->create_upload_object( $source_image, $post_id );
-
-		return $attach_id;
 
 		$basename       = basename( $image );
 		$upload_dir     = wp_upload_dir();
@@ -862,25 +844,12 @@ EXPECTED;
 
 		copy( $source_image, $featured_image ); // Prevent original from deletion.
 
-		/*$file_array = array(
+		$file_array = array(
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
-		);*/
-
-		/*add_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
+		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
-		remove_filter( 'wp_check_filetype_and_ext', array( $this, 'wp_check_filetype_and_ext' ), 10, 4 );
-*/
-		$attach_id = $this->factory->attachment->create_upload_object( $image, $post_id );
 
 		return $attach_id;
-	}
-	
-	public function wp_check_filetype_and_ext( $f, $file, $filename, $mimes ) {
-		$ext             = 'png';
-		$type            = 'image/png';
-		$proper_filename = $filename;
-
-		return compact( 'ext', 'type', 'proper_filename' );
 	}
 }

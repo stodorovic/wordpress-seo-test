@@ -521,15 +521,9 @@ class WPSEO_OpenGraph_Image {
 			return;
 		}
 
-//		fwrite( STDERR, 'att ID = ' . var_export( $attachment_id , true ) );
-
 		$variations = WPSEO_Image_Utils::get_variations( $attachment_id );
-		fwrite( STDERR, 'var 1 = ' . var_export( $variations , true ) );
 		$variations = WPSEO_Image_Utils::filter_usable_dimensions( $this->image_params, $variations );
-		fwrite( STDERR, 'var 2 = ' . var_export( $variations , true ) );		
 		$variations = WPSEO_Image_Utils::filter_usable_file_size( $variations );
-
-		fwrite( STDERR, 'att ID = ' . var_export( $variations , true ) );
 
 		// If we are left without variations, there is no valid variation for this attachment.
 		if ( empty( $variations ) ) {
@@ -680,7 +674,7 @@ class WPSEO_OpenGraph_Image {
 	 *
 	 * @return int The post ID.
 	 */
-	protected function get_post_id( $post_id = null ) {
+	protected function get_post_id() {
 		return $this->get_frontend_page_type()->get_simple_page_id();
 	}
 

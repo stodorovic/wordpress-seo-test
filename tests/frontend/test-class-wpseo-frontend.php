@@ -487,11 +487,6 @@ Page 3/3
 	 * @covers WPSEO_Frontend::embed_rss
 	 */
 	public function test_embed_rss() {
-		$wp_query_orig = $GLOBALS['wp_query'];
-		$GLOBALS['wp_query']->is_feed = true;
-		
-		$this->assertEquals( true, is_feed() );
-			
 		$input = 'Some other content';
 
 		// Go to home (non-feed).
@@ -502,28 +497,15 @@ Page 3/3
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input ) );
 
 		// Go to feed.
-		/*$this->set_permalink_structure( '/%postname%/' );
-		$this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
-		$this->go_to( '/feed/' );*/
-		//$GLOBALS['wp_query']->is_feed = true;
-		//rdf_url
-		//$post_id = $this->factory()->post->create_and_get( array( 'post_type' => 'post' ) );
-		//$this->go_to( get_post_comments_feed_link( $post_id ) );
-		$this->go_to( get_feed_link() );
-		
-		//fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		$this->go_to( get_bloginfo( 'rss2_url' ) );
 
 		// Test if input was changed.
 		$expected_string = 'Some RSS before text';
 		WPSEO_Options::set( 'rssbefore', $expected_string );
 		WPSEO_Options::set( 'rssafter', '' );
 
-//var_dump( self::$class_instance->embed_rss( $input, 'full' ) );
-
 		$expected = wpautop( $expected_string ) . $input;
 		$this->assertEquals( $expected, self::$class_instance->embed_rss( $input, 'full' ) );
-
-		$GLOBALS['wp_query'] = $wp_query_orig;
 	}
 
 	/**

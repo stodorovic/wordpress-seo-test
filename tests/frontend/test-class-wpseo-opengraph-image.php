@@ -265,29 +265,24 @@ class WPSEO_OpenGraph_Image_Test extends WPSEO_UnitTestCase {
 		$image           = '/assets/yoast.png';
 		$rand            = wp_rand( 1000, 9999 );
 		$basename        = str_replace( '.png', '-attachment-test-' . $rand . '.png', basename( $image ) );
-		//$upload_dir      = wp_upload_dir();
+		$upload_dir      = wp_upload_dir();
 		$source_image    = dirname( __FILE__ ) . '/..' . $image;
-		$full_image_path = get_temp_dir() . $basename;
+		$full_image_path = $upload_dir['path'] . '/' . $basename;
 
 		copy( $source_image, $full_image_path ); // Prevent original from deletion.
 
-		$attach_id = $this->factory->attachment->create_upload_object( $full_image_path, $post_id );
-		
-/*		$file_array = array(
+		$file_array = array(
 			'name'     => $basename,
 			'tmp_name' => $full_image_path,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
-		$filename   = basename( get_attached_file( $attach_id ) );*/
+		$filename   = basename( get_attached_file( $attach_id ) );
 
 		$this->go_to( get_permalink( $attach_id ) );
-$meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_id ) );
-		fwrite( STDERR, 'MIME = ' . var_export( get_post_mime_type( $attach_id ) , true ) );
-		fwrite( STDERR, 'FILE = ' . get_attached_file( $attach_id ) . ' MIME2 = ' . var_export( getimagesize( get_attached_file( $attach_id ) ), true ) );
+
 		$class_instance = $this->setup_class();
 
-		fwrite( STDERR, var_export( $class_instance->get_images(), true ) );
-		$this->assertEquals( $this->sample_full_file_array( wp_get_attachment_url( $attach_id ), $attach_id ), $class_instance->get_images() );
+		$this->assertEquals( $this->sample_full_file_array( $upload_dir['url'] . '/' . $filename, $attach_id ), $class_instance->get_images() );
 
 		wp_delete_file( get_attached_file( $attach_id ) );
 	}
@@ -418,19 +413,7 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 			$basename = $use_name;
 		}
 
-		$source_image   = dirname( __FILE__ ) . '/..' . $image;
-		$featured_image = get_temp_dir() . $basename;
-
-		copy( $source_image, $featured_image );
-
-		$attach_id = $this->factory->attachment->create_upload_object( $featured_image, $post_id );
-
-		return array(
-			'image' => wp_get_attachment_url( $attach_id ),
-			'id'    => $attach_id,
-		);
-
-/*		$upload_dir     = wp_upload_dir();
+		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
 		$featured_image = $upload_dir['path'] . '/' . $basename;
 		copy( $source_image, $featured_image ); // Prevent original from deletion.
@@ -440,12 +423,15 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 			'tmp_name' => $featured_image,
 		);
 		$attach_id  = media_handle_sideload( $file_array, $post_id );
-*/
-		// Get the image URL so we can add it in the post content.
-		//$file           = get_attached_file( $attach_id );
-		$attached_image = wp_get_attachment_url( $attach_id );
-		//$upload_dir['url'] . '/' . basename( $file );
 
+		// Get the image URL so we can add it in the post content.
+		$file           = get_attached_file( $attach_id );
+		$attached_image = $upload_dir['url'] . '/' . basename( $file );
+
+		return array(
+			'image' => $attached_image,
+			'id'    => $attach_id,
+		);
 	}
 
 	/**
@@ -471,8 +457,6 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 			->disableOriginalConstructor()
 			->setMethods( array( 'add_image' ) )
 			->getMock();
-
-		//$opengraph_image->init_frontend_page_type();
 
 		$opengraph_image
 			->expects( $this->once() )
@@ -540,7 +524,7 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 	 */
 	private function create_featured_image( $image, $post_id ) {
 
-/*		$basename       = basename( $image );
+		$basename       = basename( $image );
 		$upload_dir     = wp_upload_dir();
 		$source_image   = dirname( __FILE__ ) . '/..' . $image;
 		$featured_image = $upload_dir['path'] . '/' . $basename;
@@ -551,10 +535,7 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 			'name'     => $basename,
 			'tmp_name' => $featured_image,
 		);
-		$attach_id  = media_handle_sideload( $file_array, $post_id );*/
-		$source_image   = dirname( __FILE__ ) . '/..' . $image;
-		$attach_id = $this->factory->attachment->create_upload_object( $source_image, $post_id );
-
+		$attach_id  = media_handle_sideload( $file_array, $post_id );
 		$file       = get_attached_file( $attach_id );
 		wp_generate_attachment_metadata( $attach_id, $file );
 		update_post_meta( $post_id, '_thumbnail_id', $attach_id );
@@ -563,8 +544,7 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 		return array(
 			'id'   => $attach_id,
 			'path' => $file,
-			'url'  => wp_get_attachment_url( $attach_id ),
-			//'url'  => $upload_dir['url'] . '/' . basename( $file ),
+			'url'  => $upload_dir['url'] . '/' . basename( $file ),
 		);
 	}
 
