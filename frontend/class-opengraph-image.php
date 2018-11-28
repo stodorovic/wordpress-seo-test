@@ -30,7 +30,7 @@ class WPSEO_OpenGraph_Image {
 	 *
 	 * @var WPSEO_Frontend_Page_Type
 	 */
-        private $frontend_page_type;
+	private $frontend_page_type;
 
 	/**
 	 * Image tags that we output for each image.
