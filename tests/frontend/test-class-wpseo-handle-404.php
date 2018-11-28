@@ -56,7 +56,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_post_feeds() {
-		$post      = $factory->post->create_and_get();
+		$post      = $this->factory->post->create_and_get();
 		$feed_link = get_post_comments_feed_link( $post->ID );
 
 		// Go to post comments feed.
@@ -85,8 +85,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$category = $this->factory->category->create_and_get();
 		$tag      = $this->factory->tag->create_and_get();
 
-		$cat_link = $get_category_feed_link( $category->term_id, '' );
-		$tag_link = $get_tag_feed_link( $tag->term_id, '' );
+		$cat_link = get_category_feed_link( $category->term_id, '' );
+		$tag_link = get_tag_feed_link( $tag->term_id, '' );
 
 		// Go to category feed.
 		$this->go_to( $cat_link );
