@@ -23,6 +23,9 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
+		$this->set_permalink_structure( '/%postname%/' );
+		create_initial_taxonomies();
+
 		// Creates instance of WPSEO_Handle_404 class.
 		self::$class_instance = new Expose_WPSEO_Handle_404();
 	}
@@ -82,7 +85,10 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_archive_feeds() {
-		$category = $this->factory->category->create_and_get();
+		$category = $this->factory->category->create_and_get( array(
+			'name' => 'Foo Category',
+			'slug' => 'foo',
+		) );
 		$tag      = $this->factory->tag->create_and_get();
 
 		$cat_link = get_category_feed_link( $category->term_id, '' );
