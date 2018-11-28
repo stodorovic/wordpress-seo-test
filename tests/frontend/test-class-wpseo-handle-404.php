@@ -112,6 +112,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
+		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete category and go to category feed.
