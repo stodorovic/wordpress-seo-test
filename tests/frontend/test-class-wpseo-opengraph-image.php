@@ -286,7 +286,6 @@ $meta = wp_generate_attachment_metadata( $attach_id, get_attached_file( $attach_
 		fwrite( STDERR, 'FILE = ' . get_attached_file( $attach_id ) . ' MIME2 = ' . var_export( getimagesize( get_attached_file( $attach_id ) ), true ) );
 		$class_instance = $this->setup_class();
 
-$class_instance->set_images();
 		fwrite( STDERR, var_export( $class_instance->get_images(), true ) );
 		$this->assertEquals( $this->sample_full_file_array( wp_get_attachment_url( $attach_id ), $attach_id ), $class_instance->get_images() );
 
