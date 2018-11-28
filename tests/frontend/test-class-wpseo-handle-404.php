@@ -82,8 +82,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_archive_feeds() {
-		$category = $factory->category->create_and_get();
-		$tag      = $factory->tag->create_and_get();
+		$category = $this->factory->category->create_and_get();
+		$tag      = $this->factory->tag->create_and_get();
 
 		$cat_link = $get_category_feed_link( $category->term_id, '' );
 		$tag_link = $get_tag_feed_link( $tag->term_id, '' );
@@ -93,14 +93,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-		$this->assertTrue( self::$class_instance->is_feed_404() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Go to tag feed.
 		$this->go_to( $tag_link );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-		$this->assertTrue( self::$class_instance->is_feed_404() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete category and tag.
 		wp_delete_category( $category->term_id );
@@ -109,12 +109,12 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to category feed.
 		$this->go_to( $cat_link );
 
-		$this->assertFalse( self::$class_instance->is_feed_404() );
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 
 		// Go to tag feed.
 		$this->go_to( $tag_link );
 
-		$this->assertFalse( self::$class_instance->is_feed_404() );
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
 
 	/**
@@ -128,6 +128,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-		$this->assertFalse( self::$class_instance->is_feed_404() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 }
