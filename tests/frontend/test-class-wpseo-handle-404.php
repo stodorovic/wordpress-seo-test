@@ -85,8 +85,17 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_archive_feeds() {
-		$category = $this->factory->category->create_and_get();
-		$tag      = $this->factory->tag->create_and_get();
+		$cat_args = array(
+			'name' => 'Foo Category',
+			'slug' => 'foo',
+		);
+		$tag_args = array(
+			'name' => 'Bar Tag',
+			'slug' => 'bar',
+		);
+
+		$category = $this->factory->category->create_and_get( $cat_args );
+		$tag      = $this->factory->tag->create_and_get( $tag_args );
 
 		$cat_link = get_category_feed_link( $category->term_id, '' );
 		$tag_link = get_tag_feed_link( $tag->term_id, '' );
@@ -126,11 +135,20 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
-	function test_search_feed() {
+	public function test_search_feed() {
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+	}
+
+	/**
+	 * ...
+	 *
+	 * @covers WPSEO_Handle_404::is_main_feed()
+	 * @covers WPSEO_Handle_404::is_feed_404()
+	 */	
+	public function test_query_string_feeds() {
 	}
 }
