@@ -95,7 +95,7 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 
 		$c = self::$class_instance;
 
-		$categories          = get_categories( array( 'hide_empty' => false ) );
+		//$categories          = get_categories( array( 'hide_empty' => false ) );
 		$permalink_structure = get_option( 'permalink_structure' );
 
 		if ( ! ( is_multisite() && 0 === strpos( $permalink_structure, '/blog/' ) ) ) {
@@ -103,7 +103,6 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 				'(uncategorized)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
 				'(uncategorized)/page/?([0-9]{1,})/?$' => 'index.php?category_name=$matches[1]&paged=$matches[2]',
 				'(uncategorized)/?$'                   => 'index.php?category_name=$matches[1]',
-				//'category/(.+)$'                       => 'index.php?wpseo_category_redirect=$matches[1]',
 			);
 		}
 		else {
@@ -114,11 +113,10 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 			);
 		}
 
-			global $wp_rewrite;
-			$old_base = trim( str_replace( '%category%', '(.+)', $wp_rewrite->get_category_permastruct() ), '/' );
+		global $wp_rewrite;
+		$old_base = trim( str_replace( '%category%', '(.+)', $wp_rewrite->get_category_permastruct() ), '/' );
 
-			$expected[ $old_base . '$' ] = 'index.php?wpseo_category_redirect=$matches[1]';
-		
+		$expected[ $old_base . '$' ] = 'index.php?wpseo_category_redirect=$matches[1]';
 
 		$this->assertEquals( $expected, $c->category_rewrite_rules() );
 	}

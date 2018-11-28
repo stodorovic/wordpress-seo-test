@@ -24,7 +24,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		parent::setUp();
 
 		$this->set_permalink_structure( '/%postname%/' );
-		/*create_initial_taxonomies();*/
+		create_initial_taxonomies();
 
 		// Creates instance of WPSEO_Handle_404 class.
 		self::$class_instance = new Expose_WPSEO_Handle_404();

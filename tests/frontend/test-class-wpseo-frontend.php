@@ -29,6 +29,7 @@ class WPSEO_Frontend_Test extends WPSEO_UnitTestCase_Frontend {
 	public function setUp() {
 		parent::setUp();
 		$this->set_permalink_structure( '' );
+		create_initial_taxonomies();
 	}
 
 	/**
