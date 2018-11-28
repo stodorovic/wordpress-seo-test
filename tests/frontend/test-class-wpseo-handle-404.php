@@ -97,8 +97,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$category = $this->factory->category->create_and_get( $cat_args );
 		$tag      = $this->factory->tag->create_and_get( $tag_args );
 
-		$cat_link = get_category_feed_link( $category->term_id, '' );
-		$tag_link = get_tag_feed_link( $tag->term_id, '' );
+		$cat_link = get_term_feed_link( $category->term_id, 'category' );
+		$tag_link = get_term_feed_link( $tag->term_id, 'tag' );
 
 		// Go to category feed.
 		$this->go_to( $cat_link );
