@@ -453,7 +453,7 @@ class WPSEO_Frontend {
 				$title_part = sprintf( __( 'Search for "%s"', 'wordpress-seo' ), esc_html( get_search_query() ) );
 			}
 		}
-		elseif ( $this->is_simple_tax() ) {
+		elseif ( is_category() || is_tag() || is_tax() ) {
 			$title = $this->get_taxonomy_title();
 
 			if ( ! is_string( $title ) || '' === $title ) {
@@ -694,7 +694,7 @@ class WPSEO_Frontend {
 			if ( is_search() || is_404() ) {
 				$robots['index'] = 'noindex';
 			}
-			elseif ( $this->is_simple_tax() ) {
+			elseif ( is_tax() || is_tag() || is_category() ) {
 				$term = $wp_query->get_queried_object();
 				if ( is_object( $term ) && ( WPSEO_Options::get( 'noindex-tax-' . $term->taxonomy, false ) ) ) {
 					$robots['index'] = 'noindex';
@@ -855,19 +855,18 @@ class WPSEO_Frontend {
 		$canonical          = false;
 		$canonical_override = false;
 
-		$queried_object = get_queried_object();
-
 		// Set decent canonicals for homepage, singulars and taxonomy pages.
-		if ( is_singular() && property_exists( $queried_object, 'ID' )  && $queried_object->ID > 0 ) {
+		if ( is_singular() ) {
+			$obj       = get_queried_object();
+			$canonical = get_permalink( $obj->ID );
 
-			$canonical               = get_permalink( $queried_object->ID );
 			$this->canonical_unpaged = $canonical;
 
 			$canonical_override = $this->get_seo_meta_value( 'canonical' );
 
 			// Fix paginated pages canonical, but only if the page is truly paginated.
-			if ( get_query_var( 'page' ) > 1 && ! empty( $queried_object->post_content ) ) {
-				$num_pages = ( substr_count( $queried_object->post_content, '<!--nextpage-->' ) + 1 );
+			if ( get_query_var( 'page' ) > 1 ) {
+				$num_pages = ( substr_count( $obj->post_content, '<!--nextpage-->' ) + 1 );
 				if ( $num_pages && get_query_var( 'page' ) <= $num_pages ) {
 					if ( ! $GLOBALS['wp_rewrite']->using_permalinks() ) {
 						$canonical = add_query_arg( 'page', get_query_var( 'page' ), $canonical );
@@ -899,14 +898,18 @@ class WPSEO_Frontend {
 					$canonical = get_permalink( $posts_page_id );
 				}
 			}
-			elseif ( $this->is_simple_tax() && ! empty( $queried_object ) && ! $this->is_multiple_terms_query() ) {
-				$taxonomy = $queried_object->taxonomy;
+			elseif ( is_tax() || is_tag() || is_category() ) {
 
-				$canonical_override = WPSEO_Taxonomy_Meta::get_term_meta( $queried_object, $taxonomy, 'canonical' );
-				$term_link          = get_term_link( $queried_object, $taxonomy );
+				$term = get_queried_object();
 
-				if ( ! is_wp_error( $term_link ) ) {
-					$canonical = $term_link;
+				if ( ! empty( $term ) && ! $this->is_multiple_terms_query() ) {
+
+					$canonical_override = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'canonical' );
+					$term_link          = get_term_link( $term, $term->taxonomy );
+
+					if ( ! is_wp_error( $term_link ) ) {
+						$canonical = $term_link;
+					}
 				}
 			}
 			elseif ( is_post_type_archive() ) {
@@ -916,15 +919,17 @@ class WPSEO_Frontend {
 			elseif ( is_author() ) {
 				$canonical = get_author_posts_url( get_query_var( 'author' ), get_query_var( 'author_name' ) );
 			}
-			elseif ( is_date() ) {
-				if ( is_day() ) {
-					$canonical = get_day_link( get_query_var( 'year' ), get_query_var( 'monthnum' ), get_query_var( 'day' ) );
-				}
-				elseif ( is_month() ) {
-					$canonical = get_month_link( get_query_var( 'year' ), get_query_var( 'monthnum' ) );
-				}
-				elseif ( is_year() ) {
-					$canonical = get_year_link( get_query_var( 'year' ) );
+			elseif ( is_archive() ) {
+				if ( is_date() ) {
+					if ( is_day() ) {
+						$canonical = get_day_link( get_query_var( 'year' ), get_query_var( 'monthnum' ), get_query_var( 'day' ) );
+					}
+					elseif ( is_month() ) {
+						$canonical = get_month_link( get_query_var( 'year' ), get_query_var( 'monthnum' ) );
+					}
+					elseif ( is_year() ) {
+						$canonical = get_year_link( get_query_var( 'year' ) );
+					}
 				}
 			}
 
@@ -1229,7 +1234,7 @@ class WPSEO_Frontend {
 					$template = WPSEO_Options::get( 'metadesc-' . $post_type );
 				}
 			}
-			elseif ( $this->is_simple_tax() ) {
+			elseif ( is_category() || is_tag() || is_tax() ) {
 				$term              = $wp_query->get_queried_object();
 				$metadesc_override = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'desc' );
 				if ( is_object( $term ) && isset( $term->taxonomy ) && WPSEO_Options::get( 'metadesc-tax-' . $term->taxonomy, '' ) !== '' ) {
@@ -1624,15 +1629,6 @@ class WPSEO_Frontend {
 	}
 
 	/**
-	 * Check if it's cat, tag or tax.
-	 *
-	 * @return bool
-	 */
-	protected function is_simple_tax() {
-		return is_tax() || is_tag() || is_category();
-	}
-
-	/**
 	 * Check if term archive query is for multiple terms (/term-1,term2/ or /term-1+term-2/).
 	 *
 	 * @return bool
@@ -1641,7 +1637,7 @@ class WPSEO_Frontend {
 
 		global $wp_query;
 
-		if ( ! $this->is_simple_tax() ) {
+		if ( ! is_tax() && ! is_tag() && ! is_category() ) {
 			return false;
 		}
 
