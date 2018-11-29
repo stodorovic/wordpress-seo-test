@@ -23,8 +23,11 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
+		// Reset permalink structure.
 		$this->set_permalink_structure( '/%postname%/' );
-		create_initial_taxonomies();
+		$this->reset_post_types();
+		$this->reset_taxonomies();
+		$this->reset_post_statuses();
 
 		// Creates instance of WPSEO_Handle_404 class.
 		self::$class_instance = new Expose_WPSEO_Handle_404();
@@ -97,18 +100,15 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$category = $this->factory->category->create_and_get( $cat_args );
 		$tag      = $this->factory->tag->create_and_get( $tag_args );
 
-		$cat_link = get_term_feed_link( $category->term_id, 'category' );
-		$tag_link = get_term_feed_link( $tag->term_id, 'tag' );
-
 		// Go to category feed.
-		$this->go_to( '/category/foo/feed' );
+		$this->go_to( '/category/foo/feed/' );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Go to tag feed.
-		$this->go_to( '/tag/bar/feed' );
+		$this->go_to( '/tag/bar/feed/' );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
@@ -118,13 +118,13 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		// Delete category and go to category feed.
 		wp_delete_term( $category->term_id, 'category' );
-		$this->go_to( $cat_link );
+		$this->go_to( '/category/foo/feed/' );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 
 		// Delete tag and go to tag feed.
 		wp_delete_term( $tag->term_id, 'tag' );
-		$this->go_to( $tag_link );
+		$this->go_to( '/tag/bar/feed/' );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
@@ -144,11 +144,28 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	}
 
 	/**
-	 * ...
+	 * Tests feeds with query strings.
 	 *
 	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */	
 	public function test_query_string_feeds() {
+		$this->go_to( '/?feed=rss2' );
+
+		$this->assertTrue( self::$class_instance->is_main_feed() );
+
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+
+		$this->go_to( '/?s=Lorem&feed=rss2' );
+
+		$this->assertFalse( self::$class_instance->is_main_feed() );
+
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+
+		$this->go_to( '/?feed=invalid_feed' );
+
+		$this->assertFalse( self::$class_instance->is_main_feed() );
+
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
 }
