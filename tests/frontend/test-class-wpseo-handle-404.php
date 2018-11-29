@@ -23,11 +23,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		// Reset permalink structure.
-		$this->set_permalink_structure( '/%postname%/' );
+		// Reset post_types & taxonomies.
 		$this->reset_post_types();
 		$this->reset_taxonomies();
 		$this->reset_post_statuses();
+
+		// Reset permalink structure.
+		$this->set_permalink_structure( '/%postname%/' );
+		create_initial_taxonomies();
 
 		// Creates instance of WPSEO_Handle_404 class.
 		self::$class_instance = new Expose_WPSEO_Handle_404();
@@ -112,8 +115,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-//		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
-		//fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
+		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete category and go to category feed.
@@ -122,18 +125,17 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 
+		$this->assertQueryFalse( 'is_feed' );
+                $this->assertQueryTrue( 'is_404' );
+
 		// Delete tag and go to tag feed.
 		wp_delete_term( $tag->term_id, 'tag' );
 		$this->go_to( '/tag/bar/feed/' );
 
-		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
-		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
-
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 
 		$this->assertQueryFalse( 'is_feed' );
-		
-		$this->assertQueryTrue( 'is_404' );
+                $this->assertQueryTrue( 'is_404' );
 	}
 
 	/**
@@ -146,7 +148,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
-
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 
@@ -160,22 +161,11 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( '/?feed=rss2' );
 
 		$this->assertTrue( self::$class_instance->is_main_feed() );
-
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		$this->go_to( '/?s=Lorem&feed=rss2' );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
-
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
-
-		$this->go_to( '/?feed=invalid_feed' );
-
-		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
-		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
-
-		$this->assertFalse( self::$class_instance->is_main_feed() );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
 }
