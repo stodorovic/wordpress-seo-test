@@ -24,9 +24,9 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		parent::setUp();
 
 		// Reset post_types & taxonomies.
-		$this->reset_post_types();
+		/*$this->reset_post_types();
 		$this->reset_taxonomies();
-		$this->reset_post_statuses();
+		$this->reset_post_statuses();*/
 
 		// Reset permalink structure.
 		$this->set_permalink_structure( '/%postname%/' );
@@ -118,23 +118,25 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
-		// Delete category and go to category feed.
+		// Go to non-existent category feed
+		$this->go_to( '/category/foo2/feed/' );
+
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+
+		$this->assertFalse( is_feed() );
+                $this->assertTrue( is_404() );
+
+		// Go to non-existent tag feed.
+		$this->go_to( '/tag/bar2/feed/' );
+
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+
+		$this->assertFalse( is_feed() );
+                $this->assertTrue( is_404() );
+
+                // Delete terms.
 		wp_delete_term( $category->term_id, 'category' );
-		$this->go_to( '/category/foo/feed/' );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
-
-		$this->assertFalse( is_feed() );
-                $this->assertTrue( is_404() );
-
-		// Delete tag and go to tag feed.
 		wp_delete_term( $tag->term_id, 'tag' );
-		$this->go_to( '/tag/bar/feed/' );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
-
-		$this->assertFalse( is_feed() );
-                $this->assertTrue( is_404() );
 	}
 
 	/**
