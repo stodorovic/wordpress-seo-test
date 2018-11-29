@@ -101,14 +101,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$tag_link = get_term_feed_link( $tag->term_id, 'tag' );
 
 		// Go to category feed.
-		$this->go_to( $cat_link );
+		$this->go_to( '/category/foo/feed' );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Go to tag feed.
-		$this->go_to( $tag_link );
+		$this->go_to( '/tag/bar/feed' );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
