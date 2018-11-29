@@ -138,6 +138,38 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	}
 
 	/**
+	 * Tests tag feeds.
+	 *
+	 * @covers WPSEO_Handle_404::is_main_feed()
+	 * @covers WPSEO_Handle_404::is_feed_404()
+	 */
+	public function test_tag_feeds() {
+		$tag_args = array(
+			'name' => 'Bar Tag',
+			'slug' => 'bar',
+		);
+		$tag      = $this->factory->tag->create_and_get( $tag_args );
+
+		// Go to tag feed.
+		$this->go_to( '/tag/bar/feed/' );
+
+		$this->assertFalse( self::$class_instance->is_main_feed() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+		
+		// Go to home.
+		$this->go_to_home();
+
+		// Delete tag and go to tag feed.
+		wp_delete_term( $tag->term_id, 'tag' );
+		$this->go_to( '/tag/bar/feed/' );
+
+		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+
+		$this->assertFalse( is_feed() );
+                $this->assertTrue( is_404() );
+	}
+
+	/**
 	 * Tests search feed.
 	 *
 	 * @covers WPSEO_Handle_404::is_main_feed()
