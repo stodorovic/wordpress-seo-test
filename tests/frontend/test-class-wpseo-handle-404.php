@@ -112,8 +112,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
-		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
-		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
+//		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		//fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete category and go to category feed.
@@ -126,7 +126,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		wp_delete_term( $tag->term_id, 'tag' );
 		$this->go_to( '/tag/bar/feed/' );
 
+		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
+
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+
+		$this->assertQueryFalse( 'is_feed' );
+		
+		$this->assertQueryTrue( 'is_404' );
 	}
 
 	/**
@@ -163,6 +170,9 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		$this->go_to( '/?feed=invalid_feed' );
+
+		fwrite( STDERR, var_export( $GLOBALS['wp_query'], true ) );
+		fwrite( STDERR, var_export( $GLOBALS['wp'], true ) );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 
