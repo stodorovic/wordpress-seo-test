@@ -111,7 +111,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		add_filter( 'wpseo_exclude_from_sitemap_by_post_ids', array( $this, 'filter_with_output' ) );
 
-		$this->assertEquals( array( 5, 600, 23, 0, 3 ), $sitemap_provider->get_excluded_posts( 'post' ) );
+		$this->assertEquals( array( 5, 600, 23, 0, , 3 ), $sitemap_provider->get_excluded_posts( 'post' ) );
 
 		remove_filter( 'wpseo_exclude_from_sitemap_by_post_ids', array( $this, 'filter_with_output' ) );
 	}
