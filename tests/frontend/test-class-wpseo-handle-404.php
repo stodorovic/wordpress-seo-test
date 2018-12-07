@@ -81,7 +81,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Tests wp conditionals on post comments feed.
 	 */
-	private function test_wp_conditionals_on_post_feed() {
+	public function test_wp_conditionals_on_post_feed() {
 		$post      = $this->factory->post->create_and_get();
 		$feed_link = get_post_comments_feed_link( $post->ID );
 
@@ -129,13 +129,27 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_search_feed() {
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
+		fwrite( STDERR, get_search_feed_link( 'Lorem' ) );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 
 	/**
-	 * Tests feeds with query strings.
+	 * Tests search (query string) feed.
+	 *
+	 * @covers WPSEO_Handle_404::is_main_feed()
+	 * @covers WPSEO_Handle_404::is_feed_404()
+	 */
+	public function test_search_query_string_feed() {
+		$this->go_to( '/?s=Lorem&feed=rss2' );
+
+		$this->assertFalse( self::$class_instance->is_main_feed() );
+		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+	}
+
+	/**
+	 * Tests feed with query string.
 	 *
 	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
@@ -144,11 +158,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( '/?feed=rss2' );
 
 		$this->assertTrue( self::$class_instance->is_main_feed() );
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
-
-		$this->go_to( '/?s=Lorem&feed=rss2' );
-
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 
