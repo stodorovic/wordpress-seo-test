@@ -188,6 +188,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$term = $this->factory->term->create_and_get(
 			array( 'taxonomy' => $taxonomy )
 		);
+		
+		fwrite( STDERR, var_export( $term, true ) );
 
 		// Go to term feed.
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
