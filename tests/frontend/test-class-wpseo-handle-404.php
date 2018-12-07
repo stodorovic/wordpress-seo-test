@@ -89,7 +89,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $feed_link );
 
 		// Verify the query object is a feed.
-		$this->assertQueryTrue( 'is_feed', 'is_singular', 'is_single' );
+		$this->assertQueryTrue( 'is_comment_feed', 'is_feed', 'is_singular', 'is_single' );
 
 		// Delete post.
 		wp_delete_post( $post->ID );
@@ -129,7 +129,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_search_feed() {
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
-		fwrite( STDERR, get_search_feed_link( 'Lorem' ) );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
@@ -154,7 +153,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
-	public function test_query_string_feeds() {
+	public function test_query_string_feed() {
 		$this->go_to( '/?feed=rss2' );
 
 		$this->assertTrue( self::$class_instance->is_main_feed() );
