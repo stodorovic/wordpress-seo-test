@@ -23,11 +23,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		// Reset post types and taxonomies.
-		$this->reset_post_types();
-		$this->reset_taxonomies();
-		$this->reset_post_statuses();
-
 		// Reset permalink structure.
 		$this->set_permalink_structure( '/%postname%/' );
 		create_initial_taxonomies();
@@ -72,7 +67,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $feed_link );
 
 		$this->assertFalse( self::$class_instance->is_main_feed() );
-
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete post.
@@ -82,13 +76,33 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $feed_link );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+	}
+
+	/**
+	 * Tests wp conditionals on post comments feed.
+	 */
+	private function test_wp_conditionals_on_post_feed() {
+		$post      = $this->factory->post->create_and_get();
+		$feed_link = get_post_comments_feed_link( $post->ID );
+
+		// Go to post comments feed.
+		$this->go_to( $feed_link );
+
+		// Verify the query object is a feed.
+                $this->assertQueryTrue( 'is_feed', 'is_singular', 'is_single' );
+
+		// Delete post.
+		wp_delete_post( $post->ID );
+
+		// Go to (deleted) post comments feed.
+		$this->go_to( $feed_link );
 
 		$this->assertFalse( is_feed() );
 		$this->assertTrue( is_404() );
 	}
 
 	/**
-	 * Tests category feeds.
+	 * Tests category feed.
 	 *
 	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
@@ -106,52 +120,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function test_tag_feed() {
                 $this->run_test_on_term_feed( 'post_tag' );
 	}
-
-/*	public function test_archive_feeds() {
-		$cat_args = array(
-			'name' => 'Foo Category',
-			'slug' => 'foo',
-		);
-		$tag_args = array(
-			'name' => 'Bar Tag',
-			'slug' => 'bar',
-		);
-
-		$category = $this->factory->category->create_and_get( $cat_args );
-		$tag      = $this->factory->tag->create_and_get( $tag_args );
-
-		// Go to category feed.
-		$this->go_to( '/category/foo/feed/' );
-
-		$this->assertFalse( self::$class_instance->is_main_feed() );
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
-
-		// Go to tag feed.
-		$this->go_to( '/tag/bar/feed/' );
-
-		$this->assertFalse( self::$class_instance->is_main_feed() );
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
-
-		// Go to non-existent category feed.
-		$this->go_to( '/category/foo2/feed/' );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
-
-		$this->assertFalse( is_feed() );
-		$this->assertTrue( is_404() );
-
-		// Go to non-existent tag feed.
-		$this->go_to( '/tag/bar2/feed/' );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
-
-		$this->assertFalse( is_feed() );
-		$this->assertTrue( is_404() );
-
-		// Delete terms.
-		wp_delete_term( $category->term_id, 'category' );
-		wp_delete_term( $tag->term_id, 'tag' );
-	}*/
 
 	/**
 	 * Tests search feed.
@@ -187,14 +155,12 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	/**
          * Runs tests for term feed.
          *
-	 * @param string Taxonomy
+	 * @param string $taxonomy The taxonomy to test.
 	 */
 	private function run_test_on_term_feed( $taxonomy ) {
 		$term = $this->factory->term->create_and_get(
 			array( 'taxonomy' => $taxonomy )
 		);
-		
-		fwrite( STDERR, var_export( $term, true ) );
 
 		// Go to term feed.
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
