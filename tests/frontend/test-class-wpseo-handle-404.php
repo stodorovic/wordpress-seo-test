@@ -104,7 +104,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_tag_feed() {
-                $this->run_test_on_term_feed( 'tag' );
+                $this->run_test_on_term_feed( 'post_tag' );
 	}
 
 /*	public function test_archive_feeds() {
@@ -210,7 +210,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
                 // Go to term feed again.
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
 	}
 }
