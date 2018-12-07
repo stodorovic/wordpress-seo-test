@@ -23,6 +23,11 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
+		// Reset post types and taxonomies.
+		$this->reset_post_types();
+		$this->reset_taxonomies();
+		$this->reset_post_statuses();
+
 		// Reset permalink structure.
 		$this->set_permalink_structure( '/%postname%/' );
 		create_initial_taxonomies();
