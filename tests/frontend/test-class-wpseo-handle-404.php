@@ -89,7 +89,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $feed_link );
 
 		// Verify the query object is a feed.
-                $this->assertQueryTrue( 'is_feed', 'is_singular', 'is_single' );
+		$this->assertQueryTrue( 'is_feed', 'is_singular', 'is_single' );
 
 		// Delete post.
 		wp_delete_post( $post->ID );
@@ -98,7 +98,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->go_to( $feed_link );
 
 		$this->assertFalse( is_feed() );
-		$this->assertTrue( is_404() );
+		$this->assertQueryTrue( 'is_404' );
 	}
 
 	/**
@@ -108,7 +108,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_category_feed() {
-                $this->run_test_on_term_feed( 'category' );
+		$this->run_test_on_term_feed( 'category' );
 	}
 
 	/**
@@ -118,7 +118,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_tag_feed() {
-                $this->run_test_on_term_feed( 'post_tag' );
+		$this->run_test_on_term_feed( 'post_tag' );
 	}
 
 	/**
@@ -153,8 +153,8 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	}
 
 	/**
-         * Runs tests for term feed.
-         *
+	 * Runs tests for term feed.
+	 *
 	 * @param string $taxonomy The taxonomy to test.
 	 */
 	private function run_test_on_term_feed( $taxonomy ) {
@@ -170,10 +170,10 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete term.
-                wp_delete_term( $term->term_id, $term->taxonomy );
-                clean_term_cache( $term->term_id, $term->taxonomy, false );
+		wp_delete_term( $term->term_id, $term->taxonomy );
+		clean_term_cache( $term->term_id, $term->taxonomy, false );
 
-                // Go to term feed again.
+		// Go to term feed again.
 		$this->go_to( $feed_link );
 
 		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
