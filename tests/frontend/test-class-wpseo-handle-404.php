@@ -56,17 +56,15 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Tests post comments feed.
 	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
-	public function test_post_feeds() {
+	public function test_post_feed() {
 		$post      = $this->factory->post->create_and_get();
 		$feed_link = get_post_comments_feed_link( $post->ID );
 
 		// Go to post comments feed.
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete post.
@@ -97,14 +95,12 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to (deleted) post comments feed.
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( is_feed() );
 		$this->assertQueryTrue( 'is_404' );
 	}
 
 	/**
 	 * Tests category feed.
 	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_category_feed() {
@@ -114,7 +110,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Tests tag feed.
 	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_tag_feed() {
@@ -130,20 +125,17 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function test_search_feed() {
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
 
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 
 	/**
 	 * Tests search (query string) feed.
 	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_search_query_string_feed() {
 		$this->go_to( '/?s=Lorem&feed=rss2' );
 
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 	}
 
@@ -174,12 +166,10 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( self::$class_instance->is_main_feed() );
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete term.
 		wp_delete_term( $term->term_id, $term->taxonomy );
-		clean_term_cache( $term->term_id, $term->taxonomy, false );
 
 		// Go to term feed again.
 		$this->go_to( $feed_link );
