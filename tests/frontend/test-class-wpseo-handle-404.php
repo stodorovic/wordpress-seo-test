@@ -161,15 +161,15 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 			array( 'taxonomy' => $taxonomy )
 		);
 
-		// Go to term feed.
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
+
+		// Go to term feed.
 		$this->go_to( $feed_link );
 
 		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete term.
 		wp_delete_term( $term->term_id, $term->taxonomy );
-		clean_term_cache( $term->term_id, $term->taxonomy, false );
 
 		// Go to term feed again.
 		$this->go_to( $feed_link );
