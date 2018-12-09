@@ -57,11 +57,11 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 		}
 
 		// Don't 404 if it isn't archive or singular.
-		//if ( ! $wp_query->is_archive() || ! $wp_query->is_singular() ) {
+		if ( $wp_query->is_home() || $wp_query->is_search()  || ( ! $wp_query->is_archive() && ! $wp_query->is_singular() ) ) {
 		//if ( $this->is_main_feed() || $wp_query->is_search() ) {
-		//	return $handled;
-		//}
-		
+			return $handled;
+		}
+
 		fwrite( STDERR, var_export( $wp_query, true ) );
 
 		$wp_query->is_feed = false;
