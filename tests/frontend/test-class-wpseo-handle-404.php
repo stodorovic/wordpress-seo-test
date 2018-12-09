@@ -119,7 +119,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Tests search feed.
 	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_search_feed() {
@@ -170,6 +169,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 		// Delete term.
 		wp_delete_term( $term->term_id, $term->taxonomy );
+		clean_term_cache( $term->term_id, $term->taxonomy, false );
 
 		// Go to term feed again.
 		$this->go_to( $feed_link );
