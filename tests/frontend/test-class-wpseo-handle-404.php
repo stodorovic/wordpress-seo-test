@@ -141,12 +141,25 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 			array( 'taxonomy' => $taxonomy )
 		);
 
+		$is_taxonomy = 'is_tax';
+		switch ( $taxonomy ) {
+			case 'category':
+				$is_taxonomy = 'is_category';
+				break;
+			case 'post_tag':
+				$is_taxonomy = 'is_tag';
+				break;
+		}
+
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
 
 		// Go to term feed.
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+		// Verify the query object is a feed.
+		$this->assertQueryTrue( 'is_feed', 'is_archive', $is_taxonomy );
+
+//		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
 
 		// Delete term.
 		wp_delete_term( $term->term_id, $term->taxonomy );
