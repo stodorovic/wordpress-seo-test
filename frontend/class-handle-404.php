@@ -57,6 +57,11 @@ class WPSEO_Handle_404 implements WPSEO_WordPress_Integration {
 		}
 
 		global $wp;
+
+		// Don't 404 if it isn't archive or singular.
+		if ( ! $wp_query->is_archive() && ! $wp_query->is_singular() ) {
+			return $handled;
+		}
 		
 		fwrite( STDERR, var_export( $wp->request, true ) );
 		fwrite( STDERR, var_export( $wp_query->is_archive, true ) );
