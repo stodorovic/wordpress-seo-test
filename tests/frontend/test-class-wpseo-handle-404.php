@@ -65,27 +65,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to post comments feed.
 		$this->go_to( $feed_link );
 
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
-
-		// Delete post.
-		wp_delete_post( $post->ID );
-
-		// Go to (deleted) post comments feed.
-		$this->go_to( $feed_link );
-
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
-	}
-
-	/**
-	 * Tests wp conditionals on post comments feed.
-	 */
-	public function test_wp_conditionals_on_post_feed() {
-		$post      = $this->factory->post->create_and_get();
-		$feed_link = get_post_comments_feed_link( $post->ID );
-
-		// Go to post comments feed.
-		$this->go_to( $feed_link );
-
 		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_comment_feed', 'is_feed', 'is_singular', 'is_single' );
 
@@ -95,6 +74,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to (deleted) post comments feed.
 		$this->go_to( $feed_link );
 
+		// It should be 404.
 		$this->assertQueryTrue( 'is_404' );
 	}
 
@@ -174,6 +154,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to term feed again.
 		$this->go_to( $feed_link );
 
-		$this->assertTrue( self::$class_instance->is_feed_404( false ) );
+		// It should be 404.
+		$this->assertQueryTrue( 'is_404' );
 	}
 }
