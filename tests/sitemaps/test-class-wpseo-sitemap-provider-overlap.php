@@ -49,20 +49,23 @@ class Test_WPSEO_Sitemap_Provider_Overlap extends WPSEO_UnitTestCase {
 		$user_id = $this->factory->user->create( array( 'role' => 'author' ) );
 		$this->factory->post->create_many( 1, array( 'post_author' => $user_id ) );
 
-		// Fetch the global sitemap.
+		// Fetch the author sitemap.
 		set_query_var( 'sitemap', 'author' );
 
-		$author_sitemap = new WPSEO_Author_Sitemap_Provider();
-		$links = $author_sitemap->get_sitemap_links( 'author', 1, 1 );
-		fwrite( STDERR, var_export( $links, true ) );
-		 
 		// Load the sitemap.
-		self::$class_instance->redirect( $GLOBALS['wp_the_query'] );
-
+ 		self::$class_instance->redirect( $GLOBALS['wp_the_query'] );
+/*		$author_sitemap = new WPSEO_Author_Sitemap_Provider();
+		$sitemap_links  = $author_sitemap->get_sitemap_links( 'author', 1, 1 );
+		
+		fwrite( STDERR, var_export( $links, true ) );
+		$this->assertContains( get_author_posts_url( $user_id ), $sitemap_links[0] );
+*/
 		// Expect the author-sitemap to be present in the index.
-		$this->expectOutputContains(
-			'<loc>http://example.org/author-sitemap.xml</loc>'
+ 		$this->expectOutputContains(
+			get_author_posts_url( $user_id )
 		);
+
+		// Remove the author taxonomy.
 		unregister_taxonomy( 'author' );
 	}
 }
