@@ -40,17 +40,14 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to default feed.
 		$this->go_to( get_feed_link() );
 
-		$this->assertTrue( self::$class_instance->is_main_feed() );
+		// Verify the query object is a feed.
+		$this->assertQueryTrue( 'is_feed' );
 
 		// Go to comment feed.
 		$this->go_to( get_feed_link( 'comments_rss2' ) );
 
-		$this->assertTrue( self::$class_instance->is_main_feed() );
-
-		// Go to home page.
-		$this->go_to_home();
-
-		$this->assertFalse( self::$class_instance->is_main_feed() );
+		// Verify the query object is a feed.
+		$this->assertQueryTrue( 'is_comment_feed', 'is_feed' );
 	}
 
 	/**
@@ -109,15 +106,12 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 	/**
 	 * Tests feed with query string.
-	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
-	 * @covers WPSEO_Handle_404::is_feed_404()
 	 */
 	public function test_query_string_feed() {
 		$this->go_to( '/?feed=rss2' );
 
-		$this->assertTrue( self::$class_instance->is_main_feed() );
-		$this->assertFalse( self::$class_instance->is_feed_404( false ) );
+		// Verify the query object is a feed.
+		$this->assertQueryTrue( 'is_feed' );
 	}
 
 	/**
@@ -131,13 +125,11 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		);
 
 		$is_taxonomy = 'is_tax';
-		switch ( $taxonomy ) {
-			case 'category':
-				$is_taxonomy = 'is_category';
-				break;
-			case 'post_tag':
-				$is_taxonomy = 'is_tag';
-				break;
+		if ( $taxonomy === 'category' ) {
+			$is_taxonomy = 'is_category';
+		}
+		elseif ( $taxonomy === 'post_tag' ) {
+			$is_taxonomy = 'is_tag';
 		}
 
 		$feed_link = get_term_feed_link( $term->term_id, $term->taxonomy );
