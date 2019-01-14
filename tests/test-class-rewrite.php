@@ -107,6 +107,7 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 		$front_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
 		$blog_prefix .= ltrim( $front_prefix, '/' );
 		
+		
 		fwrite( STDERR, 'Blog prefix = ' . $blog_prefix . ' ' . $wp_rewrite->front );
 
 		$category_rewrite_rules = array(
