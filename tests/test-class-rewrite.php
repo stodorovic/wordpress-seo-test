@@ -112,7 +112,7 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 
 		foreach( $categories as $category ) {
 			foreach( $category_rewrite_rules as $regex => $rule ) {
-				$regex2 = str_replace( '(%category%)', $blog_prefix . $category->slug, $match );
+				$regex2 = str_replace( '(%category%)', $blog_prefix . $category->slug, $regex );
 				$expected[ $regex2 ] = $rule;
 			}
 		}
@@ -123,7 +123,12 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 
 		$this->assertEquals( $expected, $c->category_rewrite_rules() );
 	}
-	
+
+	/**
+	 * Retrieves category base.
+	 *
+	 * @return string
+	 */
 	private function get_category_base() {
 		$category_base = get_option( 'category_base' );
 
