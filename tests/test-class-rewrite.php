@@ -88,6 +88,16 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 		// @todo Find method to test redirects.
 	}
 
+	public function test_category_rewrite_rules_with_frontend() {
+		$this->set_permalink_structure( '/blog/%postname%/' );
+		create_initial_taxonomies();
+
+		$this->test_category_rewrite_rules();
+
+		$this->set_permalink_structure( '/%postname%/' );
+		create_initial_taxonomies();
+	}
+
 	/**
 	 * @covers WPSEO_Rewrite::category_rewrite_rules
 	 */
@@ -101,6 +111,8 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 
 		$blog_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
 		$blog_prefix = ltrim( $blog_prefix, '/' );
+		
+		fwrite( STDERR, 'Blog prefix = ' . $blog_prefix );
 
 		$category_rewrite_rules = array(
 			'(%category%)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
