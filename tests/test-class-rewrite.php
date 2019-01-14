@@ -53,21 +53,11 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_no_category_base() {
 
-		$input         = 'http://yoast.com/cat/link/';
-		$category_base = get_option( 'category_base' );
+		$input = 'http://yoast.com/cat/link/';
 
-		if ( empty( $category_base ) ) {
-			$category_base = 'category';
-		}
+		$category_base_regex = preg_quote( $this->get_category_base(), '`' );
 
-		// Remove initial slash, if there is one (we remove the trailing slash in the regex replacement and don't want to end up short a slash).
-		if ( '/' === substr( $category_base, 0, 1 ) ) {
-			$category_base = substr( $category_base, 1 );
-		}
-
-		$category_base .= '/';
-
-		$expected = preg_replace( '`' . preg_quote( $category_base, '`' ) . '`u', '', $input, 1 );
+		$expected = preg_replace( '`' . $category_base_regex . '`u', '', $input, 1 );
 		$this->assertEquals( $expected, self::$class_instance->no_category_base( $input ) );
 	}
 
@@ -89,7 +79,7 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 	}
 
 	public function test_category_rewrite_rules_with_frontend() {
-		$this->set_permalink_structure( '/blog/%postname%/' );
+		$this->set_permalink_structure( '/front/%postname%/' );
 		create_initial_taxonomies();
 
 		$this->test_category_rewrite_rules();
@@ -109,8 +99,13 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 		$categories          = get_categories( array( 'hide_empty' => false ) );
 		$permalink_structure = get_option( 'permalink_structure' );
 
-		$blog_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
-		$blog_prefix = ltrim( $blog_prefix, '/' );
+		$blog_prefix = '';
+		if ( ! ( is_multisite() && 0 === strpos( $permalink_structure, '/blog/' ) ) ) {
+			$blog_prefix = 'blog/';
+		}
+
+		$front_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
+		$blog_prefix .= ltrim( $front_prefix, '/' );
 		
 		fwrite( STDERR, 'Blog prefix = ' . $blog_prefix );
 
