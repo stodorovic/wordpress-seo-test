@@ -92,32 +92,50 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Rewrite::category_rewrite_rules
 	 */
 	public function test_category_rewrite_rules() {
+		global $wp_rewrite;
 
 		$c = self::$class_instance;
 
-		//$categories          = get_categories( array( 'hide_empty' => false ) );
+		$categories          = get_categories( array( 'hide_empty' => false ) );
 		$permalink_structure = get_option( 'permalink_structure' );
 
-		if ( ! ( is_multisite() && 0 === strpos( $permalink_structure, '/blog/' ) ) ) {
-			$expected = array(
-				'(uncategorized)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
-				'(uncategorized)/page/?([0-9]{1,})/?$' => 'index.php?category_name=$matches[1]&paged=$matches[2]',
-				'(uncategorized)/?$'                   => 'index.php?category_name=$matches[1]',
-			);
-		}
-		else {
-			$expected = array(
-				'blog/(uncategorized)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
-				'blog/(uncategorized)/page/?([0-9]{1,})/?$' => 'index.php?category_name=$matches[1]&paged=$matches[2]',
-				'blog/(uncategorized)/?$'                   => 'index.php?category_name=$matches[1]',
-			);
+		$blog_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
+		$blog_prefix = ltrim( $blog_prefix, '/' );
+
+		$category_rewrite_rules = array(
+			'(%category%)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
+			'(%category%)/page/?([0-9]{1,})/?$' => 'index.php?category_name=$matches[1]&paged=$matches[2]',
+			'(%category%)/?$'                   => 'index.php?category_name=$matches[1]',
+		);
+
+		$expected = array();
+
+		foreach( $categories as $category ) {
+			foreach( $category_rewrite_rules as $regex => $rule ) {
+				$regex2 = str_replace( '(%category%)', $blog_prefix . $category->slug, $match );
+				$expected[ $regex2 ] = $rule;
+			}
 		}
 
-		global $wp_rewrite;
 		$old_base = trim( str_replace( '%category%', '(.+)', $wp_rewrite->get_category_permastruct() ), '/' );
 
 		$expected[ $old_base . '$' ] = 'index.php?wpseo_category_redirect=$matches[1]';
 
 		$this->assertEquals( $expected, $c->category_rewrite_rules() );
+	}
+	
+	private function get_category_base() {
+		$category_base = get_option( 'category_base' );
+
+		if ( empty( $category_base ) ) {
+			$category_base = 'category';
+		}
+
+		// Remove initial slash, if there is one (we remove the trailing slash in the regex replacement and don't want to end up short a slash).
+		if ( '/' === substr( $category_base, 0, 1 ) ) {
+			$category_base = substr( $category_base, 1 );
+		}
+
+		return $category_base . '/';
 	}
 }

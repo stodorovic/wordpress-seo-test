@@ -104,7 +104,7 @@ class WPSEO_Rewrite {
 			$catlink = trailingslashit( get_option( 'home' ) ) . user_trailingslashit( $query_vars['wpseo_category_redirect'], 'category' );
 
 			header( 'X-Redirect-By: Yoast SEO' );
-			wp_redirect( $catlink, 301 );
+			wp_redirect( $catlink, 301, 'Yoast SEO' );
 			exit;
 		}
 
@@ -127,6 +127,10 @@ class WPSEO_Rewrite {
 		$blog_prefix = '';
 		if ( is_multisite() && ! is_subdomain_install() && is_main_site() && 0 === strpos( $permalink_structure, '/blog/' ) ) {
 			$blog_prefix = 'blog/';
+		}
+
+		if ( $wp_rewrite->front !== '/' ) {
+			$blog_prefix .= ltrim( $wp_rewrite->front, '/' );
 		}
 
 		$categories = get_categories( array( 'hide_empty' => false ) );
