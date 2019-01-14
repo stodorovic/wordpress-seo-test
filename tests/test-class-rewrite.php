@@ -100,14 +100,14 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 		$permalink_structure = get_option( 'permalink_structure' );
 
 		$blog_prefix = '';
-		if ( ! ( is_multisite() && 0 === strpos( $permalink_structure, '/blog/' ) ) ) {
+		if ( is_multisite() && 0 === strpos( $permalink_structure, '/blog/' ) ) {
 			$blog_prefix = 'blog/';
 		}
 
 		$front_prefix = str_replace( $this->get_category_base() . '%category%', '', $wp_rewrite->get_category_permastruct() );
 		$blog_prefix .= ltrim( $front_prefix, '/' );
 		
-		fwrite( STDERR, 'Blog prefix = ' . $blog_prefix );
+		fwrite( STDERR, 'Blog prefix = ' . $blog_prefix . ' ' . $wp_rewrite->front );
 
 		$category_rewrite_rules = array(
 			'(%category%)/(?:feed/)?(feed|rdf|rss|rss2|atom)/?$' => 'index.php?category_name=$matches[1]&feed=$matches[2]',
