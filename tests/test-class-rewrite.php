@@ -112,7 +112,10 @@ class WPSEO_Rewrite_Test extends WPSEO_UnitTestCase {
 
 		foreach( $categories as $category ) {
 			foreach( $category_rewrite_rules as $regex => $rule ) {
-				$regex2 = str_replace( '(%category%)', $blog_prefix . $category->slug, $regex );
+
+				$slug_regex = $blog_prefix . '(' . $category->slug . ')';
+				$regex2     = str_replace( '(%category%)', $slug_regex, $regex );
+
 				$expected[ $regex2 ] = $rule;
 			}
 		}
