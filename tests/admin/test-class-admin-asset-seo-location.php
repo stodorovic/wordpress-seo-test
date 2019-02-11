@@ -16,7 +16,7 @@ final class Test_WPSEO_Admin_Asset_SEO_Location extends PHPUnit_Framework_TestCa
 	 * @covers WPSEO_Admin_Asset_SEO_Location::get_url()
 	 */
 	public function test_get_url() {
-		$asset = new WPSEO_Admin_Asset( array(
+		$asset_args = array(
 			'name'      => 'name',
 			'src'       => 'src',
 			'deps'      => array( 'deps' ),
@@ -25,10 +25,11 @@ final class Test_WPSEO_Admin_Asset_SEO_Location extends PHPUnit_Framework_TestCa
 			'in_footer' => false,
 			'suffix'    => '.suffix',
 			'rtl'       => false,
-		) );
+		);
+		$asset      = new WPSEO_Admin_Asset( $asset_args );
 
-		$expected_js    = home_url() . '/wp-content/plugins/wordpress-seo/js/dist/src.suffix.js';
-		$expected_css   = home_url() . '/wp-content/plugins/wordpress-seo/css/dist/src.suffix.css';
+		$expected_js    = home_url() . '/wp-content/plugins/wordpress-seo-test/js/dist/src.suffix.js';
+		$expected_css   = home_url() . '/wp-content/plugins/wordpress-seo-test/css/dist/src.suffix.css';
 		$expected_empty = '';
 
 		$location = new WPSEO_Admin_Asset_SEO_Location( WPSEO_FILE );

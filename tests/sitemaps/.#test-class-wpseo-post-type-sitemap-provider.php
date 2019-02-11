@@ -1,1 +1,0 @@
-Pripravnik@JELENA.928

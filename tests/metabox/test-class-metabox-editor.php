@@ -34,7 +34,7 @@ class WPSEO_Metabox_Editor_Test extends PHPUnit_Framework_TestCase {
 	}
 
 	public function test_add_css_inside_editor_empty() {
-		$expected = home_url() . '/wp-content/plugins/wordpress-seo/css/dist/inside-editor-' . $this->get_flat_version() . WPSEO_CSSJS_SUFFIX . '.css';
+		$expected = home_url() . '/wp-content/plugins/wordpress-seo-test/css/dist/inside-editor-' . $this->get_flat_version() . WPSEO_CSSJS_SUFFIX . '.css';
 
 		$actual = $this->subject->add_css_inside_editor( '' );
 
@@ -42,7 +42,7 @@ class WPSEO_Metabox_Editor_Test extends PHPUnit_Framework_TestCase {
 	}
 
 	public function test_add_css_inside_editor_preexisting() {
-		$expected = 'preexisting,' . home_url() . '/wp-content/plugins/wordpress-seo/css/dist/inside-editor-' . $this->get_flat_version() . WPSEO_CSSJS_SUFFIX . '.css';
+		$expected = 'preexisting,' . home_url() . '/wp-content/plugins/wordpress-seo-test/css/dist/inside-editor-' . $this->get_flat_version() . WPSEO_CSSJS_SUFFIX . '.css';
 
 		$actual = $this->subject->add_css_inside_editor( 'preexisting' );
 
