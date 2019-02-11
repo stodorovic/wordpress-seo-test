@@ -4,9 +4,9 @@ Donate link: https://yoa.st/1up
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 Tags: SEO, XML sitemap, Google Search Console, Content analysis, Readability
-Requires at least: 4.8
-Tested up to: 5.0
-Stable tag: 9.2.1
+Requires at least: 4.9
+Tested up to: 5.0.3
+Stable tag: 9.5
 Requires PHP: 5.2.4
 
 Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.
@@ -106,90 +106,40 @@ You'll find answers to many of your questions on [kb.yoast.com](https://yoa.st/1
 
 == Changelog ==
 
-= 9.3.0 =
-Release Date: December 11th, 2018
+= 9.7.0 =
+Release Date: February 26th, 2019
 
-Enhancements:
+## Enhancements:
 
-* Changes the output of schema preventing unnecessary escaping of forward slashes, only available on sites running PHP 5.4 or higher.
-* Changes the website schema `@id` attribute to include the home URL to be a unique identifier.
-* Adds the page number to the breadcrumbs when an archived page is entered.
-* Removes a redundant Edge-specific CSS fix for the tooltips in the post overview. Props [mkronenfeld](https://github.com/mkronenfeld).
-* When the recalibration feature flag is switched on, the single title assessment is added. This assessment makes sure that you don't use superfluous H1s in your text.
+* Replaces inch marks by smart quotes in search breadcrumbs.
+* Improves the feedback for the assessment that checks the length of cornerstone articles.
+* Improves accessibility and focus management for the How-To and FAQ structured data blocks.
+* Improves the Internal Links table headers on the post overview for better translations and accessibility.
+* Adds a description of the SEO and Readability score to the posts and taxonomies overview in mobile view.
+* Adds a label element to the Google Search Console authorisation code input field in the configuration wizard.
 
-Bugfixes:
+## Bugfixes:
 
-* Fixes a bug where the 'Select primary category' label in the primary taxonomy picker would overlap the 'Add new category' button.
-* Fixes a bug where the cornerstone filter was still visible with the metabox disabled.
-* Fixes a bug where non-functional markers are shown for taxonomy pages.
-* Fixes a bug where the `og:description` tag would remain empty after setting the author description.
-* Fixes a bug where texts in the configuration wizard would overlap each other and break out of the columns in Internet Explorer 11. Props [DrGrimshaw](https://github.com/DrGrimshaw).
-* Fixes a bug where keyphrases weren't recognized in the URL when the words in the URL were separated by underscore characters instead of hyphens.
+* Fixes a bug where a Flesch reading ease score of exactly 90 would trigger incorrect feedback.
+* Fixes a bug where the taxonomy sitemap provider would not handle private taxonomies as expected, resulting in sitemaps not being accessible in specific situations.
+* Fixes a bug where an empty twitter description instead of the term description would be shown.
+* Fixes a bug where undefined warnings would be given when saving a Facebook image.
 
-Other:
+= 9.6.0 =
+Release Date: February 12th, 2019
 
-* Adds a toggle feature for subscribing to the recalibration beta under SEO->General->Features.
-* When the recalibration feature flag is switched on, the following assessments have a changed behavior:
-  * Keyphrase density: changes scoring schema to account for the length of the keyphrase and changes feedback strings so that we give feedback about the number of occurrences rather than a percentage.
-  * Outbound links assessment: changes the scoring schema so that red bullet instead of an orange bullet is shown when you have no outbound links.
-  * Image alt attributes: if there are at least 5 images, checks whether the alt tags contain the keyphrase or synoynyms in 30-70% of all images. If there are less than 5 images, 1 image with the keyphrase or synonym in the alt tag is still scored as good.
-  * Keyphrase in title: function words preceding the exact match keyphrase are ignored when determining the position of the keyphrase in the title.
-* Keyphrase length: makes the scoring scheme less strict for languages that don't have function word support, so that for these languages keyphrases with 1-6 words are scored as green, 7-9 as orange, and more than 9 as red.
-  * Keyphrase in subheading: only takes H2 and H3 level subheadings into account and changes the scoring schema so that 30%-75% of these subheadings need to include the keyphrase or its synonyms. In languages without function word support, a match is only counted if all the words from the keyphrase/synonym appear in the subheading.
-  * Text length: on taxonomy pages, the recommended minimum text length is increased from 150 to 250 words.
-* When the recalibration feature flag is switched on, the following assments are not used anymore:
-  * The assessment checking the length or your URL.
-  * The assessment checking whether your URL contains stopwords.
-* Shows a notice about the analyses, when the recalibration beta is enabled.
-* Shows a notice about stale content, when the recalibration beta is enabled.
-* Shows a notice when recalibration beta has not been enabled yet.
+## Enhancements:
 
-= 9.2.1 =
-Release Date: November 21th, 2018
+* Removes schema (JSON+LD) output from 404 pages.
+* Improves the Google Search Console table accessibility by removing a duplicate button.
+* Improves the code to better comply to the coding standards.
 
-Bugfixes:
+## Bugfixes:
 
-* Fixes a bug where the title and meta description field's cursor would jump to the start when typing.
+* Fixes a bug where an empty feed would be available for non-existing pages. Props [stodorovic](https://github.com/stodorovic).
+* Prevents `vendor_prefix/j4mie/idiorm/demo.php` from being included in the release.
 
-= 9.2.0 =
-Release Date: November 20th, 2018
+## Other:
 
-Enhancements:
-
-* Adds support for the 'eye' markers in Gutenberg using the experimental annotations API in Gutenberg. They will work for the paragraph, quote, heading and list blocks.
-* Adds the latest og:locale options provided by Facebook. Props to [valtlfelipe](https://github.com/valtlfelipe)
-* Adds support for oEmbed utilization of Yoast custom fields (post meta) values. Specifically the image and the title. Props to [ben-caplan](https://github.com/ben-caplan)
-* Defines attachment as non-accessible when attachment urls are redirected to the attachment file itself. Props to [stodorovic](https://github.com/stodorovic)
-* Improves the accessibility of the "Bulk editor" and "Search console" tables.
-* Hides SEO title and meta description fields on the author edit page when the author archives are disabled.
-* Replaces Settings ZIP download (export) and upload (import) functionality with Settings fields.
-
-Bugfixes:
-
-* Fixes a bug where assessments would fail if a "<" character is present in the content.
-* Fixes a bug where the excerpt replacement variable will output a piece of the post content when no excerpt is given.
-* Fixes a bug where the wrong title is rendered for the WooCommerce product archive.
-* Fixes a bug where the Yoast metabox is visible even when the attachment urls are redirected to the attachment file itself.
-* Fixes a bug where the Dashboard Widget was not displayed in the correct language.
-* Fixes a bug in combination with Gutenberg where paragraphs were sometimes not correctly detected because paragraph tags were not automatically added in WordPress-like fashion.
-* Fixes a bug in combination with Gutenberg where multiple marker buttons could be active at the same time.
-* Fixes a bug in combination with Gutenberg where escaped HTML is shown in the OpenGraph description.
-
-Compatibility:
-
-* Adds the `__block_editor_compatible_meta_box` flag to our metabox registrations to indicate they are compatible with WordPress 5.0.
-* Revise the enqueue order of the JavaScript assets to ensure compatibility with the classic editor plugin and WordPress 5.0.
-
-Security:
-
-* Fixes a possible command execution by users with SEO Manager roles. Props to [Dimopoulos Elias](https://twitter.com/gweeperx)
-
-Other:
-
-* Disables the non-functioning markers for the subheading distribution assessment.
-* Refactor SEO assessment filenames and exports. Props to [Kingdutch](https://github.com/Kingdutch)
-* Deprecates the `Yoast_Modal` class.
-
-= Earlier versions =
-
-For the changelog of earlier versions, please refer to https://yoa.st/yoast-seo-changelog
+* Props to [Kingdutch](https://github.com/Kingdutch) for helping improve our open source content analysis library.
+* Improves the redirect upsell when user clicks on create redirect in the search console overview.

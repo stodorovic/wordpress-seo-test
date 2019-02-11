@@ -15,7 +15,7 @@ if ( ! function_exists( 'add_filter' ) ) {
  * {@internal Nobody should be able to overrule the real version number as this can cause
  *            serious issues with the options, so no if ( ! defined() ).}}
  */
-define( 'WPSEO_VERSION', '9.4-beta1' );
+define( 'WPSEO_VERSION', '9.7-beta1' );
 
 
 if ( ! defined( 'WPSEO_PATH' ) ) {
@@ -329,6 +329,7 @@ function wpseo_init() {
 	$integrations   = array();
 	$integrations[] = new WPSEO_Slug_Change_Watcher();
 	$integrations[] = new WPSEO_Structured_Data_Blocks();
+	$integrations[] = new WPSEO_Courses_Overview();
 
 	foreach ( $integrations as $integration ) {
 		$integration->register_hooks();
@@ -338,12 +339,10 @@ function wpseo_init() {
 	$wpseo_onpage = new WPSEO_OnPage();
 	$wpseo_onpage->register_hooks();
 
-	$wpseo_content_images = new WPSEO_Content_Images();
-	$wpseo_content_images->register_hooks();
-
 	// When namespaces are not available, stop further execution.
-	if ( version_compare( PHP_VERSION, '5.3.0', '>=' ) ) {
+	if ( version_compare( PHP_VERSION, '5.6.0', '>=' ) ) {
 		require_once WPSEO_PATH . 'src/loaders/indexable.php';
+		require_once WPSEO_PATH . 'src/loaders/oauth.php';
 	}
 }
 
@@ -425,29 +424,41 @@ function wpseo_admin_init() {
  */
 function wpseo_cli_init() {
 	if ( WPSEO_Utils::is_yoast_seo_premium() ) {
-		WP_CLI::add_command( 'yoast redirect list', 'WPSEO_CLI_Redirect_List_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect list',
+			'WPSEO_CLI_Redirect_List_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 
-		WP_CLI::add_command( 'yoast redirect create', 'WPSEO_CLI_Redirect_Create_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect create',
+			'WPSEO_CLI_Redirect_Create_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 
-		WP_CLI::add_command( 'yoast redirect update', 'WPSEO_CLI_Redirect_Update_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect update',
+			'WPSEO_CLI_Redirect_Update_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 
-		WP_CLI::add_command( 'yoast redirect delete', 'WPSEO_CLI_Redirect_Delete_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect delete',
+			'WPSEO_CLI_Redirect_Delete_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 
-		WP_CLI::add_command( 'yoast redirect has', 'WPSEO_CLI_Redirect_Has_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect has',
+			'WPSEO_CLI_Redirect_Has_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 
-		WP_CLI::add_command( 'yoast redirect follow', 'WPSEO_CLI_Redirect_Follow_Command', array(
-			'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce',
-		) );
+		WP_CLI::add_command(
+			'yoast redirect follow',
+			'WPSEO_CLI_Redirect_Follow_Command',
+			array( 'before_invoke' => 'WPSEO_CLI_Premium_Requirement::enforce' )
+		);
 	}
 
 	// Only add the namespace if the required base class exists (WP-CLI 1.5.0+).
@@ -508,7 +519,7 @@ if ( ! wp_installing() && ( $spl_autoload_exists && $filter_exists ) ) {
 		add_action( 'plugins_loaded', 'wpseo_cli_init', 20 );
 	}
 
-	add_filter( 'phpcompat_whitelist', 'yoast_wpseo_phpcompat_whitelist' );
+	add_filter( 'phpcompat_whitelist', 'yoast_free_phpcompat_whitelist' );
 }
 
 // Activation and deactivation hook.
@@ -628,7 +639,7 @@ function yoast_wpseo_self_deactivate() {
 }
 
 /**
- * Excludes vendor directories from php-compatibility-checker.
+ * Excludes specific files from php-compatibility-checker.
  *
  * @since 9.4
  *
@@ -636,8 +647,16 @@ function yoast_wpseo_self_deactivate() {
  *
  * @return array Array of ignored directories/files.
  */
-function yoast_wpseo_phpcompat_whitelist( $ignored ) {
-	$ignored[] = '*/wordpress-seo/vendor*';
+function yoast_free_phpcompat_whitelist( $ignored ) {
+	$path = '*/' . basename( WPSEO_PATH ) . '/';
+
+	// To prevent: (warning) File has mixed line endings; this may cause incorrect results.
+	$ignored[] = $path . 'vendor/ruckusing/lib/Ruckusing/FrameworkRunner.php';
+	$ignored[] = $path . 'vendor_prefixed/ruckusing/lib/Ruckusing/FrameworkRunner.php';
+
+	// To prevent: (error) Extension 'sqlite' is removed since PHP 5.4. Ignoring because we are not using the sqlite functionality.
+	$ignored[] = $path . 'vendor/ruckusing/lib/Ruckusing/Adapter/Sqlite3/Base.php';
+	$ignored[] = $path . 'vendor_prefixed/ruckusing/lib/Ruckusing/Adapter/Sqlite3/Base.php';
 
 	return $ignored;
 }

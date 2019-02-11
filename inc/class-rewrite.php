@@ -129,10 +129,6 @@ class WPSEO_Rewrite {
 			$blog_prefix = 'blog/';
 		}
 
-		if ( $wp_rewrite->front !== '/' ) {
-			$blog_prefix .= ltrim( $wp_rewrite->front, '/' );
-		}
-
 		$categories = get_categories( array( 'hide_empty' => false ) );
 		if ( is_array( $categories ) && $categories !== array() ) {
 			foreach ( $categories as $category ) {

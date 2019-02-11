@@ -9,6 +9,10 @@
  * Class WPSEO_OpenGraph_Image
  */
 class WPSEO_OpenGraph_Image {
+
+	/**
+	 * @var string
+	 */
 	const EXTERNAL_IMAGE_ID = '-1';
 
 	/**
@@ -104,7 +108,7 @@ class WPSEO_OpenGraph_Image {
 	 *
 	 * @return WPSEO_Frontend_Page_Type
 	 */
-	private function get_frontend_page_type() {
+	protected function get_frontend_page_type() {
 		if ( ! isset( $this->frontend_page_type ) ) {
 			$this->frontend_page_type = new WPSEO_Frontend_Page_Type();
 		}

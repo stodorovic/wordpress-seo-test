@@ -1,6 +1,9 @@
 language: php
-dist: trusty
+dist: xenial
 sudo: false
+
+services:
+  - mysql
 
 branches:
   only:
@@ -12,42 +15,38 @@ branches:
     # Also build tags like 1.1.1 or 1.1 for deployment.
     - /^\d+\.\d+(\.\d+)?(-\S*)?$/
 
+stages:
+  # Don't run the test steps on tag builds, this makes tag deployments a ton faster.
+  - name: test
+    if: NOT tag is present
+  - 🚀 deployment
+
 jobs:
   fast_finish: true
   include:
     - php: 7.3
-      env: WP_VERSION=5.0 WP_MULTISITE=1 PHPLINT=1 PHPCS=1 CHECKJS=1 TRAVIS_NODE_VERSION=node
+      env: WP_VERSION=latest PHPLINT=1 PHPCS=1 CHECKJS=1 TRAVIS_NODE_VERSION=node
     - php: 7.3
-      env: WP_VERSION=5.0 WP_MULTISITE=1 COVERAGE=1
-    - php: 5.2
-      # As 'trusty' is not supporting PHP 5.2/5.3 anymore, we need to force using 'precise'.
-      dist: precise
-      env: WP_VERSION=4.8 WP_MULTISITE=1 PHPLINT=1
-    - php: 5.3
-      # As 'trusty' is not supporting PHP 5.2/5.3 anymore, we need to force using 'precise'.
-      dist: precise
-      env: WP_VERSION=5.0
+      env: WP_VERSION=latest WP_MULTISITE=1 COVERAGE=1
     - php: 5.6
-      env: WP_VERSION=5.0
-    - php: 7.0
-      env: WP_VERSION=5.0
+      env: WP_VERSION=latest PHPUNIT=1
+      # Use 'trusty' to test against MySQL 5.6, 'xenial' contains 5.7 by default.
+      dist: trusty
     - php: 5.2
       # As 'trusty' is not supporting PHP 5.2/5.3 anymore, we need to force using 'precise'.
       dist: precise
-      env: WP_VERSION=master
+      env: WP_VERSION=4.9 WP_MULTISITE=1 PHPLINT=1 PHPUNIT=1
+    - php: 7.3
+      env: WP_VERSION=master PHPUNIT=1
     - php: nightly
-      env: WP_VERSION=master
+      env: WP_VERSION=latest PHPUNIT=1
 
   allow_failures:
     # Allow failures for unstable builds.
     - php: nightly
-    - env: WP_VERSION=master
-
-# Git clone depth
-# By default Travis CI clones repositories to a depth of 50 commits
-git:
-  depth: 1
-
+      env: WP_VERSION=latest PHPUNIT=1
+    - php: 7.3
+      env: WP_VERSION=master PHPUNIT=1
 cache:
   yarn: true
   directories:
@@ -67,7 +66,7 @@ before_install:
   fi
 
 install:
-- if [[ $TRAVIS_PHP_VERSION == "5.2" || $TRAVIS_PHP_VERSION == "5.3" ]]; then phpenv local 5.6.13; fi
+- if [[ $TRAVIS_PHP_VERSION == "5.2" ]]; then phpenv local 5.6.13; fi
 - |
   if [[ ${TRAVIS_PHP_VERSION:0:1} == "7" || $TRAVIS_PHP_VERSION == "nightly" ]]; then
     composer remove humbug/php-scoper --dev --ignore-platform-reqs
@@ -81,7 +80,7 @@ install:
     composer install --no-dev --no-interaction --ignore-platform-reqs
   fi
 - composer dump-autoload
-- if [[ $TRAVIS_PHP_VERSION == "5.2" || $TRAVIS_PHP_VERSION == "5.3" ]]; then phpenv local --unset; fi
+- if [[ $TRAVIS_PHP_VERSION == "5.2" ]]; then phpenv local --unset; fi
 - |
   if [[ "$CHECKJS" == "1" ]]; then
     yarn global add grunt-cli
@@ -167,12 +166,16 @@ script:
 - |
   if [[ "$PHPCS" == "1" ]]; then
     travis_fold start "PHP.code-style" && travis_time_start
-    vendor/bin/phpcs -q --runtime-set ignore_warnings_on_exit 1
+    if [[ -d "premium" ]]; then
+      composer premium-check-cs
+    else
+      vendor/bin/phpcs -q --runtime-set ignore_warnings_on_exit 1
+    fi
     travis_time_finish && travis_fold end "PHP.code-style"
   fi
 # PHP Unit
 - |
-  if [[ "$COVERAGE" != "1" ]]; then
+  if [[ "$PHPUNIT" == "1" ]]; then
     travis_fold start "PHP.tests" && travis_time_start
     $PHPUNIT_BIN -c phpunit.xml
     travis_time_finish && travis_fold end "PHP.tests"
@@ -187,10 +190,9 @@ script:
   fi
 # Validate the composer.json file.
 # @link https://getcomposer.org/doc/03-cli.md#validate
-- if [[ $TRAVIS_PHP_VERSION == "5.3" || $TRAVIS_PHP_VERSION == "7.3" ]]; then composer validate --no-check-all; fi
+- if [[ $TRAVIS_PHP_VERSION == "5.6" || $TRAVIS_PHP_VERSION == "7.3" ]]; then composer validate --no-check-all; fi
 
 after_script:
-- if [[ "$COVERAGE" == "1" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT; fi
 
 notifications:
   email: false

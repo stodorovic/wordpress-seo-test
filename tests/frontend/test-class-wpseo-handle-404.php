@@ -11,11 +11,6 @@
 class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 
 	/**
-	 * @var Expose_WPSEO_Handle_404
-	 */
-	private static $class_instance;
-
-	/**
 	 * Sets the handle 404 object.
 	 *
 	 * @return void;
@@ -26,27 +21,20 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Reset permalink structure.
 		$this->set_permalink_structure( '/%postname%/' );
 		create_initial_taxonomies();
-
-		// Creates instance of WPSEO_Handle_404 class.
-		self::$class_instance = new Expose_WPSEO_Handle_404();
 	}
 
 	/**
 	 * Tests main feeds.
-	 *
-	 * @covers WPSEO_Handle_404::is_main_feed()
 	 */
 	public function test_main_feeds() {
 		// Go to default feed.
 		$this->go_to( get_feed_link() );
 
-		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_feed' );
 
 		// Go to comment feed.
 		$this->go_to( get_feed_link( 'comments_rss2' ) );
 
-		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_comment_feed', 'is_feed' );
 	}
 
@@ -60,7 +48,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to post comments feed.
 		$this->go_to( $feed_link );
 
-		// Verify the query object is a feed.
+		// Verify the query object is the feed.
 		$this->assertQueryTrue( 'is_comment_feed', 'is_feed', 'is_singular', 'is_single' );
 
 		// Delete post.
@@ -94,13 +82,11 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to search feed.
 		$this->go_to( get_search_feed_link( 'Lorem' ) );
 
-		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_feed', 'is_search' );
 
 		// Go to search (query string) feed.
 		$this->go_to( '/?s=Lorem&feed=rss2' );
 
-		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_feed', 'is_search' );
 	}
 
@@ -110,7 +96,6 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 	public function test_query_string_feed() {
 		$this->go_to( '/?feed=rss2' );
 
-		// Verify the query object is a feed.
 		$this->assertQueryTrue( 'is_feed' );
 	}
 
@@ -137,7 +122,7 @@ class WPSEO_Handle_404_Test extends WPSEO_UnitTestCase {
 		// Go to term feed.
 		$this->go_to( $feed_link );
 
-		// Verify the query object is a feed.
+		// Verify the query object is the feed.
 		$this->assertQueryTrue( 'is_feed', 'is_archive', $is_taxonomy );
 
 		// Delete term.
