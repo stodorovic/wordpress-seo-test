@@ -93,7 +93,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$this->assertContains( WPSEO_Utils::home_url(), $sitemap_links[0] );
 
 		$sitemap_links = $sitemap_provider->get_sitemap_links( 'post', 2, 1 );
-		$this->assertContains( get_post_type_archive_link( 'post' ), $sitemap_links[0] );
+		$this->assertContains( WPSEO_Utils::home_url(), $sitemap_links[0] );
 		$this->assertContains( get_permalink( $post_id ), $sitemap_links[1] );
 
 		update_option( 'show_on_front', $current_show_on_front );
