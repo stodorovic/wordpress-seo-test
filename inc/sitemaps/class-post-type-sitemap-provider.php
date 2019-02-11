@@ -113,11 +113,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 * @return string
 	 */
 	protected function get_home_url() {
-		if ( ! isset( self::$home_url ) ) {
-			self::$home_url = WPSEO_Utils::home_url();
-		}
-
-		return self::$home_url;
+		return WPSEO_Utils::home_url();
 	}
 
 	/**
