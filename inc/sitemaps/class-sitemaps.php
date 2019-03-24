@@ -587,11 +587,13 @@ class WPSEO_Sitemaps {
 	}
 
 	/**
-	 * Get post statuses for post_type or sitemap index.
+	 * Get post statuses for post_type or the root sitemap.
 	 *
-	 * @param string $type Post type or SITEMAP_INDEX_TYPE
+	 * @param string $type Provide a type for a post_type sitemap, SITEMAP_INDEX_TYPE for the root sitemap.
 	 *
-	 * @return array
+	 * @since 10.2
+	 *
+	 * @return array List of post statuses.
 	 */
 	public static function get_post_statuses( $type = self::SITEMAP_INDEX_TYPE ) {
 		/**
