@@ -589,7 +589,7 @@ class WPSEO_Sitemaps {
 	/**
 	 * Get post statuses for post_type or sitemap index.
 	 *
-	 * @param string Post type or SITEMAP_INDEX_TYPE
+	 * @param string $type Post type or SITEMAP_INDEX_TYPE
 	 *
 	 * @return array
 	 */
