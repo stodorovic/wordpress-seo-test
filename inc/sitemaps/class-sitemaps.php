@@ -175,7 +175,7 @@ class WPSEO_Sitemaps {
 	public function register_xsl( $name, $function, $rewrite = '' ) {
 		add_action( 'wpseo_xsl_' . $name, $function );
 		if ( ! empty( $rewrite ) ) {
-			add_rewrite_rule( $rewrite, 'index.php?xsl=' . $name, 'top' );
+			add_rewrite_rule( $rewrite, 'index.php?yoast_xsl=' . $name, 'top' );
 		}
 	}
 
@@ -230,9 +230,11 @@ class WPSEO_Sitemaps {
 			return;
 		}
 
-		$xsl = get_query_var( 'xsl' );
+		$yoast_xsl = get_query_var( 'yoast_xsl' );
 
-		if ( ! empty( $xsl ) ) {
+		if ( ! empty( $yoast_xsl ) &&
+			( $yoast_xsl === 'main' || has_action( 'wp_seo_' . $yoast_xsl ) )
+		) {
 			/*
 			 * This is a method to provide the XSL via the home_url.
 			 * Needed when the site_url and home_url are not the same.
@@ -240,7 +242,7 @@ class WPSEO_Sitemaps {
 			 *
 			 * Whenever home_url and site_url are the same, the file can be loaded directly.
 			 */
-			$this->xsl_output( $xsl );
+			$this->xsl_output( $yoast_xsl );
 			$this->sitemap_close();
 
 			return;
@@ -495,16 +497,10 @@ class WPSEO_Sitemaps {
 			$post_type_names = get_post_types( array( 'public' => true ) );
 
 			if ( ! empty( $post_type_names ) ) {
-				/**
-				 * Filter post status list for sitemap query for the post type.
-				 *
-				 * @param Array $post_status_names      Post status list, defaults to array( 'publish', 'inherit' ).
-				 */
-				$post_status_names = apply_filters( 'wpseo_sitemap_poststatus_lastmodified' , array( 'publish', 'inherit' ) );
 				$sql = "
 				SELECT post_type, MAX(post_modified_gmt) AS date
 				FROM $wpdb->posts
-				WHERE post_status IN ('" . implode( "','", array_map( 'esc_sql', $post_status_names ) ) . "')
+				WHERE post_status IN ('publish','inherit')
 					AND post_type IN ('" . implode( "','", $post_type_names ) . "')
 				GROUP BY post_type
 				ORDER BY post_modified_gmt DESC
