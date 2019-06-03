@@ -487,7 +487,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 *
 	 * @since 11.5
 	 *
-	 * @param string $post_type Post type.
+	 * @param string $post_type Post type name.
 	 * @param int    $page_id   The page id.
 	 *
 	 * @return bool
