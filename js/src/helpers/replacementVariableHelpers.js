@@ -8,7 +8,6 @@ import omit from "lodash/omit";
 import { updateReplacementVariable } from "../redux/actions/snippetEditor";
 import { firstToUpperCase } from "./stringHelpers";
 
-
 export const nonReplaceVars = [ "slug", "content" ];
 
 /**

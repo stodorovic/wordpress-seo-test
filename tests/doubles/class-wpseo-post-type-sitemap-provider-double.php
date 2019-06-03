@@ -11,6 +11,14 @@
 class WPSEO_Post_Type_Sitemap_Provider_Double extends WPSEO_Post_Type_Sitemap_Provider {
 
 	/**
+	 * Reset static variables.
+	 */
+	public function reset() {
+		self::$page_on_front_id  = null;
+		self::$page_for_posts_id = null;
+	}
+
+	/**
 	 * @inheritdoc
 	 */
 	public function get_url( $post ) {
@@ -27,7 +35,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Double extends WPSEO_Post_Type_Sitemap_Pr
 	/**
 	 * @inheritdoc
 	 */
-	public function get_excluded_posts() {
-		return parent::get_excluded_posts();
+	public function get_excluded_posts( $post_type ) {
+		return parent::get_excluded_posts( $post_type );
 	}
 }

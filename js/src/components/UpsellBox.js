@@ -3,9 +3,8 @@ import React from "react";
 import interpolateComponents from "interpolate-components";
 import PropTypes from "prop-types";
 import styled from "styled-components";
-import { utils } from "yoast-components";
+import { makeOutboundLink } from "@yoast/helpers";
 
-const { makeOutboundLink } = utils;
 
 const StyledList = styled.ul`
 	list-style: none;
@@ -100,6 +99,7 @@ class UpsellBox extends React.Component {
 					{ ...this.props.upsellButton }
 				>
 					{ this.props.upsellButtonText }
+					{ this.props.upsellButtonHasCaret && <span aria-hidden="true" className="yoast-button-upsell__caret" /> }
 				</UpsellButton>
 				<ButtonLabel id={ this.props.upsellButton[ "aria-describedby" ] }>
 					{ this.props.upsellButtonLabel }
@@ -115,6 +115,7 @@ UpsellBox.propTypes = {
 	upsellButton: PropTypes.object,
 	upsellButtonText: PropTypes.string.isRequired,
 	upsellButtonLabel: PropTypes.string,
+	upsellButtonHasCaret: PropTypes.bool,
 };
 
 UpsellBox.defaultProps = {
@@ -125,6 +126,7 @@ UpsellBox.defaultProps = {
 		className: "button button-primary",
 	},
 	upsellButtonLabel: "",
+	upsellButtonHasCaret: true,
 };
 
 export default UpsellBox;

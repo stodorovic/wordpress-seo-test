@@ -140,8 +140,9 @@ import { isGutenbergDataAvailable } from "./helpers/isGutenbergAvailable";
 			return;
 		}
 		const fetchedParents = { 0: "" };
-		let currentParent  = null;
-		const wpData       = window.wp.data;
+
+		let currentParent = null;
+		const wpData      = window.wp.data;
 		wpData.subscribe( () => {
 			const newParent = wpData.select( "core/editor" ).getEditedPostAttribute( "parent" );
 			if ( typeof newParent === "undefined" || currentParent === newParent ) {
@@ -158,19 +159,21 @@ import { isGutenbergDataAvailable } from "./helpers/isGutenbergAvailable";
 				this.declareReloaded();
 				return;
 			}
-			const page = new wp.api.models.Page( { id: newParent } );
-			page.fetch().then(
-				response => {
-					this._currentParentPageTitle = response.title.rendered;
-					fetchedParents[ newParent ]  = this._currentParentPageTitle;
-					this.declareReloaded();
-				}
-			).fail(
-				() => {
-					this._currentParentPageTitle = "";
-					this.declareReloaded();
-				}
-			);
+			wp.api.loadPromise.done( () => {
+				const page = new wp.api.models.Page( { id: newParent } );
+				page.fetch().then(
+					response => {
+						this._currentParentPageTitle = response.title.rendered;
+						fetchedParents[ newParent ]  = this._currentParentPageTitle;
+						this.declareReloaded();
+					}
+				).fail(
+					() => {
+						this._currentParentPageTitle = "";
+						this.declareReloaded();
+					}
+				);
+			} );
 		} );
 	};
 
@@ -220,8 +223,29 @@ import { isGutenbergDataAvailable } from "./helpers/isGutenbergAvailable";
 			// This order currently needs to be maintained until we can figure out a nicer way to replace this.
 			data = this.parentReplace( data );
 			data = this.replaceCustomTaxonomy( data );
+			data = this.replaceByStore( data );
 			data = this.replacePlaceholders( data );
 		}
+
+		return data;
+	};
+
+	/**
+	 * Runs the different replacements on the data-string.
+	 *
+	 * @param {string} data The data that needs its placeholders replaced.
+	 * @returns {string} The data with all its placeholders replaced by actual values.
+	 */
+	YoastReplaceVarPlugin.prototype.replaceByStore = function( data ) {
+		const replacementVariables = this._store.getState().snippetEditor.replacementVariables;
+
+		forEach( replacementVariables, ( replacementVariable ) => {
+			if ( replacementVariable.value === "" ) {
+				return;
+			}
+
+			data = data.replace( "%%"  + replacementVariable.name + "%%", replacementVariable.value );
+		} );
 
 		return data;
 	};
