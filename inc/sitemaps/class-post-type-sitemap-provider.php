@@ -475,7 +475,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			}
 		}
 
-		if ( $this->get_post_type_archive_robots_noindex( $post_type, $pt_archive_page_id ) ) {
+		if ( $this->has_post_type_archive_noindex( $post_type, $pt_archive_page_id ) ) {
 			return false;
 		}
 
@@ -483,16 +483,16 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	}
 
 	/**
-	 * Get robots noindex for a post type archive.
+	 * Get the robots noindex for a post type archive.
 	 *
 	 * @since 11.5
 	 *
-	 * @param string $post_type Post type name.
+	 * @param string $post_type Post type.
 	 * @param int    $page_id   The page id.
 	 *
 	 * @return bool
 	 */
-	protected function get_post_type_archive_robots_noindex( $post_type, $page_id = -1 ) {
+	protected function has_post_type_archive_noindex( $post_type, $page_id = -1 ) {
 
 		if ( WPSEO_Options::get( 'noindex-ptarchive-' . $post_type, false ) ) {
 			return true;
