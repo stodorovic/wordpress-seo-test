@@ -451,7 +451,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	/**
 	 * Get URL for a post type archive.
 	 *
-	 * @since  5.3
+	 * @since 5.3
 	 *
 	 * @param string $post_type Post type.
 	 *
@@ -483,14 +483,14 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	}
 
 	/**
-	 * Get the robots noindex for a post type archive.
+	 * Determines whether the robots noindex is set for a post type archive.
 	 *
 	 * @since 11.5
 	 *
 	 * @param string $post_type Post type.
 	 * @param int    $page_id   The page id.
 	 *
-	 * @return bool
+	 * @return bool True when the robots noindex exists.
 	 */
 	protected function has_post_type_archive_noindex( $post_type, $page_id = -1 ) {
 
