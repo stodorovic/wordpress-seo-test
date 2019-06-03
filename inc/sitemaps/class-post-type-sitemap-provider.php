@@ -453,7 +453,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 *
 	 * @since  5.3
 	 *
-	 * @param  string $post_type Post type.
+	 * @param string $post_type Post type.
 	 *
 	 * @return string|bool URL or false if it should be excluded.
 	 */
@@ -485,18 +485,19 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	/**
 	 * Get robots noindex for a post type archive.
 	 *
-	 * @since  11.5
+	 * @since 11.5
 	 *
-	 * @param  string $post_type Post type.
-	 * @param  int    $page_id
+	 * @param string $post_type Post type.
+	 * @param int    $page_id   The page id.
 	 *
-	 * @return bool true if noindex
+	 * @return bool
 	 */
 	protected function get_post_type_archive_robots_noindex( $post_type, $page_id = -1 ) {
 
 		if ( WPSEO_Options::get( 'noindex-ptarchive-' . $post_type, false ) ) {
 			return true;
 		}
+
 		/**
 		 * Filter the page which is dedicated to this post type archive.
 		 *
