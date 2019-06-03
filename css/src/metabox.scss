@@ -1,10 +1,8 @@
 @import "yoastseo";
-@import "help-center-metabox";
 @import "../../node_modules/draft-js-mention-plugin/lib/plugin";
 /*rtl:begin:ignore*/
 @import "../../node_modules/draft-js/dist/Draft";
 /*rtl:end:ignore*/
-@import "../../node_modules/yoast-components/css/loadingSpinner";
 
 @function svg-icon-list($color) {
 	@return inline-svg('<svg width="1792" height="1792" viewBox="0 0 1792 1792" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" focusable="false"><path fill="#{$color}" d="M384 1408q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm0-512q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm1408 416v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5zm-1408-928q0 80-56 136t-136 56-136-56-56-136 56-136 136-56 136 56 56 136zm1408 416v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5zm0-512v192q0 13-9.5 22.5t-22.5 9.5h-1216q-13 0-22.5-9.5t-9.5-22.5v-192q0-13 9.5-22.5t22.5-9.5h1216q13 0 22.5 9.5t9.5 22.5z"/></svg>');
@@ -99,6 +97,7 @@ ul.wpseo-metabox-tabs li.active {
 }
 
 .wpseo-metabox-content {
+	padding-top: 16px;
 	display: flex;
 }
 
@@ -599,40 +598,6 @@ ul.wpseo-metabox-tabs li.wpseo-tab-add-keyword {
 	border-bottom: 1px solid #eee;
 	font-size: 14px;
 	line-height: 1.4;
-}
-
-.wpseo-buy-premium {
-	color: #A4286A;
-	margin-right: 5px;
-}
-
-.wpseo-metabox-go-to {
-	&::after {
-		content: " \00BB";
-		position: static;
-		top: auto;
-		right: auto;
-		width: auto;
-		height: auto;
-		border: none;
-	}
-}
-
-#wpseo-buy-premium-popup-button.button-buy-premium {
-	background: #A4286A;
-	border-color: #A4286A;
-	color: #fff;
-}
-
-.wpseo-metabox-buy-premium {
-	position: absolute;
-	right: 12px;
-	top: 0;
-	padding: 8px 0; /* To have the same height of the `.yoast-help-center__button` button. */
-}
-
-.wpseo-metabox-buy-premium .dashicons {
-	text-decoration: none;
 }
 
 #TB_window {

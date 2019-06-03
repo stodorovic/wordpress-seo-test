@@ -9,7 +9,6 @@
  * Class that holds most of the admin functionality for Yoast SEO.
  */
 class WPSEO_Admin {
-
 	/**
 	 * The page identifier used in WordPress to register the admin page.
 	 *
@@ -18,7 +17,6 @@ class WPSEO_Admin {
 	 * @var string
 	 */
 	const PAGE_IDENTIFIER = 'wpseo_dashboard';
-
 	/**
 	 * Array of classes that add admin functionality.
 	 *
@@ -110,7 +108,7 @@ class WPSEO_Admin {
 		$integrations[] = new WPSEO_Expose_Shortlinks();
 		$integrations[] = new WPSEO_MyYoast_Proxy();
 		$integrations[] = new WPSEO_MyYoast_Route();
-		$integrations[] = new WPSEO_Addon_Manager();
+		$integrations[] = new WPSEO_Schema_Person_Upgrade_Notification();
 
 		$integrations = array_merge(
 			$integrations,
@@ -224,7 +222,7 @@ class WPSEO_Admin {
 		}
 
 		$addon_manager = new WPSEO_Addon_Manager();
-		if ( $addon_manager->has_valid_subscription( WPSEO_Addon_Manager::PREMIUM_SLUG ) ) {
+		if ( WPSEO_Utils::is_yoast_seo_premium() && $addon_manager->has_valid_subscription( WPSEO_Addon_Manager::PREMIUM_SLUG ) ) {
 			return $links;
 		}
 
@@ -258,25 +256,27 @@ class WPSEO_Admin {
 	}
 
 	/**
-	 * Filter the $contactmethods array and add Facebook, LinkedIn and Twitter.
+	 * Filter the $contactmethods array and add a set of social profiles.
 	 *
 	 * These are used with the Facebook author, rel="author" and Twitter cards implementation.
+	 *
+	 * @link https://developers.google.com/search/docs/data-types/social-profile
 	 *
 	 * @param array $contactmethods Currently set contactmethods.
 	 *
 	 * @return array $contactmethods with added contactmethods.
 	 */
 	public function update_contactmethods( $contactmethods ) {
-		// Add Facebook.
-		$contactmethods['facebook'] = __( 'Facebook profile URL', 'wordpress-seo' );
-		// Add Instagram.
-		$contactmethods['instagram'] = __( 'Instagram profile URL', 'wordpress-seo' );
-		// Add LinkedIn.
-		$contactmethods['linkedin'] = __( 'LinkedIn profile URL', 'wordpress-seo' );
-		// Add Pinterest.
-		$contactmethods['pinterest'] = __( 'Pinterest profile URL', 'wordpress-seo' );
-		// Add Twitter.
-		$contactmethods['twitter'] = __( 'Twitter username (without @)', 'wordpress-seo' );
+		$contactmethods['facebook']   = __( 'Facebook profile URL', 'wordpress-seo' );
+		$contactmethods['instagram']  = __( 'Instagram profile URL', 'wordpress-seo' );
+		$contactmethods['linkedin']   = __( 'LinkedIn profile URL', 'wordpress-seo' );
+		$contactmethods['myspace']    = __( 'MySpace profile URL', 'wordpress-seo' );
+		$contactmethods['pinterest']  = __( 'Pinterest profile URL', 'wordpress-seo' );
+		$contactmethods['soundcloud'] = __( 'SoundCloud profile URL', 'wordpress-seo' );
+		$contactmethods['tumblr']     = __( 'Tumblr profile URL', 'wordpress-seo' );
+		$contactmethods['twitter']    = __( 'Twitter username (without @)', 'wordpress-seo' );
+		$contactmethods['youtube']    = __( 'YouTube profile URL', 'wordpress-seo' );
+		$contactmethods['wikipedia']  = __( 'Wikipedia page about you', 'wordpress-seo' ) . '<br/><small>' . __( '(if one exists)', 'wordpress-seo' ) . '</small>';
 
 		return $contactmethods;
 	}
@@ -304,7 +304,8 @@ class WPSEO_Admin {
 			'variable_warning'        => sprintf( __( 'Warning: the variable %s cannot be used in this template. See the help center for more info.', 'wordpress-seo' ), '<code>%s</code>' ),
 			'dismiss_about_url'       => $this->get_dismiss_url( 'wpseo-dismiss-about' ),
 			'dismiss_tagline_url'     => $this->get_dismiss_url( 'wpseo-dismiss-tagline-notice' ),
-			'help_video_iframe_title' => __( 'Yoast SEO video tutorial', 'wordpress-seo' ),
+			/* translators: %s: expends to Yoast SEO */
+			'help_video_iframe_title' => sprintf( __( '%s video tutorial', 'wordpress-seo' ), 'Yoast SEO' ),
 			'scrollable_table_hint'   => __( 'Scroll to see the table content.', 'wordpress-seo' ),
 		);
 	}
@@ -354,7 +355,7 @@ class WPSEO_Admin {
 		}
 
 		return array(
-			'cornerstone_filter'   => new WPSEO_Cornerstone_Filter(),
+			'cornerstone_filter' => new WPSEO_Cornerstone_Filter(),
 		);
 	}
 

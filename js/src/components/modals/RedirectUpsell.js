@@ -1,8 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { __, sprintf } from "@wordpress/i18n";
-import { YoastModal } from "yoast-components";
-import YoastSeoIcon from "yoast-components/composites/basic/YoastSeoIcon";
+import { Modal, YoastSeoIcon } from "@yoast/components";
 
 import UpsellBox from "../UpsellBox";
 import { ModalContainer, ModalIcon } from "./Container";
@@ -110,7 +109,7 @@ class RedirectUpsell extends React.Component {
 		);
 
 		return (
-			<YoastModal
+			<Modal
 				isOpen={ this.state.isModalOpen }
 				onClose={ this.closeModal }
 				modalAriaLabel={ upsellText }
@@ -132,7 +131,7 @@ class RedirectUpsell extends React.Component {
 						upsellButtonLabel={ __( "1 year free support and updates included!", "wordpress-seo" ) }
 					/>
 				</ModalContainer>
-			</YoastModal>
+			</Modal>
 		);
 	}
 }

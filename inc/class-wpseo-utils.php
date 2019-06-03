@@ -57,7 +57,7 @@ class WPSEO_Utils {
 	 *
 	 * {@internal current_user_can() checks internally whether a user is on wp-ms and adjusts accordingly.}}
 	 *
-	 * @since    1.8.0
+	 * @since 1.8.0
 	 *
 	 * @return bool
 	 */
@@ -264,10 +264,10 @@ class WPSEO_Utils {
 	 *
 	 * Sanitize a string from user input or from the db.
 	 *
-	 * - Check for invalid UTF-8,
-	 * - Convert single < characters to entity,
-	 * - Strip all tags,
-	 * - Remove line breaks, tabs and extra white space,
+	 * - Check for invalid UTF-8;
+	 * - Convert single < characters to entity;
+	 * - Strip all tags;
+	 * - Remove line breaks, tabs and extra white space;
 	 * - Strip octets - BUT DO NOT REMOVE (part of) VARIABLES WHICH WILL BE REPLACED.
 	 *
 	 * @since 1.8.0
@@ -316,7 +316,7 @@ class WPSEO_Utils {
 	 * Sanitize a url for saving to the database.
 	 * Not to be confused with the old native WP function.
 	 *
-	 * @todo  [JRF => whomever] Check/improve url verification.
+	 * @todo [JRF => whomever] Check/improve url verification.
 	 *
 	 * @since 1.8.0
 	 *
@@ -946,9 +946,9 @@ class WPSEO_Utils {
 				<ellipse fill="#C8C8C8" cx="15" cy="36.1" rx="5.7" ry="5.6"/>
 			</g>
 			<g class="traffic-light-color traffic-light-init">
-				<ellipse fill="#5B2942" cx="15" cy="23.5" rx="5.7" ry="5.6"/>
-				<ellipse fill="#5B2942" cx="15" cy="10.9" rx="5.7" ry="5.6"/>
-				<ellipse fill="#5B2942" cx="15" cy="36.1" rx="5.7" ry="5.6"/>
+				<ellipse fill="#C8C8C8" cx="15" cy="23.5" rx="5.7" ry="5.6"/>
+				<ellipse fill="#C8C8C8" cx="15" cy="10.9" rx="5.7" ry="5.6"/>
+				<ellipse fill="#C8C8C8" cx="15" cy="36.1" rx="5.7" ry="5.6"/>
 			</g>
 		</g>
 	</g>
@@ -1072,7 +1072,6 @@ SVG;
 	 */
 	public static function get_admin_l10n() {
 		$wpseo_admin_l10n = array();
-		$wpseo_admin_l10n = array_merge( $wpseo_admin_l10n, WPSEO_Help_Center::get_translated_texts() );
 
 		$additional_entries = apply_filters( 'wpseo_admin_l10n', array() );
 		if ( is_array( $additional_entries ) ) {
@@ -1128,7 +1127,7 @@ SVG;
 
 	/**
 	 * Returns the original URL instead of the language-enriched URL.
-	 * This method gets automatically triggered by the wpml_get_home_url filter
+	 * This method gets automatically triggered by the wpml_get_home_url filter.
 	 *
 	 * @codeCoverageIgnore
 	 *
@@ -1152,12 +1151,76 @@ SVG;
 		return class_exists( 'WPSEO_MyYoast_Client' );
 	}
 
+	/**
+	 * Prepares data for outputting as JSON.
+	 *
+	 * @param array $data The data to format.
+	 *
+	 * @return false|string The prepared JSON string.
+	 */
+	public static function format_json_encode( $data ) {
+		$flags = 0;
+		if ( version_compare( PHP_VERSION, '5.4', '>=' ) ) {
+			// @codingStandardsIgnoreLine This is used in the wp_json_encode call, which checks for this.
+			$flags = ( $flags | JSON_UNESCAPED_SLASHES );
+		}
+		if ( self::is_development_mode() ) {
+			$flags = ( $flags | JSON_PRETTY_PRINT );
+
+			/**
+			 * Filter the Yoast SEO development mode.
+			 *
+			 * @api array $data Allows filtering of the JSON data for debug purposes.
+			 */
+			$data = apply_filters( 'wpseo_debug_json_data', $data );
+		}
+
+		return wp_json_encode( $data, $flags );
+	}
+
+	/**
+	 * Output a Schema blob.
+	 *
+	 * @param array  $graph The Schema graph array to output.
+	 * @param string $class The (optional) class to add to the script tag.
+	 *
+	 * @return bool
+	 */
+	public static function schema_output( $graph, $class = 'yoast-schema-graph' ) {
+		if ( ! is_array( $graph ) || empty( $graph ) ) {
+			return false;
+		}
+
+		echo self::schema_tag( $graph, $class );
+		return true;
+	}
+
+	/**
+	 * Returns a script tag with Schema blob.
+	 *
+	 * @param array  $graph The Schema graph array to output.
+	 * @param string $class The (optional) class to add to the script tag.
+	 *
+	 * @return false|string A schema blob with script tags.
+	 */
+	public static function schema_tag( $graph, $class = 'yoast-schema-graph' ) {
+		if ( ! is_array( $graph ) || empty( $graph ) ) {
+			return false;
+		}
+
+		$output = array(
+			'@context' => 'https://schema.org',
+			'@graph'   => $graph,
+		);
+		return "<script type='application/ld+json' class='" . esc_attr( $class ) . "'>" . self::format_json_encode( $output ) . '</script>' . "\n";
+	}
+
 	/* ********************* DEPRECATED METHODS ********************* */
 
 	/**
 	 * Returns the language part of a given locale, defaults to english when the $locale is empty.
 	 *
-	 * @see        WPSEO_Language_Utils::get_language()
+	 * @see WPSEO_Language_Utils::get_language()
 	 *
 	 * @deprecated 9.5
 	 * @codeCoverageIgnore
@@ -1180,7 +1243,7 @@ SVG;
 	 * Can be removed when support for WordPress 4.6 will be dropped, in favor
 	 * of WordPress get_user_locale() that already fallbacks to the site's locale.
 	 *
-	 * @see        WPSEO_Language_Utils::get_user_locale()
+	 * @see WPSEO_Language_Utils::get_user_locale()
 	 *
 	 * @deprecated 9.5
 	 * @codeCoverageIgnore
@@ -1191,5 +1254,21 @@ SVG;
 		_deprecated_function( __METHOD__, 'WPSEO 9.5', 'WPSEO_Language_Utils::get_user_locale' );
 
 		return WPSEO_Language_Utils::get_user_locale();
+	}
+
+	/**
+	 * Gets an array of enabled features.
+	 *
+	 * @return string[] The array of enabled features.
+	 */
+	public static function retrieve_enabled_features() {
+		$enabled_features = array();
+		if ( defined( 'YOAST_SEO_ENABLED_FEATURES' ) ) {
+			$enabled_features = preg_split( '/,\W*/', YOAST_SEO_ENABLED_FEATURES );
+		}
+		// Make the array of enabled features filterable, so features can be enabled at will.
+		$enabled_features = apply_filters( 'wpseo_enable_feature', $enabled_features );
+
+		return $enabled_features;
 	}
 }

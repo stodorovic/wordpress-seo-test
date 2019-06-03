@@ -76,7 +76,7 @@ class ORMWrapper extends ORM {
 	 * table name.
 	 *
 	 * A repeat of content in parent::for_table, so that created class is
-	 * ORMWrapper, not ORM
+	 * ORMWrapper, not ORM.
 	 *
 	 * @param string $table_name      The table to create instance for.
 	 * @param string $connection_name The connection name.
@@ -98,8 +98,8 @@ class ORMWrapper extends ORM {
 	 * @return bool|Yoast_Model Instance of the model class.
 	 */
 	protected function create_model_instance( $orm ) {
-		if ( $orm === \false ) {
-			return \false;
+		if ( $orm === false ) {
+			return false;
 		}
 
 		/** @var Yoast_Model $model */
