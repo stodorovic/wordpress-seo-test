@@ -490,8 +490,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 * @param  string $post_type Post type.
 	 * @param  int    $page_id
 	 *
-	 * @return bool
-	 *string|bool URL or false if it should be excluded.
+	 * @return bool true if noindex
 	 */
 	protected function get_post_type_archive_robots_noindex( $post_type, $page_id = -1 ) {
 
