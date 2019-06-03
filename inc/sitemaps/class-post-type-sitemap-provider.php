@@ -505,7 +505,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		 */
 		$page_id = (int) apply_filters( 'wpseo_sitemap_page_for_post_type_archive', $page_id, $post_type );
 
-		if ( $page_id > 0 && WPSEO_Meta::get_value( 'meta-robots-noindex', $pt_archive_page_id ) === '1' ) {
+		if ( $page_id > 0 && WPSEO_Meta::get_value( 'meta-robots-noindex', $page_id ) === '1' ) {
 			return true;
 		}
 
