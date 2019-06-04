@@ -25,50 +25,10 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	protected static $classifier;
 
 	/**
-	 * Static front page ID.
-	 *
-	 * @var int
-	 */
-	protected static $page_on_front_id;
-
-	/**
-	 * Posts page ID.
-	 *
-	 * @var int
-	 */
-	protected static $page_for_posts_id;
-
-	/**
 	 * Set up object properties for data reuse.
 	 */
 	public function __construct() {
 		add_filter( 'save_post', array( $this, 'save_post' ) );
-	}
-
-	/**
-	 * Get front page ID.
-	 *
-	 * @return int
-	 */
-	protected function get_page_on_front_id() {
-		if ( ! isset( self::$page_on_front_id ) ) {
-			self::$page_on_front_id = (int) get_option( 'page_on_front' );
-		}
-
-		return self::$page_on_front_id;
-	}
-
-	/**
-	 * Get page for posts ID.
-	 *
-	 * @return int
-	 */
-	protected function get_page_for_posts_id() {
-		if ( ! isset( self::$page_for_posts_id ) ) {
-			self::$page_for_posts_id = (int) get_option( 'page_for_posts' );
-		}
-
-		return self::$page_for_posts_id;
 	}
 
 	/**
@@ -694,5 +654,33 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		_deprecated_function( __METHOD__, 'WPSEO 11.5', 'WPSEO_Utils::home_url' );
 
 		return WPSEO_Utils::home_url();
+	}
+
+	/**
+	 * Get front page ID.
+	 *
+	 * @deprecated 11.5
+	 * @codeCoverageIgnore
+	 *
+	 * @return int
+	 */
+	protected function get_page_on_front_id() {
+		_deprecated_function( __METHOD__, 'WPSEO 11.5' );
+
+		return (int) get_option( 'page_on_front' );
+	}
+
+	/**
+	 * Get page for posts ID.
+	 *
+	 * @deprecated 11.5
+	 * @codeCoverageIgnore
+	 *
+	 * @return int
+	 */
+	protected function get_page_for_posts_id() {
+		_deprecated_function( __METHOD__, 'WPSEO 11.5' );
+
+		return (int) get_option( 'page_for_posts' );
 	}
 }
