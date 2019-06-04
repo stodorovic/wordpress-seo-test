@@ -267,8 +267,8 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		$instance->set_classifier( null );
 
-		update_option( 'home', 'http://example.org' );
-		$this->assertContains( 'http://example.org', $instance->get_url( $this->factory->post->create() ) );
+		update_option( 'home', 'http://example.com' );
+		$this->assertContains( 'http://example.com', $instance->get_url( $this->factory->post->create() ) );
 
 		update_option( 'home', $current_home );
 		$this->assertFalse( $instance->get_url( $this->factory->post->create() ) );
