@@ -266,20 +266,24 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$current_home     = get_option( 'home' );
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
 
-//		$post_test = $this->factory()->post->create_and_get();
-//
-		update_option( 'home', 'http://example.com' );
-		$post_test   = $this->factory()->post->create_and_get();
-		$sitemap_url = $sitemap_provider->get_url( $post_test );
-		fprintf(STDERR, "Array dump: %s\n", var_export( $post_test, true));
-		fprintf(STDERR, "Array dump: %s\n", var_export( $sitemap_url, true));
-		$this->assertContains( 'http://example.com', $sitemap_url['loc'] );
-		wp_delete_post( $post_test->ID );
+		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
 
+		update_option( 'home', $this->set_post_sitemap_url() );
+		$this->assertFalse( $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
 		update_option( 'home', $current_home );
-		$post_test   = $this->factory()->post->create_and_get();
-		$this->assertFalse( $sitemap_provider->get_url( $post_test ) );
-		wp_delete_post( $post_test->ID );		
+
+		remove_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
+	}
+
+	/**
+	 * Helper function to mock sitemap URL.
+	 *
+	 * @param string $url URL to mock.
+	 *
+	 * @return string URL to use.
+	 */
+	public function set_post_sitemap_url( $url ) {
+		return 'http://example.com';
 	}
 
 	/**
