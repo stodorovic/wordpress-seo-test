@@ -269,7 +269,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$post_test   = $this->factory()->post->create_and_get();
 		$sitemap_url = $sitemap_provider->get_url( $post_test );
 		
-		$this->assetContains( $current_home, $sitemap_url['loc'] );
+		$this->assertContains( $current_home, $sitemap_url['loc'] );
 		 
 //		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
 		update_option( 'home', 'http://example3.com' );
