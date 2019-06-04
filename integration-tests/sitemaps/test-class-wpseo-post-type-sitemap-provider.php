@@ -263,34 +263,15 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Post_Type_Sitemap_Provider::get_url
 	 */
 	public function test_get_url() {
-		$instance = $this
-			->getMockBuilder( 'WPSEO_Post_Type_Sitemap_Provider_Double' )
-			->setMethods( array( 'get_home_url' ) )
-			->getMock();
+		$current_home = get_option( 'home' );
 
-		$instance
-			->expects( $this->once() )
-			->method( 'get_home_url' )
-			->will( $this->returnValue( 'http://example.org' ) );
-
-		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
-
-		/** @var WPSEO_Post_Type_Sitemap_Provider_Double $instance */
 		$instance->set_classifier( null );
+
+		update_option( 'home', 'http://example.org' );
+		$this->assertContains( 'http://example.org', $instance->get_url( $this->factory->post->create() ) );
+
+		update_option( 'home', $current_home );
 		$this->assertFalse( $instance->get_url( $this->factory->post->create() ) );
-
-		remove_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
-	}
-
-	/**
-	 * Helper function to mock sitemap URL.
-	 *
-	 * @param string $url URL to mock.
-	 *
-	 * @return string URL to use.
-	 */
-	public function set_post_sitemap_url( $url ) {
-		return 'http://example.com';
 	}
 
 	/**
