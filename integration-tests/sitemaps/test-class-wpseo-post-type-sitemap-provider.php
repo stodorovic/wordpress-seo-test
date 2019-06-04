@@ -266,13 +266,14 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$current_home     = get_option( 'home' );
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
 
-		$sitemap_provider->set_classifier( null );
+		$post_test = $this->factory()->post->create_and_get();
 
 		update_option( 'home', 'http://example.com' );
-		$this->assertContains( 'http://example.com', $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
+		$sitemap_url = $sitemap_provider->get_url( $post_test );
+		$this->assertContains( 'http://example.com', $sitemap_url['loc'] );
 
 		update_option( 'home', $current_home );
-		$this->assertFalse( $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
+		$this->assertFalse( $sitemap_provider->get_url( $post_test ) );
 	}
 
 	/**
