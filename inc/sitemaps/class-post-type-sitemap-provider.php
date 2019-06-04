@@ -631,7 +631,6 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		 * @param object $post Post object for the URL.
 		 */
 		$url['loc'] = apply_filters( 'wpseo_xml_sitemap_post_url', get_permalink( $post ), $post );
-		fprintf(STDERR, "Array dump: %s\n", var_export( $url, true));
 
 		/*
 		 * Do not include external URLs.

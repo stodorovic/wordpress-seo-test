@@ -283,7 +283,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 * @return string URL to use.
 	 */
 	public function set_post_sitemap_url( $url ) {
-		return 'http://example.com';
+		return 'http://example.org';
 	}
 
 	/**
