@@ -263,9 +263,10 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Post_Type_Sitemap_Provider::get_url
 	 */
 	public function test_get_url() {
-		$current_home = get_option( 'home' );
+		$current_home     = get_option( 'home' );
+		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
 
-		$instance->set_classifier( null );
+		$sitemap_provider->set_classifier( null );
 
 		update_option( 'home', 'http://example.com' );
 		$this->assertContains( 'http://example.com', $instance->get_url( $this->factory->post->create() ) );
