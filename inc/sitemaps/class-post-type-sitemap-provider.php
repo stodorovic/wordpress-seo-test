@@ -464,7 +464,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		}
 
 
-		if ( ! $this->is_post_type_archive_indexable( $post_type, $pt_archive_page_id ) ) {
+		if ( ! $this->is_post_type_archive_indexable( $post_type ) ) {
 			return false;
 		}
 
@@ -501,8 +501,8 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 		 *
 		 * @since 9.3
 		 *
-		 * @param string $pt_archive_page_id The post_id of the page.
-		 * @param string $post_type          The post type this archive is for.
+		 * @param string $archive_page_id The post_id of the page.
+		 * @param string $post_type       The post type this archive is for.
 		 */
 		$archive_page_id = (int) apply_filters( 'wpseo_sitemap_page_for_post_type_archive', $archive_page_id, $post_type );
 
