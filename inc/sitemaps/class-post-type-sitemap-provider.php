@@ -475,9 +475,8 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			}
 		}
 
-		$archive_url = $this->is_post_type_archive_indexable( $post_type, $pt_archive_page_id ) ?
-			get_post_type_archive_link( $post_type ) :
-			false;
+		$archive_indexable = $this->is_post_type_archive_indexable( $post_type, $pt_archive_page_id );
+		$archive_url       = $archive_indexable ? get_post_type_archive_link( $post_type ) : false;
 
 		return $archive_url;
 	}
