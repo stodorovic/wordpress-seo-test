@@ -459,8 +459,6 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 */
 	protected function get_post_type_archive_link( $post_type ) {
 
-		$pt_archive_page_id  = -1;
-
 		if ( $post_type === 'post' && get_option( 'show_on_front' ) === 'posts' ) {
 			return WPSEO_Utils::home_url();
 		}
@@ -479,7 +477,6 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	 * @since 11.5
 	 *
 	 * @param string $post_type Post type.
-	 * @param int    $page_id   The page id.
 	 *
 	 * @return bool True when post type archive is indexable.
 	 */
