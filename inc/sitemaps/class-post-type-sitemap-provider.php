@@ -313,8 +313,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	protected function get_excluded_posts( $post_type ) {
 		$excluded_posts_ids = array();
 
-		if ( $post_type === 'page' && $this->get_page_for_posts_id() ) {
-			$excluded_posts_ids[] = $this->get_page_for_posts_id();
+		$page_on_front_id = ( $post_type === 'page' ) ? (int) get_option( 'page_on_front' ) : 0;
+		if ( $page_on_front_id > 0 ) {
+			$excluded_posts_ids[] = $page_on_front_id;
 		}
 
 		/**
@@ -329,8 +330,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 		$excluded_posts_ids = array_map( 'intval', $excluded_posts_ids );
 
-		if ( $post_type === 'page' && $this->get_page_on_front_id() ) {
-			$excluded_posts_ids[] = $this->get_page_on_front_id();
+		$page_for_posts_id = ( $post_type === 'page' ) ? (int) get_option( 'page_for_posts' ) : 0;
+		if ( $page_for_posts_id > 0 ) {
+			$excluded_posts_ids[] = $page_for_posts_id;
 		}
 
 		return array_unique( $excluded_posts_ids );
