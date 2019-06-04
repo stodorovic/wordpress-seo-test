@@ -269,8 +269,12 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
 
 		update_option( 'home', $this->set_post_sitemap_url( null ) );
+		wp_cache_delete( 'alloptions', 'options' );
+
 		$this->assertFalse( $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
+
 		update_option( 'home', $current_home );
+		wp_cache_delete( 'alloptions', 'options' );
 
 		remove_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
 	}
@@ -283,7 +287,7 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 * @return string URL to use.
 	 */
 	public function set_post_sitemap_url( $url ) {
-		return 'http://example.org';
+		return 'http://example2.com';
 	}
 
 	/**
