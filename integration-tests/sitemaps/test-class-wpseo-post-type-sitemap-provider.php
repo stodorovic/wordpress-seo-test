@@ -266,16 +266,20 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$current_home     = get_option( 'home' );
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
 
-		$post_test = $this->factory()->post->create_and_get();
-
+//		$post_test = $this->factory()->post->create_and_get();
+//
 		update_option( 'home', 'http://example.com' );
+		$post_test   = $this->factory()->post->create_and_get();
 		$sitemap_url = $sitemap_provider->get_url( $post_test );
 		fprintf(STDERR, "Array dump: %s\n", var_export( $post_test, true));
 		fprintf(STDERR, "Array dump: %s\n", var_export( $sitemap_url, true));
 		$this->assertContains( 'http://example.com', $sitemap_url['loc'] );
+		wp_delete_post( $post_test->ID );
 
 		update_option( 'home', $current_home );
+		$post_test   = $this->factory()->post->create_and_get();
 		$this->assertFalse( $sitemap_provider->get_url( $post_test ) );
+		wp_delete_post( $post_test->ID );		
 	}
 
 	/**
