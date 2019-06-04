@@ -270,6 +270,8 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 
 		update_option( 'home', 'http://example.com' );
 		$sitemap_url = $sitemap_provider->get_url( $post_test );
+		fprintf(STDERR, "Array dump: %s\n", var_export( $post_test, true));
+		fprintf(STDERR, "Array dump: %s\n", var_export( $sitemap_url, true));
 		$this->assertContains( 'http://example.com', $sitemap_url['loc'] );
 
 		update_option( 'home', $current_home );
