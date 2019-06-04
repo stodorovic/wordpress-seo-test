@@ -269,10 +269,10 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$sitemap_provider->set_classifier( null );
 
 		update_option( 'home', 'http://example.com' );
-		$this->assertContains( 'http://example.com', $sitemap_provider->get_url( $this->factory->post->create() ) );
+		$this->assertContains( 'http://example.com', $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
 
 		update_option( 'home', $current_home );
-		$this->assertFalse( $sitemap_provider->get_url( $this->factory->post->create() ) );
+		$this->assertFalse( $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
 	}
 
 	/**
