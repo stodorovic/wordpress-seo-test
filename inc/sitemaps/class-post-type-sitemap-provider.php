@@ -451,9 +451,9 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	/**
 	 * Get URL for a post type archive.
 	 *
-	 * @since  5.3
+	 * @since 5.3
 	 *
-	 * @param  string $post_type Post type.
+	 * @param string $post_type Post type.
 	 *
 	 * @return string|bool URL or false if it should be excluded.
 	 */
@@ -475,7 +475,7 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 			}
 		}
 
-		if ( $this->get_post_type_archive_robots_noindex( $post_type, $pt_archive_page_id ) ) {
+		if ( ! $this->is_post_type_archive_indexable( $post_type, $pt_archive_page_id ) ) {
 			return false;
 		}
 
@@ -483,34 +483,36 @@ class WPSEO_Post_Type_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 	}
 
 	/**
-	 * Get robots noindex for a post type archive.
+	 * Determines whether a post type archive is indexable.
 	 *
-	 * @since  11.5
+	 * @since 11.5
 	 *
-	 * @param  string $post_type Post type.
-	 * @param  int    $page_id
+	 * @param string $post_type Post type.
+	 * @param int    $page_id   The page id.
 	 *
-	 * @return bool
-	 *string|bool URL or false if it should be excluded.
+	 * @return bool True when post type archive is indexable.
 	 */
-	protected function get_post_type_archive_robots_noindex( $post_type, $page_id = -1 ) {
+	protected function is_post_type_archive_indexable( $post_type, $page_id = -1 ) {
 
 		if ( WPSEO_Options::get( 'noindex-ptarchive-' . $post_type, false ) ) {
-			return true;
+			return false;
 		}
+
 		/**
 		 * Filter the page which is dedicated to this post type archive.
+		 *
+		 * @since 9.3
 		 *
 		 * @param string $pt_archive_page_id The post_id of the page.
 		 * @param string $post_type          The post type this archive is for.
 		 */
 		$page_id = (int) apply_filters( 'wpseo_sitemap_page_for_post_type_archive', $page_id, $post_type );
 
-		if ( $page_id > 0 && WPSEO_Meta::get_value( 'meta-robots-noindex', $pt_archive_page_id ) === '1' ) {
-			return true;
+		if ( $page_id > 0 && WPSEO_Meta::get_value( 'meta-robots-noindex', $page_id ) === '1' ) {
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	/**
