@@ -266,17 +266,21 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 		$current_home     = get_option( 'home' );
 		$sitemap_provider = new WPSEO_Post_Type_Sitemap_Provider_Double();
 
-		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
-
-		update_option( 'home', $this->set_post_sitemap_url( null ) );
+		$post_test   = $this->factory()->post->create_and_get();
+		$sitemap_url = $sitemap_provider->get_url( $post_test );
+		
+		$this->assetContains( $current_home, $sitemap_url['loc'] );
+		 
+//		add_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
+		update_option( 'home', 'http://example3.com' );
 		wp_cache_delete( 'alloptions', 'options' );
 
-		$this->assertFalse( $sitemap_provider->get_url( $this->factory()->post->create_and_get() ) );
+		$this->assertFalse( $sitemap_provider->get_url( $post_test ) );
 
 		update_option( 'home', $current_home );
 		wp_cache_delete( 'alloptions', 'options' );
 
-		remove_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
+//		remove_filter( 'wpseo_xml_sitemap_post_url', array( $this, 'set_post_sitemap_url' ) );
 	}
 
 	/**
@@ -286,9 +290,9 @@ class WPSEO_Post_Type_Sitemap_Provider_Test extends WPSEO_UnitTestCase {
 	 *
 	 * @return string URL to use.
 	 */
-	public function set_post_sitemap_url( $url ) {
-		return 'http://example2.com';
-	}
+//	public function set_post_sitemap_url( $url ) {
+//		return 'http://example2.com';
+//	}
 
 	/**
 	 * Tests a regular post is added to the sitemap.
