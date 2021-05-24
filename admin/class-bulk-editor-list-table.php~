@@ -620,7 +620,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 		// Get all needed results.
 		$query = "
 			SELECT ID, post_title, post_type, post_status, post_modified, post_date
-				FROM {$subquery}
+			FROM {$subquery}
 				WHERE post_status IN ({$all_states}) $post_type_clause
 				ORDER BY {$orderby} {$order}
 				LIMIT %d,%d
@@ -964,7 +964,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 					WHERE post_id IN(" . \implode( ', ', \array_fill( 0, \count( $post_ids ), '%d' ) ) . ")
 					AND meta_key = %s
 				",
-				...$post_ids,
+				$post_ids,
 				WPSEO_Meta::$meta_prefix . $this->target_db_field,
 			)
 		);
