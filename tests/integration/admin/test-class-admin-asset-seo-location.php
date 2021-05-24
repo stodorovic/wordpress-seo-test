@@ -29,8 +29,8 @@ final class Test_WPSEO_Admin_Asset_SEO_Location extends TestCase {
 		];
 		$asset      = new WPSEO_Admin_Asset( $asset_args );
 
-		$expected_js    = home_url() . '/wp-content/plugins/wordpress-seo/js/dist/src.js';
-		$expected_css   = home_url() . '/wp-content/plugins/wordpress-seo/css/dist/src.css';
+		$expected_js    = home_url() . '/wp-content/plugins/wordpress-seo-test/js/dist/src.js';
+		$expected_css   = home_url() . '/wp-content/plugins/wordpress-seo-test/css/dist/src.css';
 		$expected_empty = '';
 
 		$location = new WPSEO_Admin_Asset_SEO_Location( WPSEO_FILE );
