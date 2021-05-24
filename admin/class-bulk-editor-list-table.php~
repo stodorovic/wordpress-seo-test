@@ -954,7 +954,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	 *
 	 * @return mixed
 	 */
-	protected function get_meta_data_result( $post_ids ) {
+	protected function get_meta_data_result( (array) $post_ids ) {
 		global $wpdb;
 
 		$meta_data = $wpdb->get_results(
@@ -965,7 +965,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 					AND meta_key = %s
 				",
 				$post_ids,
-				WPSEO_Meta::$meta_prefix . $this->target_db_field,
+				WPSEO_Meta::$meta_prefix . $this->target_db_field
 			)
 		);
 

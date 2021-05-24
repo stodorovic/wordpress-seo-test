@@ -954,7 +954,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	 *
 	 * @return mixed
 	 */
-	protected function get_meta_data_result( (array) $post_ids ) {
+	protected function get_meta_data_result( array $post_ids ) {
 		global $wpdb;
 
 		$meta_data = $wpdb->get_results(
