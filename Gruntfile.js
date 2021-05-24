@@ -2,7 +2,8 @@
 var timeGrunt = require( "time-grunt" );
 var path = require( "path" );
 var loadGruntConfig = require( "load-grunt-config" );
-const { flattenVersionForFile } = require( "./webpack/paths" );
+const { flattenVersionForFile } = require( "./config/webpack/paths" );
+require( "dotenv" ).config();
 
 module.exports = function( grunt ) {
 	timeGrunt( grunt );
@@ -10,43 +11,76 @@ module.exports = function( grunt ) {
 	const pkg = grunt.file.readJSON( "package.json" );
 	const pluginVersion = pkg.yoast.pluginVersion;
 
-	// Define project configuration
-	var project = {
-		pluginVersion: pluginVersion,
+	/* Used to switch between development and release builds.
+	Switches based on the grunt command (which is the third 'argv', after node and grunt,  so index 2).*/
+	const developmentBuild = ! [ "create-rc", "release", "release:js", "artifact", "deploy:trunk", "deploy:master" ].includes( process.argv[ 2 ] );
+
+	// Define project configuration.
+	const project = {
+		developmentBuild,
+		pluginVersion,
+		pluginVersionSlug: flattenVersionForFile( pluginVersion ),
 		pluginSlug: "wordpress-seo",
 		pluginMainFile: "wp-seo.php",
 		paths: {
+			/**
+			 * Gets the config path.
+			 *
+			 * @returns {string} Config path.
+			 */
 			get config() {
-				return this.grunt + "config/";
+				return this.grunt + "task-config/";
 			},
 			css: "css/dist/",
-			sass: "css/src/",
-			grunt: "grunt/",
+			grunt: "config/grunt/",
 			images: "images/",
-			js: "js/src/",
+			js: "packages/js/src/",
+			jsDist: "js/dist/",
 			languages: "languages/",
 			logs: "logs/",
 			svnCheckoutDir: ".wordpress-svn",
+			assets: "svn-assets",
+			vendor: "vendor/",
 		},
 		files: {
-			sass: [ "<%= paths.sass %>*.scss" ],
 			css: [
-				"css/dist/*.css",
-				"!css/dist/*.min.css",
+				"css/src/*.css",
+			],
+			cssMap: [
+				"css/dist/*.css.map",
 			],
 			js: [
-				"js/src/**/*.js",
+				"packages/js/src/**/*.js",
 			],
 			jsTests: [
-				"js/tests/**/*.js",
+				"packages/js/tests/**/*.js",
 			],
 			php: [
 				"*.php",
 				"admin/**/*.php",
 				"frontend/**/*.php",
 				"inc/**/*.php",
+				"src/**/*.php",
+				"config/**/*.php",
+			],
+			versionFiles: [
+				"package.json",
+				"wp-seo-main.php",
+				"wp-seo.php",
 			],
 			pot: {
+
+				/*
+				 * Yoast JS are the @yoast JavaScript packages.
+				 * They (currently) have the `yoast-components` textdomain.
+				 * They get combined with the `yoastComponents` translations to one yoast-components.pot file.
+				 */
+				yoastJsAnalysisReport: "<%= paths.languages %>yoast-js-analysis-report.pot",
+				yoastJsComponents: "<%= paths.languages %>yoast-js-components.pot",
+				yoastJsConfigurationWizard: "<%= paths.languages %>yoast-js-configuration-wizard.pot",
+				yoastJsHelpers: "<%= paths.languages %>yoast-js-helpers.pot",
+				yoastJsSearchMetadataPreviews: "<%= paths.languages %>yoast-js-search-metadata-previews.pot",
+
 				yoastseojs: "<%= paths.languages %>yoast-seo-js.pot",
 				yoastComponents: "<%= paths.languages %>yoast-components.pot",
 				yoastComponentsConfigurationWizard: "<%= paths.languages %>yoast-components1.pot",
@@ -62,9 +96,19 @@ module.exports = function( grunt ) {
 			artifact: "artifact",
 			artifactComposer: "artifact-composer",
 			phptests: "tests/**/*.php",
+			/**
+			 * Gets the config path glob.
+			 *
+			 * @returns {string} Config path glob.
+			 */
 			get config() {
 				return project.paths.config + "*.js";
 			},
+			/**
+			 * Gets the changelog path file.
+			 *
+			 * @returns {string} Changelog path file.
+			 */
 			get changelog() {
 				return project.paths.theme + "changelog.txt";
 			},
@@ -73,22 +117,36 @@ module.exports = function( grunt ) {
 		pkg,
 	};
 
-	project.pluginVersionSlug = flattenVersionForFile( pluginVersion );
-
-	// Load Grunt configurations and tasks
+	// Load Grunt configurations and tasks.
 	loadGruntConfig( grunt, {
-		configPath: path.join( process.cwd(), project.paths.config ),
+		configPath: path.join( process.cwd(), "node_modules/@yoast/grunt-plugin-tasks/config/" ),
+		overridePath: path.join( process.cwd(), project.paths.config ),
 		data: project,
 		jitGrunt: {
 			staticMappings: {
 				addtextdomain: "grunt-wp-i18n",
 				makepot: "grunt-wp-i18n",
+				/* eslint-disable-next-line camelcase */
 				glotpress_download: "grunt-glotpress",
-				wpcss: "grunt-wp-css",
+				gittag: "grunt-git",
+				gitfetch: "grunt-git",
+				gitadd: "grunt-git",
+				gitstatus: "grunt-git",
+				gitcommit: "grunt-git",
+				gitcheckout: "grunt-git",
+				gitpull: "grunt-git",
+				gitpush: "grunt-git",
 				"update-version": "@yoast/grunt-plugin-tasks",
 				"set-version": "@yoast/grunt-plugin-tasks",
+				"update-changelog-with-latest-pr-texts": "@yoast/grunt-plugin-tasks",
+				"get-latest-pr-texts": "@yoast/grunt-plugin-tasks",
+				"update-changelog": "@yoast/grunt-plugin-tasks",
+				"build-qa-changelog": "@yoast/grunt-plugin-tasks",
+				"download-qa-changelog": "@yoast/grunt-plugin-tasks",
+				"register-prompt": "grunt-prompt",
+				"notify-slack": "notify-slack",
 			},
-			customTasksDir: "grunt/custom",
+			customTasksDir: "config/grunt/custom-tasks",
 		},
 	} );
 };

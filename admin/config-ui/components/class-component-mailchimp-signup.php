@@ -11,6 +11,8 @@
 class WPSEO_Config_Component_Mailchimp_Signup implements WPSEO_Config_Component {
 
 	/**
+	 * The name of the mailchimp signup meta key.
+	 *
 	 * @var string
 	 */
 	const META_NAME = 'wpseo-has-mailchimp-signup';
@@ -27,7 +29,7 @@ class WPSEO_Config_Component_Mailchimp_Signup implements WPSEO_Config_Component 
 	/**
 	 * Gets the field.
 	 *
-	 * @return WPSEO_Config_Field
+	 * @return WPSEO_Config_Field_Mailchimp_Signup
 	 */
 	public function get_field() {
 		return new WPSEO_Config_Field_Mailchimp_Signup();
@@ -39,9 +41,9 @@ class WPSEO_Config_Component_Mailchimp_Signup implements WPSEO_Config_Component 
 	 * @return mixed
 	 */
 	public function get_data() {
-		$data = array(
+		$data = [
 			'hasSignup' => $this->has_mailchimp_signup(),
-		);
+		];
 
 		return $data;
 	}
@@ -64,9 +66,9 @@ class WPSEO_Config_Component_Mailchimp_Signup implements WPSEO_Config_Component 
 		}
 
 		// Collect results to return to the configurator.
-		$results = array(
+		$results = [
 			'hasSignup' => $has_saved,
-		);
+		];
 
 		return $results;
 	}

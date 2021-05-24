@@ -32,15 +32,15 @@ class WPSEO_Config_Field_Multiple_Authors extends WPSEO_Config_Field_Choice {
 	public function set_adapter( WPSEO_Configuration_Options_Adapter $adapter ) {
 		$adapter->add_custom_lookup(
 			$this->get_identifier(),
-			array( $this, 'get_data' ),
-			array( $this, 'set_data' )
+			[ $this, 'get_data' ],
+			[ $this, 'set_data' ]
 		);
 	}
 
 	/**
 	 * Get the data from the stored options.
 	 *
-	 * @return null|string
+	 * @return string|null
 	 */
 	public function get_data() {
 
@@ -50,10 +50,10 @@ class WPSEO_Config_Field_Multiple_Authors extends WPSEO_Config_Field_Choice {
 
 		if ( ! isset( $value ) || is_null( $value ) ) {
 			// If there are more than one users with level > 1 default to multiple authors.
-			$user_criteria = array(
+			$user_criteria = [
 				'fields' => 'IDs',
 				'who'    => 'authors',
-			);
+			];
 			$users         = get_users( $user_criteria );
 
 			$value = count( $users ) > 1;
