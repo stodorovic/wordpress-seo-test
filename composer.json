@@ -1,5 +1,5 @@
 {
-	"name": "yoast/wordpress-seo",
+	"name": "stodorovic/wordpress-seo-test",
 	"description": "Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.",
 	"keywords": [
 		"wordpress",
@@ -16,10 +16,10 @@
 	],
 	"type": "wordpress-plugin",
 	"support": {
-		"issues": "https://github.com/Yoast/wordpress-seo/issues",
+		"issues": "stodorovic/wordpress-seo-test/issues",
 		"forum": "https://wordpress.org/support/plugin/wordpress-seo",
-		"wiki": "https://github.com/Yoast/wordpress-seo/wiki",
-		"source": "https://github.com/Yoast/wordpress-seo"
+		"wiki": "stodorovic/wordpress-seo-test/wiki",
+		"source": "stodorovic/wordpress-seo-test"
 	},
 	"require": {
 		"php": "^5.6.20||^7.0",

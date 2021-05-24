@@ -1,5 +1,5 @@
 {
-  "name": "wordpress-seo",
+  "name": "wordpress-seo-test",
   "license": "GPL-2.0+",
   "description": "Development files for the Yoast SEO plugin",
   "private": true,
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Yoast/wordpress-seo"
+    "url": "https://github.com/stodorovic/wordpress-seo-test"
   },
   "workspaces": {
     "packages": [
