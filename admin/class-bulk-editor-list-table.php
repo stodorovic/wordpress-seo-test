@@ -268,19 +268,17 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 
 		$status_links = [];
 
-		$states     = get_post_stati( [ 'show_in_admin_all_list' => true ] );
-		$states     = esc_sql( $states );
-		$all_states = "'" . implode( "', '", $states ) . "'";
-
+		$states   = get_post_stati( [ 'show_in_admin_all_list' => true ] );
 		$subquery = $this->get_base_subquery();
 
 		$total_posts = $wpdb->get_var(
-			"
-					SELECT COUNT(ID) FROM {$subquery}
-					WHERE post_status IN ({$all_states})
-				"
+			$wpdb->prepare(
+				"SELECT COUNT(ID) FROM {$subquery}
+					WHERE post_status IN (" . implode( ', ', array_fill( 0, count( $states ), '%s' ) ) . ')
+				',
+				$states
+			)
 		);
-
 
 		$post_status             = filter_input( INPUT_GET, 'post_status' );
 		$current_link_attributes = empty( $post_status ) ? ' class="current" aria-current="page"' : '';
@@ -372,16 +370,17 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 
 				$states          = get_post_stati( [ 'show_in_admin_all_list' => true ] );
 				$states['trash'] = 'trash';
-				$states          = esc_sql( $states );
-				$all_states      = "'" . implode( "', '", $states ) . "'";
 
 				$subquery = $this->get_base_subquery();
 
 				$post_types = $wpdb->get_results(
-					"SELECT DISTINCT post_type FROM {$subquery}
-						WHERE post_status IN ({$all_states})
-						ORDER BY post_type ASC
-					"
+					$wpdb->prepare(
+						"SELECT DISTINCT post_type FROM {$subquery}
+							WHERE post_status IN (" . implode( ', ', array_fill( 0, count( $states ), '%s' ) ) . ')
+							ORDER BY post_type ASC
+						',
+						$states
+					)
 				);
 
 				$post_type_filter = filter_input( INPUT_GET, 'post_type_filter' );
@@ -525,7 +524,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	 * Counting total items.
 	 *
 	 * @param string $subquery         SQL FROM part.
-	 * @param string $all_states       SQL IN part.
+	 * @param array  $all_states       SQL IN part.
 	 * @param string $post_type_clause SQL post type part.
 	 *
 	 * @return mixed
@@ -533,11 +532,13 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	protected function count_items( $subquery, $all_states, $post_type_clause ) {
 		global $wpdb;
 		$total_items = $wpdb->get_var(
-			"
-					SELECT COUNT(ID)
-					FROM {$subquery}
-					WHERE post_status IN ({$all_states}) $post_type_clause
-				"
+			$wpdb->prepare(
+				'SELECT COUNT(ID)
+					FROM ' . $subquery . '
+					WHERE post_status IN (' . implode( ', ', array_fill( 0, count( $all_states ), '%s' ) ) . ') ' .
+					$post_type_clause,
+				$all_states
+			)
 		);
 
 		return $total_items;
@@ -619,7 +620,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 
 		// Get all needed results.
 		$query = "
-			SELECT ID, post_title, post_type, post_status, post_modified, post_date
+				SELECT ID, post_title, post_type, post_status, post_modified, post_date
 				FROM {$subquery}
 				WHERE post_status IN ({$all_states}) $post_type_clause
 				ORDER BY {$orderby} {$order}
@@ -687,7 +688,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	/**
 	 * Getting all the states.
 	 *
-	 * @return string
+	 * @return array
 	 */
 	protected function get_all_states() {
 		$states          = get_post_stati( [ 'show_in_admin_all_list' => true ] );
@@ -703,9 +704,6 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 				unset( $states['trash'] );
 			}
 		}
-
-		$states     = esc_sql( $states );
-		$all_states = "'" . implode( "', '", $states ) . "'";
 
 		return $all_states;
 	}
@@ -950,23 +948,25 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	/**
 	 * Getting the meta_data from database.
 	 *
-	 * @param string $post_ids Post IDs string for SQL IN part.
+	 * @param array $post_ids Post IDs for SQL IN part.
 	 *
 	 * @return mixed
 	 */
 	protected function get_meta_data_result( array $post_ids ) {
 		global $wpdb;
 
+		$where = $wpdb->prepare(
+			'post_id IN (' . implode( ', ', array_fill( 0, count( $post_ids ), '%d' ) ) . ')',
+			$post_ids
+		);
+
+		$where .= $wpdb->prepare( ' AND meta_key = %s', WPSEO_Meta::$meta_prefix . $this->target_db_field );
+
 		$meta_data = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT *
-					FROM {$wpdb->postmeta}
-					WHERE post_id IN(" . \implode( ', ', \array_fill( 0, \count( $post_ids ), '%d' ) ) . ")
-					AND meta_key = %s
-				",
-				$post_ids,
-				WPSEO_Meta::$meta_prefix . $this->target_db_field
-			)
+			"SELECT *
+				FROM {$wpdb->postmeta}
+				WHERE {$where}
+			"
 		);
 
 		return $meta_data;
