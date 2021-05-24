@@ -619,7 +619,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 
 		// Get all needed results.
 		$query = "
-				SELECT ID, post_title, post_type, post_status, post_modified, post_date
+			SELECT ID, post_title, post_type, post_status, post_modified, post_date
 				FROM {$subquery}
 				WHERE post_status IN ({$all_states}) $post_type_clause
 				ORDER BY {$orderby} {$order}
