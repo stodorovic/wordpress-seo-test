@@ -16,10 +16,10 @@
 	],
 	"type": "wordpress-plugin",
 	"support": {
-		"issues": "stodorovic/wordpress-seo-test/issues",
+		"issues": "https://github.com/stodorovic/wordpress-seo-test/issues",
 		"forum": "https://wordpress.org/support/plugin/wordpress-seo",
-		"wiki": "stodorovic/wordpress-seo-test/wiki",
-		"source": "stodorovic/wordpress-seo-test"
+		"wiki": "https://github.com/stodorovic/wordpress-seo-test/wiki",
+		"source": "https://github.com/stodorovic/wordpress-seo-test"
 	},
 	"require": {
 		"php": "^5.6.20||^7.0",
