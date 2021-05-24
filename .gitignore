@@ -17,6 +17,7 @@ local.properties
 *.launch
 .cproject
 .buildpath
+.vscode
 nbproject/
 node_modules/
 bower_components/
@@ -24,6 +25,7 @@ premium/node_modules/
 phpcs.xml
 .phpcs.xml
 phpunit.xml
+.phpunit.result.cache
 
 ############
 ## OSes
@@ -44,6 +46,7 @@ tmp/
 *.bak
 *.log
 *.[Cc]ache
+!.cache
 *.cpr
 *.orig
 *.php.in
@@ -51,8 +54,9 @@ tmp/
 temp/
 ._*
 .Trashes
-
+.env
 .svn
+.tmp
 
 ############
 ## Composer
@@ -71,24 +75,32 @@ test.sh
 /artifact.zip
 /artifact-composer/
 /coverage
+/packages/**/coverage
 /gettext.pot
 /.wordpress-svn
 /webpack-stats.json
 # Legacy, can be removed in the future.
 .recalibration.yaml
+/src/generated/
+/premium/src/generated/
 
 ############
 # Dist files
 ############
 /languages/
-/js/dist/*
-!/js/dist/select2
 /js/vendor/*
+/js/dist/*
 /css/dist/*
-!/css/dist/select2
+/packages/*/dist
+yarn-error.log
+coverage
+dependencies.json
+dependencies.md
+.vscode
+.idea/
+.DS_Store
 
-##############
-# JS Mono Repo
-##############
-/javascript/
-.yoast
+############
+# Temp files
+############
+/.tmp
