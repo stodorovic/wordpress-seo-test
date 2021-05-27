@@ -1,5 +1,5 @@
 {
-	"name": "yoast/wordpress-seo",
+	"name": "stodorovic/wordpress-seo-test",
 	"description": "Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.",
 	"keywords": [
 		"wordpress",
@@ -16,10 +16,10 @@
 	],
 	"type": "wordpress-plugin",
 	"support": {
-		"issues": "https://github.com/Yoast/wordpress-seo/issues",
+		"issues": "https://github.com/stodorovic/wordpress-seo-test/issues",
 		"forum": "https://wordpress.org/support/plugin/wordpress-seo",
-		"wiki": "https://github.com/Yoast/wordpress-seo/wiki",
-		"source": "https://github.com/Yoast/wordpress-seo"
+		"wiki": "https://github.com/stodorovic/wordpress-seo-test/wiki",
+		"source": "https://github.com/stodorovic/wordpress-seo-test"
 	},
 	"require": {
 		"php": "^5.6.20||^7.0",
@@ -80,8 +80,8 @@
 			"Yoast\\WP\\SEO\\Composer\\Actions::check_coding_standards"
 		],
 		"check-cs-thresholds": [
-			"@putenv YOASTCS_THRESHOLD_ERRORS=309",
-			"@putenv YOASTCS_THRESHOLD_WARNINGS=224",
+			"@putenv YOASTCS_THRESHOLD_ERRORS=302",
+			"@putenv YOASTCS_THRESHOLD_WARNINGS=223",
 			"Yoast\\WP\\SEO\\Composer\\Actions::check_cs_thresholds"
 		],
 		"check-cs-summary": [

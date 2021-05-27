@@ -119,9 +119,9 @@ class WPSEO_Cornerstone_Filter extends WPSEO_Abstract_Post_Filter {
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT( 1 )
-				FROM {$wpdb->postmeta}
-				WHERE post_id IN( SELECT ID FROM {$wpdb->posts} WHERE post_type = %s ) AND
-				meta_key = %s AND meta_value = '1'
+					FROM {$wpdb->postmeta}
+					WHERE post_id IN( SELECT ID FROM {$wpdb->posts} WHERE post_type = %s ) AND
+					meta_key = %s AND meta_value = '1'
 				",
 				$this->get_current_post_type(),
 				WPSEO_Meta::$meta_prefix . self::META_NAME
