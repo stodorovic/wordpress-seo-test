@@ -53,12 +53,12 @@ class WooCommerce implements Integration_Interface {
 	 */
 	protected $pagination_helper;
 
-        /**
-         * True when current page is the shop page.
-         *
-         * @var bool
-         */
-        protected static $is_shop_page;
+	/**
+	 * True when current page is the shop page.
+	 *
+	 * @var bool
+	 */
+	protected $is_shop_page = null;
 
 	/**
 	 * Returns the conditionals based in which this loadable should be active.
@@ -72,11 +72,11 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * WooCommerce constructor.
 	 *
-	 * @param Options_Helper             $options           The options helper.
-	 * @param WPSEO_Replace_Vars         $replace_vars      The replace vars helper.
+	 * @param Options_Helper	     $options	   The options helper.
+	 * @param WPSEO_Replace_Vars	 $replace_vars      The replace vars helper.
 	 * @param Meta_Tags_Context_Memoizer $context_memoizer  The meta tags context memoizer.
-	 * @param Indexable_Repository       $repository        The indexable repository.
-	 * @param Pagination_Helper          $pagination_helper The paginataion helper.
+	 * @param Indexable_Repository       $repository	The indexable repository.
+	 * @param Pagination_Helper	  $pagination_helper The paginataion helper.
 	 */
 	public function __construct(
 		Options_Helper $options,
@@ -85,10 +85,10 @@ class WooCommerce implements Integration_Interface {
 		Indexable_Repository $repository,
 		Pagination_Helper $pagination_helper
 	) {
-		$this->options           = $options;
+		$this->options	   = $options;
 		$this->replace_vars      = $replace_vars;
 		$this->context_memoizer  = $context_memoizer;
-		$this->repository        = $repository;
+		$this->repository	= $repository;
 		$this->pagination_helper = $pagination_helper;
 	}
 
@@ -112,7 +112,7 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * Returns the correct canonical when WooCommerce is enabled.
 	 *
-	 * @param string                      $canonical    The current canonical.
+	 * @param string		      $canonical    The current canonical.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The correct canonical.
@@ -133,8 +133,8 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * Returns the correct adjacent pages when WooCommerce is enabled.
 	 *
-	 * @param string                      $url          The current URL.
-	 * @param string                      $rel          Link relationship, prev or next.
+	 * @param string		      $url	  The current URL.
+	 * @param string		      $rel	  Link relationship, prev or next.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The correct URL.
@@ -153,9 +153,9 @@ class WooCommerce implements Integration_Interface {
 			return $rel_url;
 		}
 
-                return $url;
+		return $url;
 	}
-	
+
 	/**
 	 * Adds a breadcrumb for the shop page.
 	 *
@@ -197,7 +197,7 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * Handles the title.
 	 *
-	 * @param string                      $title        The title.
+	 * @param string		      $title	The title.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The title to use.
@@ -233,7 +233,7 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * Handles the meta description.
 	 *
-	 * @param string                      $description  The title.
+	 * @param string		      $description  The title.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The description to use.
@@ -272,13 +272,13 @@ class WooCommerce implements Integration_Interface {
 	 * @return bool True when the page is a shop page.
 	 */
 	protected function is_shop_page() {
-		if ( isset( self::$is_shop_page ) ) {
-			return self::$is_shop_page;
+		if ( $this->$is_shop_page !== null ) {
+			return $this->$is_shop_page;
 		}
 
-		self::$is_shop_page = \is_shop() && ! \is_search();
+		$this->is_shop_page = \is_shop() && ! \is_search();
 
-		return self::$is_shop_page;
+		return $this->is_shop_page;
 	}
 
 	/**
@@ -305,14 +305,14 @@ class WooCommerce implements Integration_Interface {
 		return \wc_get_page_id( 'shop' );
 	}
 
-        /**
-         * Get adjacent pages link for shop page.
-         *
-         * @param string $rel       Link relationship, prev or next or curr.
-         * @param Indexable_Presentation|null $presentation The indexable presentation.
-         *
-         * @return string|null The link.
-         */    
+	/**
+	 * Get adjacent pages link for shop page.
+	 *
+	 * @param string $rel       Link relationship, prev or next or curr.
+	 * @param Indexable_Presentation|null $presentation The indexable presentation.
+	 *
+	 * @return string|null The link.
+	 */    
 	protected function get_shop_paginated_url( $rel, $presentation = null ) {
 		$presentation = $this->ensure_presentation( $presentation );
 
@@ -322,7 +322,7 @@ class WooCommerce implements Integration_Interface {
 		}
 
 		$current_page = max( 1, $this->pagination_helper->get_current_archive_page_number() );
-		
+
 		if ( $rel === 'curr' && $current_page > 1 ) {
 			return $this->pagination_helper->get_paginated_url( $permalink, $current_page );
 		}
@@ -337,9 +337,9 @@ class WooCommerce implements Integration_Interface {
 
 		if ( $rel === 'next' && $current_page < $this->pagination_helper->get_number_of_archive_pages() ) {
 			return $this->pagination_helper->get_paginated_url( $permalink, $current_page + 1 );
-                }
+		}
 
-                return null;
+		return null;
 	}
 
 	/**
