@@ -53,6 +53,13 @@ class WooCommerce implements Integration_Interface {
 	 */
 	protected $pagination_helper;
 
+        /**
+         * True when current page is the shop page.
+         *
+         * @var bool
+         */
+        protected static $is_shop_page;
+
 	/**
 	 * Returns the conditionals based in which this loadable should be active.
 	 *
@@ -99,10 +106,11 @@ class WooCommerce implements Integration_Interface {
 		\add_filter( 'wpseo_title', [ $this, 'title' ], 10, 2 );
 		\add_filter( 'wpseo_metadesc', [ $this, 'description' ], 10, 2 );
 		\add_filter( 'wpseo_canonical', [ $this, 'canonical' ], 10, 2 );
+		\add_filter( 'wpseo_adjacent_rel_url', [ $this, 'adjacent_rel_url' ], 10, 3 );
 	}
 
 	/**
-	 * Returns the correct canonical when WooCommerces is enabled.
+	 * Returns the correct canonical when WooCommerce is enabled.
 	 *
 	 * @param string                      $canonical    The current canonical.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
@@ -114,21 +122,40 @@ class WooCommerce implements Integration_Interface {
 			return $canonical;
 		}
 
-		$presentation = $this->ensure_presentation( $presentation );
-
-		$permalink = $presentation->get_permalink();
-		if ( ! $permalink ) {
+		$url = $this->get_shop_paginated_url( 'curr', $presentation );
+		if ( ! $url ) {
 			return $canonical;
 		}
 
-		$current_page = $this->pagination_helper->get_current_archive_page_number();
-		if ( $current_page > 1 ) {
-			return $this->pagination_helper->get_paginated_url( $permalink, $current_page );
-		}
-
-		return $permalink;
+		return $url;
 	}
 
+	/**
+	 * Returns the correct adjacent pages when WooCommerce is enabled.
+	 *
+	 * @param string                      $url          The current URL.
+	 * @param string                      $rel          Link relationship, prev or next.
+	 * @param Indexable_Presentation|null $presentation The indexable presentation.
+	 *
+	 * @return string The correct URL.
+	 */
+	public function adjacent_rel_url( $url, $rel, $presentation = null ) {
+		if ( ! $this->is_shop_page() ) {
+			return $url;
+		}
+
+		if ( $rel !== 'next' && $rel !== 'prev' ) {
+			return $url;
+		}
+
+		$rel_url = $this->get_shop_paginated_url( $rel, $presentation );
+		if ( $rel_url ) {
+			return $rel_url;
+		}
+
+                return $url;
+	}
+	
 	/**
 	 * Adds a breadcrumb for the shop page.
 	 *
@@ -245,15 +272,13 @@ class WooCommerce implements Integration_Interface {
 	 * @return bool True when the page is a shop page.
 	 */
 	protected function is_shop_page() {
-		if ( ! \is_shop() ) {
-			return false;
+		if ( isset( self::$is_shop_page ) ) {
+			return self::$is_shop_page;
 		}
 
-		if ( \is_search() ) {
-			return false;
-		}
+		self::$is_shop_page = \is_shop() && ! \is_search();
 
-		return true;
+		return self::$is_shop_page;
 	}
 
 	/**
@@ -277,11 +302,44 @@ class WooCommerce implements Integration_Interface {
 	 * @return int The ID of the set page.
 	 */
 	protected function get_shop_page_id() {
-		if ( ! \function_exists( 'wc_get_page_id' ) ) {
-			return -1;
+		return \wc_get_page_id( 'shop' );
+	}
+
+        /**
+         * Get adjacent pages link for shop page.
+         *
+         * @param string $rel       Link relationship, prev or next or curr.
+         * @param Indexable_Presentation|null $presentation The indexable presentation.
+         *
+         * @return string|null The link.
+         */    
+	protected function get_shop_paginated_url( $rel, $presentation = null ) {
+		$presentation = $this->ensure_presentation( $presentation );
+
+		$permalink = $presentation->get_permalink();
+		if ( ! $permalink ) {
+			return null;
 		}
 
-		return \wc_get_page_id( 'shop' );
+		$current_page = max( 1, $this->pagination_helper->get_current_archive_page_number() );
+		
+		if ( $rel === 'curr' && $current_page > 1 ) {
+			return $this->pagination_helper->get_paginated_url( $permalink, $current_page );
+		}
+
+		if ( $rel === 'prev' && $current_page === 2 ) {
+			return $presentation->get_permalink();
+		}
+
+		if ( $rel === 'prev' && $current_page > 2 ) {
+			return $this->pagination_helper->get_paginated_url( $permalink, $current_page - 1 );
+		}
+
+		if ( $rel === 'next' && $current_page < $this->pagination_helper->get_number_of_archive_pages() ) {
+			return $this->pagination_helper->get_paginated_url( $permalink, $current_page + 1 );
+                }
+
+                return null;
 	}
 
 	/**
