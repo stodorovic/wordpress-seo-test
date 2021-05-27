@@ -274,8 +274,9 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 		$total_posts = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(ID) FROM {$subquery}
-					WHERE post_status IN ('" . implode( "', '", array_fill( 0, count( $states ), '%s' ) ) . "')
-				",
+					WHERE post_status IN (" .
+						implode( ', ', array_fill( 0, count( $states ), '%s' ) ) .
+					')',
 				$states
 			)
 		);
@@ -321,10 +322,9 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 		unset( $post_stati, $status, $status_name, $total, $current_link_attributes );
 
 		$trashed_posts = $wpdb->get_var(
+			"SELECT COUNT(ID) FROM {$subquery}
+				WHERE post_status IN ('trash')
 			"
-					SELECT COUNT(ID) FROM {$subquery}
-					WHERE post_status IN ('trash')
-				"
 		);
 
 		$current_link_attributes = '';
@@ -376,9 +376,9 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 				$post_types = $wpdb->get_results(
 					$wpdb->prepare(
 						"SELECT DISTINCT post_type FROM {$subquery}
-							WHERE post_status IN ('" . implode( "', '", array_fill( 0, count( $states ), '%s' ) ) . "')
-							ORDER BY post_type ASC
-						",
+							WHERE post_status IN (" .
+								implode( ', ', array_fill( 0, count( $states ), '%s' ) ) .
+							') ORDER BY post_type ASC',
 						$states
 					)
 				);
@@ -532,8 +532,11 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 	protected function count_items( $subquery, $all_states, $post_type_clause ) {
 		global $wpdb;
 
-		return $wpdb->get_var(
-			'SELECT COUNT(ID) FROM ' . $subquery . ' WHERE post_status IN (' . $all_states . ') ' . $post_type_clause
+		return (int) $wpdb->get_var(
+			"SELECT COUNT(ID) FROM {$subquery}
+				WHERE post_status IN ({$all_states})
+					{$post_type_clause}
+			"
 		);
 	}
 
@@ -701,7 +704,7 @@ class WPSEO_Bulk_List_Table extends WP_List_Table {
 		}
 
 		return $wpdb->prepare(
-			"'" . implode( "', '", array_fill( 0, count( $states ), '%s' ) ) . "'",
+			implode( ', ', array_fill( 0, count( $states ), '%s' ) ),
 			$states
 		);
 	}
