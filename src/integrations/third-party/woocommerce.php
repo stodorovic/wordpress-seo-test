@@ -272,7 +272,7 @@ class WooCommerce implements Integration_Interface {
 	 * @return bool True when the page is a shop page.
 	 */
 	protected function is_shop_page() {
-		if ( $this->$is_shop_page !== null ) {
+		if ( $this->is_shop_page !== null ) {
 			return $this->$is_shop_page;
 		}
 
