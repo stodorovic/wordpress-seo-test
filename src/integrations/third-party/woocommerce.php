@@ -134,7 +134,7 @@ class WooCommerce implements Integration_Interface {
 	 * Returns the correct adjacent pages when WooCommerce is enabled.
 	 *
 	 * @param string                      $url          The current URL.
-         * @param string                      $rel          Link relationship, prev or next.
+	 * @param string                      $rel          Link relationship, prev or next.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The correct URL.
@@ -197,7 +197,7 @@ class WooCommerce implements Integration_Interface {
 	/**
 	 * Handles the title.
 	 *
-	 * @param string                      $title	The title.
+	 * @param string                      $title        The title.
 	 * @param Indexable_Presentation|null $presentation The indexable presentation.
 	 *
 	 * @return string The title to use.
