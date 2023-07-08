@@ -1,8 +1,11 @@
 import { Component, Fragment } from "@wordpress/element";
 import { __, _n, sprintf } from "@wordpress/i18n";
+import { makeOutboundLink } from "@yoast/helpers";
 import { Alert, Select, FieldGroup } from "@yoast/components";
 import PropTypes from "prop-types";
 import linkHiddenFields, { linkFieldsShape } from "./higherorder/linkHiddenField";
+
+const NewsLandingPageLink = makeOutboundLink();
 
 /**
  * Returns the content of the schema settings.
@@ -34,6 +37,15 @@ class SchemaSettings extends Component {
 		/* eslint-enable camelcase */
 
 		this.handleOptionFocus = this.handleOptionFocus.bind( this );
+
+		this.showNewsSEOUpsell = window.wpseoScriptData?.searchAppearance?.showNewsSEOUpsell;
+		this.newsSEOUpsellURL = window.wpseoScriptData?.searchAppearance?.newsSEOUpsellURL;
+		if ( typeof this.showNewsSEOUpsell === "undefined" ) {
+			this.showNewsSEOUpsell = false;
+		}
+		if ( typeof this.newsSEOUpsellURL === "undefined" ) {
+			this.newsSEOUpsellURL = "";
+		}
 	}
 
 	/**
@@ -51,6 +63,15 @@ class SchemaSettings extends Component {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Determines whether News Article is selected for the Default Article Type.
+	 *
+	 * @returns {boolean} True if News Article is selected for the Default Article Type.
+	 */
+	 isNewsArticleSelected() {
+		return this.state.schema_article_type === "NewsArticle";
 	}
 
 	/**
@@ -83,8 +104,8 @@ class SchemaSettings extends Component {
 					description={ sprintf(
 						/* translators: %1$s expands to an indexable object's name, e.g. Posts or Pages. */
 						__(
-							"Choose how your %1$s should be described by default in your site's schema.org markup. " +
-							"You can change these settings for individual %1$s.",
+							// eslint-disable-next-line max-len
+							"Choose how your %1$s should be described by default in your site's schema.org markup. You can change these settings for individual %1$s.",
 							"wordpress-seo"
 						),
 						this.props.postTypeName
@@ -95,8 +116,7 @@ class SchemaSettings extends Component {
 						/* translators: %1$s expands to an indexable object's name, e.g. Posts or Pages. */
 						_n(
 							"Upon saving, this setting will apply to all of your %1$s. %1$s that are manually configured will be left untouched.",
-							"Upon saving, these settings will apply to all of your %1$s." +
-							" %1$s that are manually configured will be left untouched.",
+							"Upon saving, these settings will apply to all of your %1$s. %1$s that are manually configured will be left untouched.",
 							this.props.articleType ? 2 : 1,
 							"wordpress-seo"
 						),
@@ -121,6 +141,29 @@ class SchemaSettings extends Component {
 					onOptionFocus={ this.handleOptionFocus }
 					selected={ this.props.articleType.value }
 				/> }
+				{ this.showNewsSEOUpsell && this.isNewsArticleSelected() && <Alert type="info">
+					{
+						sprintf(
+							/* translators: %s Expands to "Yoast SEO News" */
+							__(
+								"Are you publishing news articles? %s helps you optimize your site for Google News. Get %s now!",
+								"wordpress-seo"
+							),
+							"Yoast SEO News", "Yoast SEO News"
+						) + " "
+					}
+					<NewsLandingPageLink
+						href={ this.newsSEOUpsellURL }
+					>
+						{
+							sprintf(
+								/* translators: %s: Expands to "Yoast News SEO". */
+								__( "Get the %s plugin!", "wordpress-seo" ),
+								"Yoast News SEO"
+							)
+						}
+					</NewsLandingPageLink>
+				</Alert> }
 			</Fragment>
 		);
 	}

@@ -4,7 +4,7 @@ import {
 	omit,
 	get,
 	identity,
-} from "lodash-es";
+} from "lodash";
 
 // @wordpress/sanitize loads directly from the wp-sanitize script handle.
 import { stripTags } from "@wordpress/sanitize";
@@ -230,17 +230,22 @@ export function excerptFromContent( content, limit = 156 ) {
 	// Retrieves the first 156 chars from the content.
 	content = content.substring( 0, limit );
 
-	// Caps to the last space to have a full last word.
-	return content.substring( 0, content.lastIndexOf( " " ) );
+	// Check if the description has space and trim the auto-generated string to a word boundary.
+	if ( /\s/.test( content ) ) {
+		content = content.substring( 0, content.lastIndexOf( " " ) );
+	}
+
+	return content;
 }
 
 /**
  * Runs the legacy replaceVariables function on the data in the snippet preview.
  *
- * @param {Object} data             The snippet preview data object.
- * @param {string} data.title       The snippet preview title.
- * @param {string} data.url         The snippet preview url: baseUrl with the slug.
- * @param {string} data.description The snippet preview description.
+ * @param {Object} data					The snippet preview data object.
+ * @param {string} data.title			The snippet preview title.
+ * @param {string} data.url				The snippet preview url: baseUrl with the slug.
+ * @param {string} data.description		The snippet preview description.
+ * @param {string} data.filteredSEOTitle The SEO title without separator and site title.
  *
  * @returns {Object} Returns the data object in which the placeholders have been replaced.
  */
@@ -251,6 +256,7 @@ const legacyReplaceUsingPlugin = function( data ) {
 		url: data.url,
 		title: stripHTMLTags( replaceVariables( data.title ) ),
 		description: stripHTMLTags( replaceVariables( data.description ) ),
+		filteredSEOTitle: data.filteredSEOTitle ? stripHTMLTags( replaceVariables( data.filteredSEOTitle ) ) : "",
 	};
 };
 
@@ -261,6 +267,7 @@ const legacyReplaceUsingPlugin = function( data ) {
  * @param {string} data.title       The snippet preview title.
  * @param {string} data.url         The snippet preview url: baseUrl with the slug.
  * @param {string} data.description The snippet preview description.
+ * @param {string} data.filteredSEOTitle The SEO title without separator and site title.
  *
  * @returns {Object} Returns the data object in which the placeholders have been replaced.
  */
@@ -277,5 +284,6 @@ export const applyReplaceUsingPlugin = function( data ) {
 		url: data.url,
 		title: stripHTMLTags( applyModifications( "data_page_title", data.title ) ),
 		description: stripHTMLTags( applyModifications( "data_meta_desc", data.description ) ),
+		filteredSEOTitle: data.filteredSEOTitle ? stripHTMLTags( applyModifications( "data_page_title", data.filteredSEOTitle ) ) : "",
 	};
 };

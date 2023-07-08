@@ -51,18 +51,16 @@ class Indexable_Author_Archive_Presentation extends Indexable_Presentation {
 			return $this->model->canonical;
 		}
 
-		$permalink = $this->get_permalink();
-
-		if ( ! $permalink ) {
+		if ( ! $this->permalink ) {
 			return '';
 		}
 
 		$current_page = $this->pagination->get_current_archive_page_number();
 		if ( $current_page > 1 ) {
-			return $this->pagination->get_paginated_url( $permalink, $current_page );
+			return $this->pagination->get_paginated_url( $this->permalink, $current_page );
 		}
 
-		return $permalink;
+		return $this->permalink;
 	}
 
 	/**
@@ -149,6 +147,19 @@ class Indexable_Author_Archive_Presentation extends Indexable_Presentation {
 	 */
 	public function generate_open_graph_type() {
 		return 'profile';
+	}
+
+	/**
+	 * Generates the open graph images.
+	 *
+	 * @return array The open graph images.
+	 */
+	public function generate_open_graph_images() {
+		if ( $this->context->open_graph_enabled === false ) {
+			return [];
+		}
+
+		return $this->open_graph_image_generator->generate_for_author_archive( $this->context );
 	}
 
 	/**

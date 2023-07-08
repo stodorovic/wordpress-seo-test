@@ -4,6 +4,8 @@ namespace Yoast\WP\SEO\Tests\Unit\Routes;
 
 use Brain\Monkey;
 use Mockery;
+use WP_REST_Request;
+use WP_REST_Response;
 use Yoast\WP\SEO\Actions\Indexables\Indexable_Head_Action;
 use Yoast\WP\SEO\Conditionals\Headless_Rest_Endpoints_Enabled_Conditional;
 use Yoast\WP\SEO\Routes\Indexables_Head_Route;
@@ -103,7 +105,7 @@ class Indexables_Head_Route_Test extends TestCase {
 	public function test_get_head() {
 		$this->stubEscapeFunctions();
 
-		$request = Mockery::mock( 'WP_REST_Request', 'ArrayAccess' );
+		$request = Mockery::mock( WP_REST_Request::class, 'ArrayAccess' );
 		$request
 			->expects( 'offsetGet' )
 			->with( 'url' )
@@ -114,7 +116,11 @@ class Indexables_Head_Route_Test extends TestCase {
 			->with( 'https://example.org' )
 			->andReturn( (object) [ 'status' => 'yes' ] );
 
-		Mockery::mock( 'overload:WP_REST_Response' );
+		Mockery::mock( 'overload:' . WP_REST_Response::class );
+
+		Monkey\Functions\expect( 'utf8_uri_encode' )
+			->with( 'https://example.org' )
+			->andReturnFirstArg();
 
 		$this->assertInstanceOf( 'WP_REST_Response', $this->instance->get_head( $request ) );
 	}
@@ -125,6 +131,10 @@ class Indexables_Head_Route_Test extends TestCase {
 	 * @covers ::is_valid_url
 	 */
 	public function test_is_valid_url_with_invalid_url_given() {
+		Monkey\Functions\expect( 'utf8_uri_encode' )
+			->with( 'foo bar baz' )
+			->andReturnFirstArg();
+
 		$this->assertFalse( $this->instance->is_valid_url( 'foo bar baz' ) );
 	}
 
@@ -134,6 +144,10 @@ class Indexables_Head_Route_Test extends TestCase {
 	 * @covers ::is_valid_url
 	 */
 	public function test_is_valid_url_with_valid_url_given() {
+		Monkey\Functions\expect( 'utf8_uri_encode' )
+			->with( 'https://example.org' )
+			->andReturnFirstArg();
+
 		$this->assertTrue( $this->instance->is_valid_url( 'https://example.org' ) );
 	}
 }

@@ -4,14 +4,11 @@ import Factory from "../../../specHelpers/factory";
 import EnglishResearcher from "../../../../src/languageProcessing/languages/en/Researcher";
 import DefaultResearcher from "../../../../src/languageProcessing/languages/_default/Researcher";
 
-const i18n = Factory.buildJed();
-
 describe( "An assessment for checking if the keyphrase contains function words only", function() {
 	it( "returns a consideration feedback if there are only function words in the keyphrase", function() {
 		const assessment = new FunctionWordsInKeyphraseAssessment().getResult(
 			new Paper( "", { keyword: "someone was here" } ),
 			Factory.buildMockResearcher( true ),
-			i18n
 		);
 		expect( assessment.getScore() ).toBe( 0 );
 		expect( assessment.getText() ).toBe(
@@ -19,13 +16,14 @@ describe( "An assessment for checking if the keyphrase contains function words o
 			"Your keyphrase \"someone was here\" contains function words only. " +
 			"<a href='https://yoa.st/functionwordskeyphrase-2' target='_blank'>Learn more about what makes a good keyphrase.</a>"
 		);
+		expect( assessment.hasJumps() ).toBeTruthy();
+		expect( assessment.getEditFieldName() ).toBe( "keyphrase" );
 	} );
 
 	it( "returns nothing if there are also content words in the keyphrase", function() {
 		const assessment = new FunctionWordsInKeyphraseAssessment().getResult(
 			new Paper( "", { keyword: "someone smart was here" } ),
-			Factory.buildMockResearcher( false ),
-			i18n
+			Factory.buildMockResearcher( false )
 		);
 		expect( assessment.hasScore() ).toBe( false );
 	} );

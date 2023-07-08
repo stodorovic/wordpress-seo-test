@@ -20,7 +20,7 @@ class Container_Compiler {
 	 * @param string $generated_container_path The path the generated container should be written to.
 	 * @param string $services_path            The path of the services.php.
 	 * @param string $class_map_path           The path of the class map.
-	 * @param string $namespace                The namespace the generated container should be in.
+	 * @param string $target_namespace         The namespace the generated container should be in.
 	 *
 	 * @return void
 	 *
@@ -31,7 +31,7 @@ class Container_Compiler {
 		$generated_container_path,
 		$services_path,
 		$class_map_path,
-		$namespace
+		$target_namespace
 	) {
 		$cache = new ConfigCache( $generated_container_path, $debug );
 
@@ -43,7 +43,6 @@ class Container_Compiler {
 
 			$container_builder = new ContainerBuilder();
 			$container_builder->addCompilerPass( new Loader_Pass() );
-			$container_builder->addCompilerPass( new Schema_Templates_Pass( new Schema_Templates_Loader() ) );
 			$container_builder->addCompilerPass( new Interface_Injection_Pass() );
 			$container_builder->addCompilerPass( new AutowireRequiredMethodsPass() );
 			$container_builder->addCompilerPass( new Inject_From_Registry_Pass() );
@@ -55,7 +54,7 @@ class Container_Compiler {
 			$code   = $dumper->dump(
 				[
 					'class'     => 'Cached_Container',
-					'namespace' => $namespace,
+					'namespace' => $target_namespace,
 				]
 			);
 			$code   = \str_replace( 'Symfony\\Component\\DependencyInjection', 'YoastSEO_Vendor\\Symfony\\Component\\DependencyInjection', $code );

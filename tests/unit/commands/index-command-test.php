@@ -3,21 +3,27 @@
 namespace Yoast\WP\SEO\Tests\Unit\Commands;
 
 use Brain\Monkey;
+use cli\progress\Bar;
 use Mockery;
+use WP_CLI;
+use wpdb;
 use Yoast\WP\SEO\Actions\Indexing\Indexable_General_Indexation_Action;
 use Yoast\WP\SEO\Actions\Indexing\Indexable_Indexing_Complete_Action;
 use Yoast\WP\SEO\Actions\Indexing\Indexable_Post_Indexation_Action;
 use Yoast\WP\SEO\Actions\Indexing\Indexable_Post_Type_Archive_Indexation_Action;
 use Yoast\WP\SEO\Actions\Indexing\Indexable_Term_Indexation_Action;
 use Yoast\WP\SEO\Actions\Indexing\Indexing_Prepare_Action;
+use Yoast\WP\SEO\Actions\Indexing\Post_Link_Indexing_Action;
+use Yoast\WP\SEO\Actions\Indexing\Term_Link_Indexing_Action;
 use Yoast\WP\SEO\Commands\Index_Command;
+use Yoast\WP\SEO\Helpers\Indexable_Helper;
 use Yoast\WP\SEO\Main;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
 /**
  * Class Index_Command_Test.
  *
- * @group commands
+ * @group  commands
  *
  * @coversDefaultClass \Yoast\WP\SEO\Commands\Index_Command
  * @covers \Yoast\WP\SEO\Commands\Index_Command
@@ -53,6 +59,20 @@ class Index_Command_Test extends TestCase {
 	private $general_indexation_action;
 
 	/**
+	 * The post link indexation action.
+	 *
+	 * @var Post_Link_Indexing_Action
+	 */
+	private $post_link_indexation_action;
+
+	/**
+	 * The term link indexation action.
+	 *
+	 * @var Term_Link_Indexing_Action
+	 */
+	private $term_link_indexation_action;
+
+	/**
 	 * The complete indexation action.
 	 *
 	 * @var Indexable_Indexing_Complete_Action
@@ -65,6 +85,13 @@ class Index_Command_Test extends TestCase {
 	 * @var Indexing_Prepare_Action
 	 */
 	private $prepare_indexing_action;
+
+	/**
+	 * The indexable helper.
+	 *
+	 * @var Indexable_Helper|Mockery\MockInterface
+	 */
+	protected $indexable_helper;
 
 	/**
 	 * The instance
@@ -83,8 +110,11 @@ class Index_Command_Test extends TestCase {
 		$this->term_indexation_action              = Mockery::mock( Indexable_Term_Indexation_Action::class );
 		$this->post_type_archive_indexation_action = Mockery::mock( Indexable_Post_Type_Archive_Indexation_Action::class );
 		$this->general_indexation_action           = Mockery::mock( Indexable_General_Indexation_Action::class );
+		$this->post_link_indexation_action         = Mockery::mock( Post_Link_Indexing_Action::class );
+		$this->term_link_indexation_action         = Mockery::mock( Term_Link_Indexing_Action::class );
 		$this->complete_indexation_action          = Mockery::mock( Indexable_Indexing_Complete_Action::class );
 		$this->prepare_indexing_action             = Mockery::mock( Indexing_Prepare_Action::class );
+		$this->indexable_helper                    = Mockery::mock( Indexable_Helper::class );
 
 		$this->instance = new Index_Command(
 			$this->post_indexation_action,
@@ -92,8 +122,13 @@ class Index_Command_Test extends TestCase {
 			$this->post_type_archive_indexation_action,
 			$this->general_indexation_action,
 			$this->complete_indexation_action,
-			$this->prepare_indexing_action
+			$this->prepare_indexing_action,
+			$this->post_link_indexation_action,
+			$this->term_link_indexation_action,
+			$this->indexable_helper
 		);
+
+		$this->stubTranslationFunctions();
 	}
 
 	/**
@@ -136,6 +171,8 @@ class Index_Command_Test extends TestCase {
 			$this->term_indexation_action,
 			$this->post_type_archive_indexation_action,
 			$this->general_indexation_action,
+			$this->post_link_indexation_action,
+			$this->term_link_indexation_action,
 		];
 
 		foreach ( $indexation_actions as $indexation_action ) {
@@ -146,20 +183,66 @@ class Index_Command_Test extends TestCase {
 				->andReturn( \array_fill( 0, 25, true ), \array_fill( 0, 5, true ) );
 		}
 
+		$this->indexable_helper->expects( 'should_index_indexables' )->once()->andReturn( true );
+
 		$this->prepare_indexing_action->expects( 'prepare' )->once();
 
 		$this->complete_indexation_action->expects( 'complete' )->once();
 
-		$progress_bar_mock = Mockery::mock( 'cli\progress\Bar' );
+		$progress_bar_mock = Mockery::mock( Bar::class );
 		Monkey\Functions\expect( '\WP_CLI\Utils\make_progress_bar' )
-			->times( 4 )
+			->times( 6 )
 			->with( Mockery::type( 'string' ), 30 )
 			->andReturn( $progress_bar_mock );
-		$progress_bar_mock->expects( 'tick' )->times( 4 )->with( 25 );
-		$progress_bar_mock->expects( 'tick' )->times( 4 )->with( 5 );
-		$progress_bar_mock->expects( 'finish' )->times( 4 );
+		Monkey\Functions\expect( '\WP_CLI\Utils\wp_clear_object_cache' )
+			->times( 12 );
+		$progress_bar_mock->expects( 'tick' )->times( 6 )->with( 25 );
+		$progress_bar_mock->expects( 'tick' )->times( 6 )->with( 5 );
+		$progress_bar_mock->expects( 'finish' )->times( 6 );
 
-		$this->instance->index();
+		$this->instance->index( null, [ 'interval' => 500 ] );
+	}
+
+	/**
+	 * Tests the execute function on a staging site.
+	 *
+	 * @covers ::index
+	 * @covers ::run_indexation_action
+	 */
+	public function test_execute_staging() {
+		$indexation_actions = [
+			$this->post_indexation_action,
+			$this->term_indexation_action,
+			$this->post_type_archive_indexation_action,
+			$this->general_indexation_action,
+			$this->post_link_indexation_action,
+			$this->term_link_indexation_action,
+		];
+
+		foreach ( $indexation_actions as $indexation_action ) {
+			$indexation_action->expects( 'get_total_unindexed' )->never();
+			$indexation_action->expects( 'get_limit' )->never();
+			$indexation_action->expects( 'index' )->never();
+		}
+
+		$this->indexable_helper->expects( 'should_index_indexables' )->once()->andReturn( false );
+
+		$this->prepare_indexing_action->expects( 'prepare' )->never();
+
+		$this->complete_indexation_action->expects( 'complete' )->never();
+
+		$progress_bar_mock = Mockery::mock( Bar::class );
+		Monkey\Functions\expect( '\WP_CLI\Utils\make_progress_bar' )->never();
+		Monkey\Functions\expect( '\WP_CLI\Utils\wp_clear_object_cache' )->never();
+		$progress_bar_mock->expects( 'tick' )->never();
+		$progress_bar_mock->expects( 'finish' )->never();
+
+		$cli = Mockery::mock( 'overload:' . WP_CLI::class );
+		$cli->expects( 'log' )
+			->once()
+			->with( 'Your WordPress environment is running on a non-production site. Indexables can only be created on production environments. Please check your `WP_ENVIRONMENT_TYPE` settings.' );
+
+		$this->instance->index( null, [ 'interval' => 500 ] );
 	}
 
 	/**
@@ -175,6 +258,8 @@ class Index_Command_Test extends TestCase {
 			$this->term_indexation_action,
 			$this->post_type_archive_indexation_action,
 			$this->general_indexation_action,
+			$this->post_link_indexation_action,
+			$this->term_link_indexation_action,
 		];
 
 		foreach ( $indexation_actions as $indexation_action ) {
@@ -185,25 +270,29 @@ class Index_Command_Test extends TestCase {
 				->andReturn( \array_fill( 0, 25, true ), \array_fill( 0, 5, true ) );
 		}
 
+		$this->indexable_helper->expects( 'should_index_indexables' )->once()->andReturn( true );
+
 		$this->complete_indexation_action->expects( 'complete' )->once();
 
 		$this->prepare_indexing_action->expects( 'prepare' )->once();
 
-		$progress_bar_mock = Mockery::mock( 'cli\progress\Bar' );
+		$progress_bar_mock = Mockery::mock( Bar::class );
 		Monkey\Functions\expect( '\WP_CLI\Utils\make_progress_bar' )
-			->times( 4 )
+			->times( 6 )
 			->with( Mockery::type( 'string' ), 30 )
 			->andReturn( $progress_bar_mock );
-		$progress_bar_mock->expects( 'tick' )->times( 4 )->with( 25 );
-		$progress_bar_mock->expects( 'tick' )->times( 4 )->with( 5 );
-		$progress_bar_mock->expects( 'finish' )->times( 4 );
+		Monkey\Functions\expect( '\WP_CLI\Utils\wp_clear_object_cache' )
+			->times( 12 );
+		$progress_bar_mock->expects( 'tick' )->times( 6 )->with( 25 );
+		$progress_bar_mock->expects( 'tick' )->times( 6 )->with( 5 );
+		$progress_bar_mock->expects( 'finish' )->times( 6 );
 
-		$cli = Mockery::mock( 'overload:WP_CLI' );
+		$cli = Mockery::mock( 'overload:' . WP_CLI::class );
 		$cli
 			->expects( 'confirm' )
 			->with( 'This will clear all previously indexed objects. Are you certain you wish to proceed?' );
 
-		$wpdb            = Mockery::mock();
+		$wpdb            = Mockery::mock( wpdb::class );
 		$wpdb->prefix    = 'wp_';
 		$GLOBALS['wpdb'] = $wpdb; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Intended override for test purpose.
 
@@ -241,7 +330,13 @@ class Index_Command_Test extends TestCase {
 			->once()
 			->with( 'wpseo_total_unindexed_terms' );
 
-		$this->instance->index( null, [ 'reindex' => true ] );
+		$this->instance->index(
+			null,
+			[
+				'reindex'  => true,
+				'interval' => 500,
+			]
+		);
 	}
 
 	/**
@@ -273,6 +368,8 @@ class Index_Command_Test extends TestCase {
 			$this->term_indexation_action,
 			$this->post_type_archive_indexation_action,
 			$this->general_indexation_action,
+			$this->post_link_indexation_action,
+			$this->term_link_indexation_action,
 		];
 
 		foreach ( $indexation_actions as $indexation_action ) {
@@ -288,20 +385,30 @@ class Index_Command_Test extends TestCase {
 				);
 		}
 
+		$this->indexable_helper->expects( 'should_index_indexables' )->once()->andReturn( true );
+
 		// Expect the complete and prepare actions twice: once for each site in the multisite.
 		$this->complete_indexation_action->expects( 'complete' )->twice();
 		$this->prepare_indexing_action->expects( 'prepare' )->twice();
 
-		$progress_bar_mock = Mockery::mock( 'cli\progress\Bar' );
+		$progress_bar_mock = Mockery::mock( Bar::class );
 		Monkey\Functions\expect( '\WP_CLI\Utils\make_progress_bar' )
-			->times( 8 )
+			->times( 12 )
 			->with( Mockery::type( 'string' ), 30 )
 			->andReturn( $progress_bar_mock );
-		$progress_bar_mock->expects( 'tick' )->times( 8 )->with( 25 );
-		$progress_bar_mock->expects( 'tick' )->times( 8 )->with( 5 );
-		$progress_bar_mock->expects( 'finish' )->times( 8 );
+		Monkey\Functions\expect( '\WP_CLI\Utils\wp_clear_object_cache' )
+			->times( 24 );
+		$progress_bar_mock->expects( 'tick' )->times( 12 )->with( 25 );
+		$progress_bar_mock->expects( 'tick' )->times( 12 )->with( 5 );
+		$progress_bar_mock->expects( 'finish' )->times( 12 );
 
-		$this->instance->index( null, [ 'network' => true ] );
+		$this->instance->index(
+			null,
+			[
+				'network'  => true,
+				'interval' => 500,
+			]
+		);
 	}
 
 	/**

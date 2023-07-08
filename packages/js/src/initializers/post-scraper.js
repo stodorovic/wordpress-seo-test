@@ -5,16 +5,13 @@ import { App } from "yoastseo";
 import {
 	isUndefined,
 	debounce,
-} from "lodash-es";
-import {
-	setReadabilityResults,
-	setSeoResultsForKeyword,
-} from "yoast-components";
+} from "lodash";
 import { isShallowEqualObjects } from "@wordpress/is-shallow-equal";
 import { select, subscribe } from "@wordpress/data";
 
 // Internal dependencies.
 import YoastReplaceVarPlugin from "../analysis/plugins/replacevar-plugin";
+import YoastReusableBlocksPlugin from "../analysis/plugins/reusable-blocks-plugin";
 import YoastShortcodePlugin from "../analysis/plugins/shortcode-plugin";
 import YoastMarkdownPlugin from "../analysis/plugins/markdown-plugin";
 import * as tinyMCEHelper from "../lib/tinymce";
@@ -36,7 +33,14 @@ import getIndicatorForScore from "../analysis/getIndicatorForScore";
 import getTranslations from "../analysis/getTranslations";
 import isKeywordAnalysisActive from "../analysis/isKeywordAnalysisActive";
 import isContentAnalysisActive from "../analysis/isContentAnalysisActive";
-import snippetEditorHelpers from "../analysis/snippetEditor";
+import isInclusiveLanguageAnalysisActive from "../analysis/isInclusiveLanguageAnalysisActive";
+import {
+	getDataFromCollector,
+	getDataFromStore,
+	getDataWithoutTemplates,
+	getDataWithTemplates,
+	getTemplatesFromL10n,
+} from "../analysis/snippetEditor";
 import CustomAnalysisData from "../analysis/CustomAnalysisData";
 import getApplyMarks from "../analysis/getApplyMarks";
 import { refreshDelay } from "../analysis/constants";
@@ -44,18 +48,21 @@ import handleWorkerError from "../analysis/handleWorkerError";
 import initializeUsedKeywords from "./used-keywords-assessment";
 
 // Redux dependencies.
-import { setFocusKeyword } from "../redux/actions/focusKeyword";
-import { setMarkerStatus } from "../redux/actions/markerButtons";
-import { updateData } from "../redux/actions/snippetEditor";
-import { setWordPressSeoL10n, setYoastComponentsL10n } from "../helpers/i18n";
-import { setCornerstoneContent } from "../redux/actions/cornerstoneContent";
-import { refreshSnippetEditor } from "../redux/actions/snippetEditor.js";
+import { actions } from "@yoast/externals/redux";
 
 // Helper dependencies.
 import isBlockEditor from "../helpers/isBlockEditor";
 
-setYoastComponentsL10n();
-setWordPressSeoL10n();
+
+const {
+	setFocusKeyword,
+	setMarkerStatus,
+	updateData,
+	setCornerstoneContent,
+	refreshSnippetEditor,
+	setReadabilityResults,
+	setSeoResultsForKeyword,
+} = actions;
 
 // Plugin class prototypes (not the instances) are being used by other plugins from the window.
 window.YoastReplaceVarPlugin = YoastReplaceVarPlugin;
@@ -150,11 +157,11 @@ export default function initPostScraper( $, store, editorData ) {
 	/**
 	 * Initializes keyword analysis.
 	 *
-	 * @param {Object} publishBox             The publish box object.
+	 * @param {Object} activePublishBox             The publish box object.
 	 *
 	 * @returns {void}
 	 */
-	function initializeKeywordAnalysis( publishBox ) {
+	function initializeKeywordAnalysis( activePublishBox ) {
 		const savedKeywordScore = $( "#yoast_wpseo_linkdex" ).val();
 
 		const indicator = getIndicatorForScore( savedKeywordScore );
@@ -162,24 +169,41 @@ export default function initPostScraper( $, store, editorData ) {
 		updateTrafficLight( indicator );
 		updateAdminBar( indicator );
 
-		publishBox.updateScore( "keyword", indicator.className );
+		activePublishBox.updateScore( "keyword", indicator.className );
 	}
 
 	/**
 	 * Initializes content analysis
 	 *
-	 * @param {Object} publishBox The publish box object.
+	 * @param {Object} activePublishBox The publish box object.
 	 *
 	 * @returns {void}
 	 */
-	function initializeContentAnalysis( publishBox ) {
+	function initializeContentAnalysis( activePublishBox ) {
 		const savedContentScore = $( "#yoast_wpseo_content_score" ).val();
 
 		const indicator = getIndicatorForScore( savedContentScore );
 
 		updateAdminBar( indicator );
 
-		publishBox.updateScore( "content", indicator.className );
+		activePublishBox.updateScore( "content", indicator.className );
+	}
+
+	/**
+	 * Initializes the inclusive language analysis.
+	 *
+	 * @param {Object} activePublishBox The publish box object.
+	 *
+	 * @returns {void}
+	 */
+	function initializeInclusiveLanguageAnalysis( activePublishBox ) {
+		const savedContentScore = $( "#yoast_wpseo_inclusive_language_score" ).val();
+
+		const indicator = getIndicatorForScore( savedContentScore );
+
+		updateAdminBar( indicator );
+
+		activePublishBox.updateScore( "inclusive-language", indicator.className );
 	}
 
 	/**
@@ -301,6 +325,10 @@ export default function initPostScraper( $, store, editorData ) {
 
 		if ( isContentAnalysisActive() ) {
 			initializeContentAnalysis( publishBox );
+		}
+
+		if ( isInclusiveLanguageAnalysisActive() ) {
+			initializeInclusiveLanguageAnalysis( publishBox );
 		}
 	}
 
@@ -459,7 +487,7 @@ export default function initPostScraper( $, store, editorData ) {
 			window.YoastSEO.app.refresh();
 		};
 
-		initializeUsedKeywords( app.refresh, "get_focus_keyword_usage", store );
+		initializeUsedKeywords( app.refresh, "get_focus_keyword_usage_and_post_types", store );
 		store.subscribe( handleStoreChange.bind( null, store, app.refresh ) );
 
 		// Backwards compatibility.
@@ -474,7 +502,10 @@ export default function initPostScraper( $, store, editorData ) {
 			pluginReady: app.pluginReady,
 			pluginReloaded: app.pluginReloaded,
 		} );
-
+		if ( isBlockEditor() ) {
+			const reusableBlocksPlugin = new YoastReusableBlocksPlugin( app.registerPlugin, app.registerModification, window.YoastSEO.app.refresh );
+			reusableBlocksPlugin.register();
+		}
 		if ( wpseoScriptData.metabox.markdownEnabled ) {
 			const markdownPlugin = new YoastMarkdownPlugin( app.registerPlugin, app.registerModification );
 			markdownPlugin.register();
@@ -513,9 +544,9 @@ export default function initPostScraper( $, store, editorData ) {
 		}
 
 		// Initialize the snippet editor data.
-		let snippetEditorData = snippetEditorHelpers.getDataFromCollector( postDataCollector );
-		const snippetEditorTemplates = snippetEditorHelpers.getTemplatesFromL10n( wpseoScriptData.metabox );
-		snippetEditorData = snippetEditorHelpers.getDataWithTemplates( snippetEditorData, snippetEditorTemplates );
+		let snippetEditorData = getDataFromCollector( postDataCollector );
+		const snippetEditorTemplates = getTemplatesFromL10n( wpseoScriptData.metabox );
+		snippetEditorData = getDataWithTemplates( snippetEditorData, snippetEditorTemplates );
 
 		// Set the initial snippet editor data.
 		store.dispatch( updateData( snippetEditorData ) );
@@ -542,8 +573,8 @@ export default function initPostScraper( $, store, editorData ) {
 				refreshAfterFocusKeywordChange();
 			}
 
-			const data = snippetEditorHelpers.getDataFromStore( store );
-			const dataWithoutTemplates = snippetEditorHelpers.getDataWithoutTemplates( data, snippetEditorTemplates );
+			const data = getDataFromStore( store );
+			const dataWithoutTemplates = getDataWithoutTemplates( data, snippetEditorTemplates );
 
 
 			if ( snippetEditorData.title !== data.title ) {

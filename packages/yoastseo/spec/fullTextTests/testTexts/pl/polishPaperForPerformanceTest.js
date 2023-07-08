@@ -15,9 +15,10 @@ const paper = new Paper( content, {
 	description: "Зелёная книга - краткое название ежегодного путеводителя для чернокожих автомобилистов, который издавался в США с 1936 по 1966 год",
 	title: "Зелёная книга (путеводитель)",
 	titleWidth: 450,
+	textTitle: "Зелёная книга (путеводитель)",
 	locale: "pl_PL",
 	permalink: "https://ru.wikipedia.org/wiki/Зелёная_книга_(путеводитель)",
-	url: "Зелёная_книга_(путеводитель)",
+	slug: "Зелёная_книга_(путеводитель)",
 } );
 
 const expectedResults = {
@@ -34,7 +35,7 @@ const expectedResults = {
 	keywordDensity: {
 		isApplicable: true,
 		score: 4,
-		resultText: "<a href='https://yoa.st/33v' target='_blank'>Keyphrase density</a>: The focus keyphrase was found 5 times. That's less than the recommended minimum of 6 times for a text of this length. <a href='https://yoa.st/33w' target='_blank'>Focus on your keyphrase</a>!",
+		resultText: "<a href='https://yoa.st/33v' target='_blank'>Keyphrase density</a>: The keyphrase was found 5 times. That's less than the recommended minimum of 6 times for a text of this length. <a href='https://yoa.st/33w' target='_blank'>Focus on your keyphrase</a>!",
 	},
 	metaDescriptionKeyword: {
 		isApplicable: true,
@@ -56,17 +57,10 @@ const expectedResults = {
 		score: 0,
 		resultText: "",
 	},
-	textImages: {
-		isApplicable: true,
-		score: 6,
-		resultText: "<a href='https://yoa.st/33c' target='_blank'>Image alt attributes</a>: " +
-			"Images on this page do not have alt attributes that reflect the topic of your text. " +
-			"<a href='https://yoa.st/33d' target='_blank'>Add your keyphrase or synonyms to the alt tags of relevant images</a>!",
-	},
 	textLength: {
 		isApplicable: true,
 		score: 9,
-		resultText: "<a href='https://yoa.st/34n' target='_blank'>Text length</a>: The text contains 1390 words. Good job!",
+		resultText: "<a href='https://yoa.st/34n' target='_blank'>Text length</a>: The text contains 1391 words. Good job!",
 	},
 	externalLinks: {
 		isApplicable: true,
@@ -78,17 +72,17 @@ const expectedResults = {
 		score: 9,
 		resultText: "<a href='https://yoa.st/33z' target='_blank'>Internal links</a>: You have enough internal links. Good job!",
 	},
-	titleKeyword: {
+	keyphraseInSEOTitle: {
 		isApplicable: true,
 		score: 9,
-		resultText: "<a href='https://yoa.st/33g' target='_blank'>Keyphrase in title</a>: The exact match of the focus keyphrase appears at the beginning of the SEO title. Good job!",
+		resultText: "<a href='https://yoa.st/33g' target='_blank'>Keyphrase in SEO title</a>: The exact match of the focus keyphrase appears at the beginning of the SEO title. Good job!",
 	},
 	titleWidth: {
 		isApplicable: true,
 		score: 9,
 		resultText: "<a href='https://yoa.st/34h' target='_blank'>SEO title width</a>: Good job!",
 	},
-	urlKeyword: {
+	slugKeyword: {
 		isApplicable: true,
 		score: 9,
 		resultText: "<a href='https://yoa.st/33o' target='_blank'>Keyphrase in slug</a>: Great work!",
@@ -106,11 +100,6 @@ const expectedResults = {
 		score: 9,
 		resultText: "<a href='https://yoa.st/33q' target='_blank'>Keyphrase distribution</a>: Good job!",
 	},
-	fleschReadingEase: {
-		isApplicable: false,
-		score: 9,
-		resultText: "<a href='https://yoa.st/34v' target='_blank'>Sentence length</a>: 30.3% of the sentences contain more than 20 words, which is more than the recommended maximum of 15%. <a href='https://yoa.st/34w' target='_blank'>Try to shorten the sentences</a>.",
-	},
 	subheadingsTooLong: {
 		isApplicable: true,
 		score: 3,
@@ -124,7 +113,7 @@ const expectedResults = {
 	textSentenceLength: {
 		isApplicable: true,
 		score: 3,
-		resultText: "<a href='https://yoa.st/34v' target='_blank'>Sentence length</a>: 30.3% of the sentences contain more than 20 words, which is more than the recommended maximum of 15%. <a href='https://yoa.st/34w' target='_blank'>Try to shorten the sentences</a>.",
+		resultText: "<a href='https://yoa.st/34v' target='_blank'>Sentence length</a>: 53.8% of the sentences contain more than 20 words, which is more than the recommended maximum of 15%. <a href='https://yoa.st/34w' target='_blank'>Try to shorten the sentences</a>.",
 	},
 	textTransitionWords: {
 		isApplicable: true,
@@ -145,6 +134,30 @@ const expectedResults = {
 		isApplicable: true,
 		score: 9,
 		resultText: "<a href='https://yoa.st/35f' target='_blank'>Consecutive sentences</a>: There is enough variety in your sentences. That's great!",
+	},
+	imageKeyphrase: {
+		isApplicable: true,
+		score: 6,
+		resultText: "<a href='https://yoa.st/4f7' target='_blank'>Image Keyphrase</a>: Images on this page do not have alt attributes with at least" +
+			" half of the words from your keyphrase. <a href='https://yoa.st/4f6' target='_blank'>Fix that</a>!",
+	},
+	imageCount: {
+		isApplicable: true,
+		score: 9,
+		resultText: "<a href='https://yoa.st/4f4' target='_blank'>Images</a>: Good job!",
+	},
+	wordComplexity: {
+		isApplicable: false,
+	},
+	textAlignment: {
+		isApplicable: true,
+		score: 0,
+		resultText: "",
+	},
+	textTitleAssessment: {
+		isApplicable: true,
+		score: 9,
+		resultText: "<a href='https://yoa.st/4nh' target='_blank'>Title</a>: Your page has a title. Well done!",
 	},
 };
 

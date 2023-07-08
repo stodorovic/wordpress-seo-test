@@ -1,10 +1,11 @@
+/* global wpseoAdminL10n */
 import { compose } from "@wordpress/compose";
 import { withDispatch, withSelect } from "@wordpress/data";
 import { useEffect } from "@wordpress/element";
 import { __ } from "@wordpress/i18n";
 import PropTypes from "prop-types";
 import SchemaTab from "../components/SchemaTab";
-import SchemaFields from "../helpers/fields/SchemaFields";
+import SchemaFields from "../helpers/SchemaFields";
 import withLocation from "../helpers/withLocation";
 
 /**
@@ -17,15 +18,15 @@ import withLocation from "../helpers/withLocation";
 const getLocationBasedProps = ( location ) => {
 	if ( location === "metabox" ) {
 		return {
-			helpTextLink: "https://yoa.st/400",
-			additionalHelpTextLink: "https://yoa.st/402",
+			helpTextLink: wpseoAdminL10n[ "shortlinks.metabox.schema.explanation" ],
+			additionalHelpTextLink: wpseoAdminL10n[ "shortlinks.metabox.schema.page_type" ],
 			isMetabox: true,
 		};
 	}
 
 	return {
-		helpTextLink: "https://yoa.st/401",
-		additionalHelpTextLink: "https://yoa.st/403",
+		helpTextLink: wpseoAdminL10n[ "shortlinks.sidebar.schema.explanation" ],
+		additionalHelpTextLink: wpseoAdminL10n[ "shortlinks.sidebar.schema.page_type" ],
 		isMetabox: false,
 	};
 };
@@ -95,8 +96,11 @@ export default compose( [
 			getDefaultArticleType,
 		} = select( "yoast-seo/editor" );
 
+		const { displaySchemaSettingsFooter: displayFooter, isNewsEnabled } = getPreferences();
+
 		return {
-			displayFooter: getPreferences().displaySchemaSettingsFooter,
+			displayFooter,
+			isNewsEnabled,
 			schemaPageTypeSelected: getPageType(),
 			schemaArticleTypeSelected: getArticleType(),
 			defaultArticleType: getDefaultArticleType(),

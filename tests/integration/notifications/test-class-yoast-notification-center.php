@@ -32,8 +32,8 @@ class Yoast_Notification_Center_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Create user with proper caps.
 	 */
-	public function setUp() {
-		parent::setUp();
+	public function set_up() {
+		parent::set_up();
 
 		$this->user_id = $this->factory->user->create();
 
@@ -46,11 +46,11 @@ class Yoast_Notification_Center_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Remove notifications on tearDown.
 	 */
-	public function tearDown() {
-		parent::tearDown();
-
+	public function tear_down() {
 		$notification_center = Yoast_Notification_Center::get();
 		$notification_center->deactivate_hook();
+
+		parent::tear_down();
 	}
 
 	/**
@@ -602,12 +602,6 @@ class Yoast_Notification_Center_Test extends WPSEO_UnitTestCase {
 	 */
 	public function test_is_notification_dismissed_is_per_site() {
 		$this->skipWithoutMultisite();
-
-		if ( version_compare( $GLOBALS['wp_version'], '5.1', '>=' ) ) {
-			$this->markTestSkipped( 'Skipped because since WordPress 5.1 the hook wpmu_new_blog is deprecated' );
-
-			return;
-		}
 
 		$site2 = self::factory()->blog->create();
 

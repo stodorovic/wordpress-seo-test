@@ -4,8 +4,11 @@ namespace Yoast\WP\SEO\Tests\Unit\Inc\Sitemaps;
 
 use Brain\Monkey;
 use Mockery;
+use WP_Post;
+use WP_Rewrite;
 use WPSEO_Options;
 use WPSEO_Sitemaps_Admin;
+use Yoast\WP\SEO\Helpers\Environment_Helper;
 use Yoast\WP\SEO\Tests\Unit\Doubles\Inc\Options\Options_Double;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
@@ -45,9 +48,9 @@ class WPSEO_Sitemaps_Admin_Test extends TestCase {
 	protected function set_up() {
 		parent::set_up();
 
-		$this->instance             = Mockery::mock( WPSEO_Sitemaps_Admin::class )->makePartial();
+		$this->instance             = new WPSEO_Sitemaps_Admin();
 		$this->options_mock         = Mockery::mock( WPSEO_Options::class )->shouldAllowMockingProtectedMethods();
-		$this->mock_post            = Mockery::mock( '\WP_Post' )->makePartial();
+		$this->mock_post            = Mockery::mock( WP_Post::class )->makePartial();
 		$this->mock_post->post_type = 'post';
 	}
 
@@ -74,8 +77,16 @@ class WPSEO_Sitemaps_Admin_Test extends TestCase {
 			->shouldReceive( 'is_multisite' )
 			->andReturn( false );
 
-		Monkey\Functions\expect( 'apply_filters' )
+		Monkey\Filters\expectApplied( 'wpseo_allow_xml_sitemap_ping' )
 			->never();
+
+		$environment_helper = Mockery::mock( Environment_Helper::class );
+		$environment_helper->expects( 'is_production_mode' )->once()->andReturn( false );
+
+		$container = $this->create_container_with( [ Environment_Helper::class => $environment_helper ] );
+
+		Monkey\Functions\expect( 'YoastSEO' )
+			->andReturn( (object) [ 'helpers' => $this->create_helper_surface( $container ) ] );
 
 		$this->instance->status_transition( 'publish', 'draft', $this->mock_post );
 	}
@@ -86,6 +97,11 @@ class WPSEO_Sitemaps_Admin_Test extends TestCase {
 	 * @covers WPSEO_Sitemaps_Admin::status_transition
 	 */
 	public function test_status_transition_on_production() {
+		global $wp_rewrite;
+
+		$wp_rewrite = Mockery::mock( WP_Rewrite::class );
+		$wp_rewrite->expects( 'using_index_permalinks' )->andReturnFalse();
+
 		Monkey\Functions\stubs(
 			[
 				'wp_get_environment_type' => 'production',
@@ -103,26 +119,27 @@ class WPSEO_Sitemaps_Admin_Test extends TestCase {
 			->shouldReceive( 'is_multisite' )
 			->andReturn( false );
 
-		Monkey\Functions\expect( 'apply_filters' )
+		Monkey\Filters\expectApplied( 'wpseo_allow_xml_sitemap_ping' )
 			->once()
 			->andReturn( true );
 
-		Monkey\Functions\expect( 'wp_next_scheduled' )
+		Monkey\Functions\expect( 'home_url' )
 			->once()
-			->andReturn( false );
+			->andReturn( 'https://example.com' );
 
-		$start = \time();
-
-		Monkey\Functions\expect( 'wp_schedule_single_event' )
+		Monkey\Functions\expect( 'wp_parse_url' )
 			->once()
-			->withArgs(
-				static function( $timestamp, $function_name ) use ( $start ) {
-					if ( $function_name === 'wpseo_ping_search_engines' ) {
-						return ( $timestamp < $start + 600 );
-					}
-					return false;
-				}
-			);
+			->andReturn( 'https' );
+
+		Monkey\Functions\expect( 'wp_remote_get' );
+
+		$environment_helper = Mockery::mock( Environment_Helper::class );
+		$environment_helper->expects( 'is_production_mode' )->once()->andReturn( true );
+
+		$container = $this->create_container_with( [ Environment_Helper::class => $environment_helper ] );
+
+		Monkey\Functions\expect( 'YoastSEO' )
+			->andReturn( (object) [ 'helpers' => $this->create_helper_surface( $container ) ] );
 
 		$this->instance->status_transition( 'publish', 'draft', $this->mock_post );
 	}

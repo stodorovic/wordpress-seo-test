@@ -4,6 +4,8 @@ namespace Yoast\WP\SEO\Tests\Unit\Routes;
 
 use Brain\Monkey;
 use Mockery;
+use WP_REST_Response;
+use Yoast\WP\SEO\Conditionals\Addon_Installation_Conditional;
 use Yoast\WP\SEO\Routes\Supported_Features_Route;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
@@ -38,7 +40,7 @@ class Supported_Features_Route_Test extends TestCase {
 	 */
 	public function test_get_conditionals() {
 		$this->assertEquals(
-			[],
+			[ Addon_Installation_Conditional::class ],
 			Supported_Features_Route::get_conditionals()
 		);
 	}
@@ -70,16 +72,16 @@ class Supported_Features_Route_Test extends TestCase {
 	 * @covers ::get_supported_features
 	 */
 	public function test_get_supported_features() {
-		Mockery::mock( 'overload:WP_REST_Response' );
+		Mockery::mock( 'overload:' . WP_REST_Response::class );
 		$actual = $this->instance->get_supported_features();
 
-		$expected = new \WP_REST_Response(
+		$expected = new WP_REST_Response(
 			[
 				'addon-installation' => 1,
 			]
 		);
 
-		$this->assertInstanceOf( 'WP_REST_Response', $actual );
+		$this->assertInstanceOf( WP_REST_Response::class, $actual );
 		$this->assertEquals( $expected, $actual );
 	}
 }

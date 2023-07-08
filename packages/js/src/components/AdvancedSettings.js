@@ -1,9 +1,11 @@
+/* global wpseoAdminL10n */
 import { Fragment, useEffect } from "@wordpress/element";
 import { __, sprintf } from "@wordpress/i18n";
 import { Alert, MultiSelect, RadioButtonGroup, Select, TextInput } from "@yoast/components";
 import { join } from "@yoast/helpers";
 import PropTypes from "prop-types";
-import { LocationConsumer } from "./contexts/location";
+import { LocationConsumer } from "@yoast/externals/contexts";
+import WordProofTimestampToggle from "./WordProofTimestampToggle";
 
 /**
  * Boolean that tells whether the current object refers to a post or a taxonomy.
@@ -72,9 +74,8 @@ const MetaRobotsNoIndex = ( { noIndex, onNoIndexChange, editorContext, isPrivate
 					isPrivateBlog &&
 					<Alert type="warning">
 						{ __(
-							"Even though you can set the meta robots setting here, " +
-							"the entire site is set to noindex in the sitewide privacy settings, " +
-							"so these settings won't have an effect.",
+							// eslint-disable-next-line max-len
+							"Even though you can set the meta robots setting here, the entire site is set to noindex in the sitewide privacy settings, so these settings won't have an effect.",
 							"wordpress-seo"
 						) }
 					</Alert>
@@ -90,7 +91,7 @@ const MetaRobotsNoIndex = ( { noIndex, onNoIndexChange, editorContext, isPrivate
 					id={ join( [ "yoast-meta-robots-noindex", location ] ) }
 					options={ metaRobotsNoIndexOptions }
 					selected={ noIndex }
-					linkTo={ "https://yoa.st/allow-search-engines" }
+					linkTo={ wpseoAdminL10n[ "shortlinks.advanced.allow_search_engines" ] }
 					linkText={ __( "Learn more about the no-index setting on our help page.", "wordpress-seo" ) }
 				/>
 			</Fragment>;
@@ -130,7 +131,7 @@ const MetaRobotsNoFollow = ( { noFollow, onNoFollowChange, postTypeName } ) => {
 				groupName={ id }
 				onChange={ onNoFollowChange }
 				selected={ noFollow }
-				linkTo={ "https://yoa.st/follow-links" }
+				linkTo={ wpseoAdminL10n[ "shortlinks.advanced.follow_links" ] }
 				linkText={ __( "Learn more about the no-follow setting on our help page.", "wordpress-seo" ) }
 			/>;
 		} }
@@ -167,7 +168,7 @@ const MetaRobotsAdvanced = ( { advanced, onAdvancedChange } ) => {
 					{ name: __( "No Snippet", "wordpress-seo" ), value: "nosnippet" },
 				] }
 				selected={ advanced }
-				linkTo={ "https://yoa.st/meta-robots-advanced" }
+				linkTo={ wpseoAdminL10n[ "shortlinks.advanced.meta_robots" ] }
 				linkText={ __( "Learn more about advanced meta robots settings on our help page.", "wordpress-seo" ) }
 			/>;
 		} }
@@ -195,7 +196,7 @@ const BreadcrumbsTitle = ( { breadcrumbsTitle, onBreadcrumbsTitleChange } ) => {
 					id={ join( [ "yoast-breadcrumbs-title", location ] ) }
 					onChange={ onBreadcrumbsTitleChange }
 					value={ breadcrumbsTitle }
-					linkTo={ "https://yoa.st/breadcrumbs-title" }
+					linkTo={ wpseoAdminL10n[ "shortlinks.advanced.breadcrumbs_title" ] }
 					linkText={ __( "Learn more about the breadcrumbs title setting on our help page.", "wordpress-seo" ) }
 				/>;
 			}
@@ -238,6 +239,34 @@ CanonicalURL.propTypes = {
 };
 
 /**
+ * Functional component for the WordProof timestamp toggle.
+ *
+ * @param {Object} props The props object
+ *
+ * @returns {JSX.Element} The canonical URL.
+ */
+const WordProofTimestamp = ( { wordproofTimestamp, onWordProofTimestampChange, postTypeName } ) => {
+	return <LocationConsumer>
+		{
+			location => {
+				return <WordProofTimestampToggle
+					id={ join( [ "yoast-wordproof-timestamp", location ] ) }
+					isEnabled={ wordproofTimestamp }
+					onToggle={ onWordProofTimestampChange }
+					postTypeName={ postTypeName }
+				/>;
+			}
+		}
+	</LocationConsumer>;
+};
+
+WordProofTimestamp.propTypes = {
+	wordproofTimestamp: PropTypes.bool.isRequired,
+	onWordProofTimestampChange: PropTypes.func.isRequired,
+	postTypeName: PropTypes.string.isRequired,
+};
+
+/**
  * The Advanced Settings component.
  *
  * @param {Object} props The props object
@@ -251,16 +280,19 @@ const AdvancedSettings = ( props ) => {
 		advanced,
 		breadcrumbsTitle,
 		canonical,
+		wordproofTimestamp,
 		onNoIndexChange,
 		onNoFollowChange,
 		onAdvancedChange,
 		onBreadcrumbsTitleChange,
 		onCanonicalChange,
+		onWordProofTimestampChange,
 		onLoad,
 		isLoading,
 		editorContext,
 		isBreadcrumbsDisabled,
 		isPrivateBlog,
+		isWordProofIntegrationActive,
 	} = props;
 
 	useEffect( () => {
@@ -298,6 +330,12 @@ const AdvancedSettings = ( props ) => {
 		onCanonicalChange,
 	};
 
+	const wordproofTimestampProps = {
+		wordproofTimestamp,
+		onWordProofTimestampChange,
+		postTypeName: editorContext.postTypeNameSingular,
+	};
+
 	if ( isLoading ) {
 		return null;
 	}
@@ -311,6 +349,7 @@ const AdvancedSettings = ( props ) => {
 				! isBreadcrumbsDisabled && <BreadcrumbsTitle { ...breadcrumbsTitleProps } />
 			}
 			<CanonicalURL { ...canonicalProps } />
+			{ isWordProofIntegrationActive && <WordProofTimestamp { ...wordproofTimestampProps } /> }
 		</Fragment>
 	);
 };
@@ -318,8 +357,10 @@ const AdvancedSettings = ( props ) => {
 AdvancedSettings.propTypes = {
 	noIndex: PropTypes.string.isRequired,
 	canonical: PropTypes.string.isRequired,
+	wordproofTimestamp: PropTypes.bool,
 	onNoIndexChange: PropTypes.func.isRequired,
 	onCanonicalChange: PropTypes.func.isRequired,
+	onWordProofTimestampChange: PropTypes.func,
 	onLoad: PropTypes.func.isRequired,
 	isLoading: PropTypes.bool.isRequired,
 	editorContext: PropTypes.object.isRequired,
@@ -331,6 +372,7 @@ AdvancedSettings.propTypes = {
 	onNoFollowChange: PropTypes.func,
 	breadcrumbsTitle: PropTypes.string,
 	onBreadcrumbsTitleChange: PropTypes.func,
+	isWordProofIntegrationActive: PropTypes.bool.isRequired,
 };
 
 AdvancedSettings.defaultProps = {
@@ -341,6 +383,8 @@ AdvancedSettings.defaultProps = {
 	breadcrumbsTitle: "",
 	onBreadcrumbsTitleChange: () => {},
 	isPrivateBlog: false,
+	onWordProofTimestampChange: () => {},
+	wordproofTimestamp: false,
 };
 
 export default AdvancedSettings;

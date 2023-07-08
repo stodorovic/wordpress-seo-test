@@ -1,23 +1,24 @@
-import { debounce } from "lodash-es";
-import { languageProcessing } from "yoastseo";
+/* eslint-disable complexity */
 import { select, subscribe } from "@wordpress/data";
+import { actions } from "@yoast/externals/redux";
+import { debounce } from "lodash";
+import { languageProcessing } from "yoastseo";
+import { reapplyAnnotationsForSelectedBlock } from "../decorator/gutenberg";
+import { excerptFromContent, fillReplacementVariables, mapCustomFields, mapCustomTaxonomies } from "../helpers/replacementVariableHelpers";
+import getContentLocale from "./getContentLocale";
 
-import {
+const {
 	updateReplacementVariable,
 	updateData,
-} from "../redux/actions/snippetEditor";
-import {
+	hideReplacementVariables,
 	setContentImage,
-} from "../redux/actions/settings";
-import {
-	excerptFromContent,
-	fillReplacementVariables,
-	mapCustomFields,
-	mapCustomTaxonomies,
-} from "../helpers/replacementVariableHelpers";
-import {
-	reapplyAnnotationsForSelectedBlock,
-} from "../decorator/gutenberg";
+	updateSettings,
+	setEditorDataContent,
+	setEditorDataTitle,
+	setEditorDataExcerpt,
+	setEditorDataImageUrl,
+	setEditorDataSlug,
+} = actions;
 
 const $ = global.jQuery;
 
@@ -44,12 +45,15 @@ export default class BlockEditorData {
 	 * Initializes this Gutenberg data instance.
 	 *
 	 * @param {Object} replaceVars The replacevars.
+	 * @param {string[]} hiddenReplaceVars The replacement variables passed in the wp-seo-post-scraper args.
+	 *
 	 * @returns {void}
 	 */
-	initialize( replaceVars ) {
+	initialize( replaceVars, hiddenReplaceVars = [] ) {
 		// Fill data object on page load.
 		this._data = this.getInitialData( replaceVars );
 		fillReplacementVariables( this._data, this._store );
+		this._store.dispatch( hideReplacementVariables( hiddenReplaceVars ) );
 		this.subscribeToGutenberg();
 		this.subscribeToYoastSEO();
 	}
@@ -167,7 +171,43 @@ export default class BlockEditorData {
 
 		// When no custom slug is provided we should use the generated_slug attribute.
 		const slug = this.getPostAttribute( "slug" ) || generatedSlug;
-		return decodeURIComponent( slug );
+		try {
+			return decodeURI( slug );
+		} catch ( e ) {
+			return slug;
+		}
+	}
+
+	/**
+	 * Gets the base url from the permalink parts.
+	 *
+	 * @returns {string} The base url.
+	 */
+	getPostBaseUrl() {
+		const permalinkParts = select( "core/editor" ).getPermalinkParts();
+		if ( permalinkParts === null || ! permalinkParts?.prefix ) {
+			// Fallback on the base url retrieved from the wpseoScriptData.
+			return window.wpseoScriptData.metabox.base_url;
+		}
+
+		let baseUrl = permalinkParts.prefix;
+		const isAutoDraft = select( "core/editor" ).isEditedPostNew();
+		if ( isAutoDraft ) {
+			// For post auto-drafts, the `baseUrl` includes the `?={ID}` that we do not want.
+			try {
+				const url = new URL( baseUrl );
+				baseUrl = url.origin + url.pathname;
+			} catch ( e ) {
+				// Ignore this error.
+			}
+		}
+
+		// Enforce ending with a slash because of the internal handling in the SnippetEditor component.
+		if ( ! baseUrl.endsWith( "/" ) ) {
+			baseUrl += "/";
+		}
+
+		return baseUrl;
 	}
 
 	/**
@@ -176,15 +216,20 @@ export default class BlockEditorData {
 	 * @returns {{content: string, title: string, slug: string, excerpt: string}} The content, title, slug and excerpt.
 	 */
 	collectGutenbergData() {
+		const content = this.getPostAttribute( "content" );
+		const contentImage = this.calculateContentImage( content );
+		const excerpt = this.getPostAttribute( "excerpt" ) || "";
+
 		return {
-			content: this.getPostAttribute( "content" ),
+			content,
 			title: this.getPostAttribute( "title" ) || "",
 			slug: this.getSlug(),
-			excerpt: this.getExcerpt(),
+			excerpt: excerpt || excerptFromContent( content, getContentLocale() === "ja" ? 80 : 156 ),
 			// eslint-disable-next-line camelcase
-			excerpt_only: this.getExcerpt( false ),
-			snippetPreviewImageURL: this.getFeaturedImage() || this.getContentImage(),
-			contentImage: this.getContentImage(),
+			excerpt_only: excerpt,
+			snippetPreviewImageURL: this.getFeaturedImage() || contentImage,
+			contentImage,
+			baseUrl: this.getPostBaseUrl(),
 		};
 	}
 
@@ -209,30 +254,26 @@ export default class BlockEditorData {
 	/**
 	 * Returns the image from the content.
 	 *
+	 * @param {string} content The content.
+	 *
 	 * @returns {string} The first image found in the content.
 	 */
-	getContentImage() {
-		const content = this._coreEditorSelect.getEditedPostContent();
-
+	calculateContentImage( content ) {
 		const images = languageProcessing.imageInText( content );
-		let image = "";
 
 		if ( images.length === 0 ) {
 			return "";
 		}
 
-		do {
-			var currentImage = images.shift();
-			currentImage = $( currentImage );
+		const imageElements = $.parseHTML( images.join( "" ) );
 
-			var imageSource = currentImage.prop( "src" );
-
-			if ( imageSource ) {
-				image = imageSource;
+		for ( const imageElement of imageElements ) {
+			if ( imageElement.src ) {
+				return imageElement.src;
 			}
-		} while ( "" === image && images.length > 0 );
+		}
 
-		return image;
+		return "";
 	}
 
 	/**
@@ -243,44 +284,39 @@ export default class BlockEditorData {
 	 * @returns {void}
 	 */
 	handleEditorChange( newData ) {
-		// Handle title change
+		// Handle content change.
+		if ( this._data.content !== newData.content ) {
+			this._store.dispatch( setEditorDataContent( newData.content ) );
+		}
+		// Handle title change.
 		if ( this._data.title !== newData.title ) {
+			this._store.dispatch( setEditorDataTitle( newData.title ) );
 			this._store.dispatch( updateReplacementVariable( "title", newData.title ) );
 		}
-		// Handle excerpt change
+		// Handle excerpt change.
 		if ( this._data.excerpt !== newData.excerpt ) {
+			this._store.dispatch( setEditorDataExcerpt( newData.excerpt ) );
 			this._store.dispatch( updateReplacementVariable( "excerpt", newData.excerpt ) );
 			this._store.dispatch( updateReplacementVariable( "excerpt_only", newData.excerpt_only ) );
 		}
-		// Handle slug change
+		// Handle slug change.
 		if ( this._data.slug !== newData.slug ) {
+			this._store.dispatch( setEditorDataSlug( newData.slug ) );
 			this._store.dispatch( updateData( { slug: newData.slug } ) );
 		}
 		// Handle snippet preview image change.
 		if ( this._data.snippetPreviewImageURL !== newData.snippetPreviewImageURL ) {
+			this._store.dispatch( setEditorDataImageUrl( newData.snippetPreviewImageURL ) );
 			this._store.dispatch( updateData( { snippetPreviewImageURL: newData.snippetPreviewImageURL } ) );
 		}
-
 		// Handle content image change.
 		if ( this._data.contentImage !== newData.contentImage ) {
 			this._store.dispatch( setContentImage( newData.contentImage ) );
 		}
-	}
-
-	/**
-	 * Gets the excerpt from the post.
-	 *
-	 * @param {boolean} useFallBack Whether the fallback for content should be used.
-	 *
-	 * @returns {string} The excerpt.
-	 */
-	getExcerpt( useFallBack = true ) {
-		const excerpt = this.getPostAttribute( "excerpt" ) || "";
-		if ( excerpt !== "" || useFallBack === false ) {
-			return excerpt;
+		// Handle base URL change.
+		if ( this._data.baseUrl !== newData.baseUrl ) {
+			this._store.dispatch( updateSettings( { baseUrl: newData.baseUrl } ) );
 		}
-
-		return excerptFromContent( this.getPostAttribute( "content" ) );
 	}
 
 	/**
@@ -330,7 +366,7 @@ export default class BlockEditorData {
 	areNewAnalysisResultsAvailable() {
 		const yoastSeoEditorSelectors = select( "yoast-seo/editor" );
 		const readabilityResults = yoastSeoEditorSelectors.getReadabilityResults();
-		const seoResults         = yoastSeoEditorSelectors.getResultsForFocusKeyword();
+		const seoResults = yoastSeoEditorSelectors.getResultsForFocusKeyword();
 
 		if (
 			this._previousReadabilityResults !== readabilityResults ||
@@ -360,9 +396,7 @@ export default class BlockEditorData {
 	 */
 	subscribeToGutenberg() {
 		this.subscriber = debounce( this.refreshYoastSEO, 500 );
-		subscribe(
-			this.subscriber
-		);
+		subscribe( this.subscriber );
 	}
 
 	/**

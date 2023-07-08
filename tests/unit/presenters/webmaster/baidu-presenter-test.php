@@ -2,6 +2,7 @@
 
 namespace Yoast\WP\SEO\Tests\Unit\Presenters\Webmaster;
 
+use Brain\Monkey;
 use Mockery;
 use Yoast\WP\SEO\Helpers\Options_Helper;
 use Yoast\WP\SEO\Presenters\Webmaster\Baidu_Presenter;
@@ -64,11 +65,21 @@ class Baidu_Presenter_Test extends TestCase {
 	public function test_present() {
 		$this->options->expects( 'get' )->with( $this->option_name, '' )->andReturn( 'baidu' );
 
+		Monkey\Functions\expect( 'is_admin_bar_showing' )->andReturn( false );
+
 		$this->assertSame(
 			'<meta name="baidu-site-verification" content="baidu" />',
 			$this->instance->present()
 		);
+	}
 
+	/**
+	 * Test an empty presentation.
+	 *
+	 * @covers ::present
+	 * @covers ::get
+	 */
+	public function test_empty_presentation() {
 		$this->options->expects( 'get' )->with( $this->option_name, '' )->andReturn( '' );
 
 		$this->assertSame(
@@ -89,12 +100,36 @@ class Baidu_Presenter_Test extends TestCase {
 			'baidu',
 			$this->instance->get()
 		);
+	}
 
+	/**
+	 * Test getting an empty value.
+	 *
+	 * @covers ::get
+	 */
+	public function test_get_empty() {
 		$this->options->expects( 'get' )->with( $this->option_name, '' )->andReturn( '' );
 
 		$this->assertSame(
 			'',
 			$this->instance->get()
+		);
+	}
+
+	/**
+	 * Tests the presentation for a Baidu site verification string when the admin bar is showing a class is added.
+	 *
+	 * @covers ::present
+	 * @covers ::get
+	 */
+	public function test_present_with_class() {
+		$this->options->expects( 'get' )->with( $this->option_name, '' )->andReturn( 'baidu' );
+
+		Monkey\Functions\expect( 'is_admin_bar_showing' )->andReturn( true );
+
+		$this->assertSame(
+			'<meta name="baidu-site-verification" content="baidu" class="yoast-seo-meta-tag" />',
+			$this->instance->present()
 		);
 	}
 }

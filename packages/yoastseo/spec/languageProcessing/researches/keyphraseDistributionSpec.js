@@ -1,4 +1,5 @@
-import { collectStems } from "../../../src/languageProcessing/helpers/morphology/buildTopicStems";
+/* eslint-disable capitalized-comments, spaced-comment */
+import { primeLanguageSpecificData } from "../../../src/languageProcessing/helpers/morphology/buildTopicStems";
 import {
 	computeScoresPerSentenceShortTopic,
 	computeScoresPerSentenceLongTopic,
@@ -11,10 +12,12 @@ import Mark from "../../../src/values/Mark";
 import Researcher from "../../../src/languageProcessing/languages/en/Researcher";
 import ItalianResearcher from "../../../src/languageProcessing/languages/it/Researcher";
 import DefaultResearcher from "../../../src/languageProcessing/languages/_default/Researcher";
+import JapaneseResearcher from "../../../src/languageProcessing/languages/ja/Researcher";
 import getMorphologyData from "../../specHelpers/getMorphologyData";
 import { realWorldULExample1, realWorldULExample2 } from "../helpers/sanitize/mergeListItemsSpec";
 
 const morphologyData = getMorphologyData( "en" );
+const morphologyDataJA = getMorphologyData( "ja" );
 
 describe( "Test for maximizing sentence scores", function() {
 	it( "returns the largest score per sentence over all topics", function() {
@@ -148,7 +151,6 @@ describe( "Test for computing the sentence score", function() {
 	} );
 } );
 
-
 describe( "Test for the research", function() {
 	it( "returns a score over all sentences and all topic forms; returns markers for sentences that contain the topic", function() {
 		const paper = new Paper(
@@ -249,7 +251,9 @@ describe( "Test for the research", function() {
 		} );
 	} );
 
-	it( "returns a score (for a language without morphology support) over all sentences and all topic forms; returns markers for " +
+	//It’s the same as the English one above it, excepts the locale is Italian. But still the English morphology data is added.
+
+	/*it( "returns a score (for a language without morphology support) over all sentences and all topic forms; returns markers for " +
 		"sentences that contain the topic", function() {
 		const paper = new Paper(
 			sentencesIT.join( " " ),
@@ -296,7 +300,11 @@ describe( "Test for the research", function() {
 			],
 		} );
 	} );
-
+*/
+	/*
+	 * The following Italian tests are not language specific as they are an example of languages in general
+	 * that have no morphology support.
+	 */
 	it( "returns the same score when function words are added (for a language without morphological support, but with function words, " +
 		"e.g. Italian in Free)", function() {
 		const paper = new Paper(
@@ -343,7 +351,6 @@ describe( "Test for the research", function() {
 			],
 		} );
 	} );
-
 	it( "when the topic words don't contain function words and the function words for this locale are not available, " +
 		"returns the same score", function() {
 		const paper = new Paper(
@@ -363,7 +370,7 @@ describe( "Test for the research", function() {
 
 		const researcher = new DefaultResearcher( paper );
 		// We clear the cache from when we collected the stems/synonyms from previous spec
-		collectStems.cache.clear();
+		primeLanguageSpecificData.cache.clear();
 
 		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
 			keyphraseDistributionScore: 25,
@@ -438,6 +445,25 @@ describe( "Test for the research", function() {
 				locale: "en_EN",
 				keyword: "keyphrase",
 				// The added function words are now analyzed as content words, so the score changes.
+				synonyms: "synonym",
+			}
+		);
+
+		const researcher = new Researcher( paper );
+		researcher.addResearchData( "morphology", morphologyData );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 100,
+			sentencesToHighlight: [],
+		} );
+	} );
+
+	it( "returns the score 100 when the keyphrase is used inside an element we want to exclude from the analysis", function() {
+		const paper = new Paper(
+			"This is a text with a <code>keyphrase</code> that doesn't count",
+			{
+				locale: "en_EN",
+				keyword: "keyphrase",
 				synonyms: "synonym",
 			}
 		);
@@ -729,3 +755,341 @@ describe( "Test for the research", function() {
 		} );
 	} );
 } );
+
+describe( "a test for focus keyphrase in uppercase that contains period", () => {
+	it( "should match keyphrase in upper case with a period in the text", function() {
+		let text = "An example text. What is ASP.NET.";
+		let paper = new Paper( text, { keyword: "ASP.NET" } );
+		let researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual(
+			{
+				keyphraseDistributionScore: 50,
+				sentencesToHighlight: [
+					new Mark( {
+						marked: "What is <yoastmark class='yoast-text-mark'>ASP.NET</yoastmark>.",
+						original: "What is ASP.NET.",
+					} ) ],
+			}
+		);
+		text = "An example text. What is ASP.net.";
+		paper = new Paper( text, { keyword: "ASP.NET" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>ASP.net</yoastmark>.",
+					original: "What is ASP.net.",
+				} ) ],
+		} );
+
+		text = "An example text. What is asp.NET?";
+		paper = new Paper( text, { keyword: "ASP.NET" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>asp.NET</yoastmark>?",
+					original: "What is asp.NET?",
+				} ) ],
+		} );
+
+		text = "An example text. What is asp.net.";
+		paper = new Paper( text, { keyword: "ASP.NET" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>asp.net</yoastmark>.",
+					original: "What is asp.net.",
+				} ) ],
+		} );
+	} );
+
+	it( "should still match keyphrase in upper case with a period in the text when the keyphrase is in double quote", function() {
+		let text = "An example text. What is ASP.NET.";
+		let paper = new Paper( text, { keyword: "\"ASP.NET\"" } );
+		let researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual(
+			{
+				keyphraseDistributionScore: 50,
+				sentencesToHighlight: [
+					new Mark( {
+						marked: "What is <yoastmark class='yoast-text-mark'>ASP.NET</yoastmark>.",
+						original: "What is ASP.NET.",
+					} ) ],
+			}
+		);
+		text = "An example text. What is ASP.net.";
+		paper = new Paper( text, { keyword: "\"ASP.NET\"" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>ASP.net</yoastmark>.",
+					original: "What is ASP.net.",
+				} ) ],
+		} );
+
+		text = "An example text. What is asp.NET?";
+		paper = new Paper( text, { keyword: "\"ASP.NET\"" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>asp.NET</yoastmark>?",
+					original: "What is asp.NET?",
+				} ) ],
+		} );
+
+		text = "An example text. What is asp.net.";
+		paper = new Paper( text, { keyword: "\"ASP.NET\"" } );
+		researcher = new Researcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "What is <yoastmark class='yoast-text-mark'>asp.net</yoastmark>.",
+					original: "What is asp.net.",
+				} ) ],
+		} );
+	} );
+} );
+
+// Did not remove Japanese tests below as they test the function with different helpers as well as japaneseTopicLength.
+
+const japaneseSentences = "私はペットとして2匹の猫を飼っています。" +
+	"どちらもとても可愛くて甘い猫で、猫の餌を食べるのが大好きです。" +
+	"彼らが好きなタイプの猫用フードは新鮮なものです。" +
+	"加工が少ない猫用食品の一種。";
+
+
+describe( "Test for the research for Japanese language", function() {
+	it( "returns a score over all sentences and all topic forms (short topic); returns markers for sentences that contain the topic " +
+		"(when morphology data is available)", function() {
+		const paper = new Paper(
+			japaneseSentences,
+			{
+				locale: "ja",
+				keyword: "猫餌",
+				synonyms: "猫用フード, 猫用食品",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "彼らが好きなタイプの<yoastmark class='yoast-text-mark'>猫用</yoastmark><yoastmark class='yoast-text-mark'>フード</yoastmark>は新鮮なものです。",
+					original: "彼らが好きなタイプの猫用フードは新鮮なものです。",
+				} ),
+				new Mark( {
+					marked: "加工が少ない<yoastmark class='yoast-text-mark'>猫用</yoastmark><yoastmark class='yoast-text-mark'>食品</yoastmark>の一種。",
+					original: "加工が少ない猫用食品の一種。",
+				} ),
+			],
+		} );
+	} );
+
+	const japaneseSentencesExactMatch = "猫餌猫が食べるものです。" +
+		"どちらもとても可愛くて甘い猫で、のような猫猫用フード。" +
+		"彼らが好きなタイプの猫用フードは新鮮なものです。" +
+		"加工が少ない猫用食品の一種。";
+
+
+	it( "returns a score over all sentences and all topic forms (short topic); returns markers for sentences that contain the keyphrase " +
+		"in single quotation marks", function() {
+		const paper = new Paper(
+			japaneseSentencesExactMatch,
+			{
+				locale: "ja",
+				keyword: "「猫餌」",
+				synonyms: "「猫用フード」,「猫用食品」",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+		researcher.addResearchData( "morphology", morphologyDataJA );
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 0,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "<yoastmark class='yoast-text-mark'>猫餌</yoastmark>猫が食べるものです。",
+					original: "猫餌猫が食べるものです。",
+				} ),
+				new Mark( {
+					marked: "どちらもとても可愛くて甘い猫で、のような猫<yoastmark class='yoast-text-mark'>猫用フード</yoastmark>。",
+					original: "どちらもとても可愛くて甘い猫で、のような猫猫用フード。",
+				} ),
+				new Mark( {
+					marked: "彼らが好きなタイプの<yoastmark class='yoast-text-mark'>猫用フード</yoastmark>は新鮮なものです。",
+					original: "彼らが好きなタイプの猫用フードは新鮮なものです。",
+				} ),
+				new Mark( {
+					marked: "加工が少ない<yoastmark class='yoast-text-mark'>猫用食品</yoastmark>の一種。",
+					original: "加工が少ない猫用食品の一種。",
+				} ),
+			],
+		} );
+	} );
+
+	it( "returns a score over all sentences and all topic forms (short topic); returns markers for sentences that contain the keyphrase " +
+		"in double quotation marks", function() {
+		const paper = new Paper(
+			japaneseSentencesExactMatch,
+			{
+				locale: "ja",
+				keyword: "『猫餌』",
+				synonyms: "『猫用フード』,『猫用食品』",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+		researcher.addResearchData( "morphology", morphologyDataJA );
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 0,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "<yoastmark class='yoast-text-mark'>猫餌</yoastmark>猫が食べるものです。",
+					original: "猫餌猫が食べるものです。",
+				} ),
+				new Mark( {
+					marked: "どちらもとても可愛くて甘い猫で、のような猫<yoastmark class='yoast-text-mark'>猫用フード</yoastmark>。",
+					original: "どちらもとても可愛くて甘い猫で、のような猫猫用フード。",
+				} ),
+				new Mark( {
+					marked: "彼らが好きなタイプの<yoastmark class='yoast-text-mark'>猫用フード</yoastmark>は新鮮なものです。",
+					original: "彼らが好きなタイプの猫用フードは新鮮なものです。",
+				} ),
+				new Mark( {
+					marked: "加工が少ない<yoastmark class='yoast-text-mark'>猫用食品</yoastmark>の一種。",
+					original: "加工が少ない猫用食品の一種。",
+				} ),
+			],
+		} );
+	} );
+
+	it( "doesn't count non-exact matches of a keyphrase when an exact match is requested", function() {
+		const paper = new Paper(
+			"小さくて可愛い花の刺繍に関する一般一般の記事です。私は美しい猫を飼っています。野生のハーブの刺繡。",
+			{
+				locale: "ja",
+				keyword: "『小さい花の刺繍』",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+		researcher.addResearchData( "morphology", morphologyDataJA );
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 100,
+			sentencesToHighlight: [],
+		} );
+	} );
+
+	it( "doesn't count non-exact matches of a synonym when an exact match is requested", function() {
+		const paper = new Paper(
+			"小さくて可愛い花の刺繍に関する一般一般の記事です。私は美しい猫を飼っています。野生のハーブの刺繡。",
+			{
+				locale: "ja",
+				keyword: "犬",
+				synonyms: "『小さい花の刺繍』",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+		researcher.addResearchData( "morphology", morphologyDataJA );
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 100,
+			sentencesToHighlight: [],
+		} );
+	} );
+
+	it( "returns the same score when function words are added", function() {
+		const paper = new Paper(
+			japaneseSentences,
+			{
+				locale: "ja",
+				keyword: "猫の餌",
+				synonyms: "猫用フード, 猫用食品",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 25,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "どちらもとても可愛くて甘い<yoastmark class='yoast-text-mark'>猫</yoastmark>で、<yoastmark class='yoast-text-mark'>猫</yoastmark>" +
+						"の<yoastmark class='yoast-text-mark'>餌</yoastmark>を食べるのが大好きです。",
+					original: "どちらもとても可愛くて甘い猫で、猫の餌を食べるのが大好きです。",
+				} ),
+				new Mark( {
+					marked: "彼らが好きなタイプの<yoastmark class='yoast-text-mark'>猫用</yoastmark><yoastmark class='yoast-text-mark'>フード</yoastmark>は新鮮なものです。",
+					original: "彼らが好きなタイプの猫用フードは新鮮なものです。",
+				} ),
+				new Mark( {
+					marked: "加工が少ない<yoastmark class='yoast-text-mark'>猫用</yoastmark><yoastmark class='yoast-text-mark'>食品</yoastmark>の一種。",
+					original: "加工が少ない猫用食品の一種。",
+				} ),
+			],
+		} );
+	} );
+
+	it( "when no keyphrase or synonyms is used in the text at all", function() {
+		const paper = new Paper(
+			japaneseSentences,
+			{
+				locale: "ja",
+				keyword: "香りのよい花",
+				synonyms: "香り花",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 100,
+			sentencesToHighlight: [],
+		} );
+	} );
+
+	it( "returns the result for long topic", function() {
+		const paper = new Paper(
+			"彼女はオンラインストアで黒の長袖マキシドレスを購入したかった。しかし、それは在庫切れでした。",
+			{
+				locale: "ja",
+				keyword: "黒の長袖マキシドレス",
+				synonyms: "シノニム",
+			}
+		);
+
+		const researcher = new JapaneseResearcher( paper );
+
+		expect( keyphraseDistributionResearcher( paper, researcher ) ).toEqual( {
+			keyphraseDistributionScore: 50,
+			sentencesToHighlight: [
+				new Mark( {
+					marked: "彼女はオンラインストアで<yoastmark class='yoast-text-mark'>黒</yoastmark>の<yoastmark class='yoast-text-mark'>長袖</yoastmark>" +
+						"<yoastmark class='yoast-text-mark'>マキシドレス</yoastmark>を購入したかった。",
+					original: "彼女はオンラインストアで黒の長袖マキシドレスを購入したかった。",
+				} ),
+			],
+		} );
+	} );
+} );
+

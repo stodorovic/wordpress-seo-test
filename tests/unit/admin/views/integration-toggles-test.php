@@ -22,7 +22,7 @@ class Yoast_Integration_Toggles_Test extends TestCase {
 	public function test_integration_toggles() {
 		$expected_names = [
 			0 => 'Semrush integration',
-			1 => 'Ryte integration',
+			1 => 'Algolia integration',
 		];
 
 		$this->stubTranslationFunctions();
@@ -51,7 +51,7 @@ class Yoast_Integration_Toggles_Test extends TestCase {
 		$expected_names = [
 			0 => 'Dummy prio 5',
 			1 => 'Semrush integration',
-			2 => 'Ryte integration',
+			2 => 'Algolia integration',
 			3 => 'Dummy prio 50',
 		];
 
@@ -76,7 +76,7 @@ class Yoast_Integration_Toggles_Test extends TestCase {
 	 * @param array $toggles Current array with integration toggle objects where each object
 	 *                       should have a `name`, `setting` and `label` property.
 	 *
-	 * @return Adjusted array with integration toggle objects.
+	 * @return array Adjusted array with integration toggle objects.
 	 */
 	public function toggle_filter_callback( $toggles ) {
 		$toggles[] = (object) [

@@ -11,11 +11,18 @@ use Yoast\WP\SEO\Presenters\Abstract_Indexable_Tag_Presenter;
 class Title_Presenter extends Abstract_Indexable_Tag_Presenter {
 
 	/**
+	 * The tag key name.
+	 *
+	 * @var string
+	 */
+	protected $key = 'og:title';
+
+	/**
 	 * The tag format including placeholders.
 	 *
 	 * @var string
 	 */
-	protected $tag_format = '<meta property="og:title" content="%s" />';
+	protected $tag_format = self::META_PROPERTY_CONTENT;
 
 	/**
 	 * Run the title content through replace vars, the `wpseo_opengraph_title` filter and sanitization.
@@ -24,6 +31,7 @@ class Title_Presenter extends Abstract_Indexable_Tag_Presenter {
 	 */
 	public function get() {
 		$title = $this->replace_vars( $this->presentation->open_graph_title );
+
 		/**
 		 * Filter: 'wpseo_opengraph_title' - Allow changing the Yoast SEO generated title.
 		 *

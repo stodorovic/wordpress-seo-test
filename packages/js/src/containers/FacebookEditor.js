@@ -1,33 +1,15 @@
 /* External dependencies */
 import { compose } from "@wordpress/compose";
 import { withDispatch, withSelect, dispatch as wpDataDispatch } from "@wordpress/data";
-import { __, sprintf } from "@wordpress/i18n";
-import { validateFacebookImage } from "@yoast/helpers";
 
 /* Internal dependencies */
 import FacebookWrapper from "../components/social/FacebookWrapper";
 import getL10nObject from "../analysis/getL10nObject";
 import withLocation from "../helpers/withLocation";
-import { openMedia } from "../helpers/selectMedia";
+import { openMedia, prepareFacebookPreviewImage } from "../helpers/selectMedia";
+import getMemoizedFindCustomFields from "../helpers/getMemoizedFindCustomFields";
 
 const socialMediumName = "Facebook";
-
-/**
- * Callback function for selectMedia. Performs actions with the 'image' Object that it gets as an argument.
- *
- * @param {Object} image Object containing data about the selected image.
- *
- * @param {Function} onSelect Callback function received from openMedia. Gets object image' as an argument.
- *
- * @returns {void}
- */
-const imageCallback = ( image ) => {
-	wpDataDispatch( "yoast-seo/editor" ).setFacebookPreviewImage( {
-		url: image.url,
-		id: image.id,
-		warnings: validateFacebookImage( image ),
-	} );
-};
 
 /**
  * Lazy function to open the media instance.
@@ -35,38 +17,35 @@ const imageCallback = ( image ) => {
  * @returns {void}
  */
 const selectMedia = () => {
-	openMedia( imageCallback );
+	openMedia( ( image ) => wpDataDispatch( "yoast-seo/editor" ).setFacebookPreviewImage( prepareFacebookPreviewImage( image ) ) );
 };
 
+/* eslint-disable complexity */
 export default compose( [
 	withSelect( select => {
 		const {
 			getFacebookDescription,
-			getDescriptionFallback,
+			getDescription,
 			getFacebookTitle,
-			getTitleFallback,
+			getSeoTitle,
 			getFacebookImageUrl,
 			getImageFallback,
 			getFacebookWarnings,
 			getRecommendedReplaceVars,
 			getReplaceVars,
 			getSiteUrl,
-			getAuthorName,
+			getSeoTitleTemplate,
+			getSeoTitleTemplateNoFallback,
+			getSocialTitleTemplate,
+			getSeoDescriptionTemplate,
+			getSocialDescriptionTemplate,
+			getReplacedExcerpt,
+			getFacebookAltText,
 		} = select( "yoast-seo/editor" );
 
-		/* Translators: %s expands to the social medium name, i.e. Faceboook. */
-		const titleInputPlaceholder  = sprintf(
-			/* Translators: %s expands to the social medium name, i.e. Faceboook. */
-			__( "Modify your %s title by editing it right here...", "wordpress-seo" ),
-			socialMediumName
-		);
+		const titleInputPlaceholder  = "";
 
-		/* Translators: %s expands to the social medium name, i.e. Faceboook. */
-		const descriptionInputPlaceholder  = sprintf(
-			/* Translators: %s expands to the social medium name, i.e. Faceboook. */
-			__( "Modify your %s description by editing it right here...", "wordpress-seo" ),
-			socialMediumName
-		);
+		const descriptionInputPlaceholder  = "";
 
 		return {
 			imageUrl: getFacebookImageUrl(),
@@ -74,34 +53,48 @@ export default compose( [
 			recommendedReplacementVariables: getRecommendedReplaceVars(),
 			replacementVariables: getReplaceVars(),
 			description: getFacebookDescription(),
-			descriptionPreviewFallback: getDescriptionFallback() || descriptionInputPlaceholder,
+			descriptionPreviewFallback: getSocialDescriptionTemplate() ||
+				getDescription() ||
+				getSeoDescriptionTemplate() ||
+				getReplacedExcerpt() ||
+				descriptionInputPlaceholder,
 			title: getFacebookTitle(),
-			titlePreviewFallback: getTitleFallback() || titleInputPlaceholder,
+			titlePreviewFallback: getSocialTitleTemplate() ||
+				getSeoTitle() ||
+				getSeoTitleTemplateNoFallback() ||
+				getSeoTitleTemplate() ||
+				titleInputPlaceholder,
 			imageWarnings: getFacebookWarnings(),
-			authorName: getAuthorName(),
 			siteUrl: getSiteUrl(),
 			isPremium: !! getL10nObject().isPremium,
 			titleInputPlaceholder,
 			descriptionInputPlaceholder,
 			socialMediumName,
+			alt: getFacebookAltText(),
 		};
 	} ),
 
-	withDispatch( dispatch => {
+	withDispatch( ( dispatch, ownProps, { select } ) => {
 		const {
 			setFacebookPreviewTitle,
 			setFacebookPreviewDescription,
 			clearFacebookPreviewImage,
 			loadFacebookPreviewData,
+			findCustomFields,
 		} = dispatch( "yoast-seo/editor" );
+
+		const postId = select( "yoast-seo/editor" ).getPostId();
+
 		return {
 			onSelectImageClick: selectMedia,
 			onRemoveImageClick: clearFacebookPreviewImage,
 			onDescriptionChange: setFacebookPreviewDescription,
 			onTitleChange: setFacebookPreviewTitle,
 			onLoad: loadFacebookPreviewData,
+			onReplacementVariableSearchChange: getMemoizedFindCustomFields( postId, findCustomFields ),
 		};
 	} ),
 
 	withLocation(),
 ] )( FacebookWrapper );
+/* eslint-enable complexity */

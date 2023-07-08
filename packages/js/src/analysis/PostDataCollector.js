@@ -1,7 +1,8 @@
 /* global wpseoScriptData */
 
 /* External dependencies */
-import { get } from "lodash-es";
+import { __ } from "@wordpress/i18n";
+import { get } from "lodash";
 import { markers } from "yoastseo";
 import { select } from "@wordpress/data";
 
@@ -11,14 +12,12 @@ import { update as updateAdminBar } from "../ui/adminBar";
 import * as publishBox from "../ui/publishBox";
 import { update as updateTrafficLight } from "../ui/trafficLight";
 import * as tmceHelper from "../lib/tinymce";
-import getI18n from "./getI18n";
 import getIndicatorForScore from "./getIndicatorForScore";
 import isKeywordAnalysisActive from "./isKeywordAnalysisActive";
+import isContentAnalysisActive from "./isContentAnalysisActive";
 
 const { tmceId } = tmceHelper;
 const $ = jQuery;
-const i18n = getI18n();
-
 /**
  * Show warning in console when the unsupported CkEditor is used
  *
@@ -261,7 +260,7 @@ PostDataCollector.prototype.getPermalink = function() {
 PostDataCollector.prototype.getCategoryName = function( li ) {
 	var clone = li.clone();
 	clone.children().remove();
-	return $.trim( clone.text() );
+	return clone.text().trim();
 };
 
 /**
@@ -385,9 +384,9 @@ PostDataCollector.prototype.saveScores = function( score, keyword ) {
 
 	if ( "" === keyword ) {
 		indicator.className = "na";
-		indicator.screenReaderText = i18n.dgettext(
-			"js-text-analysis",
-			"Enter a focus keyphrase to calculate the SEO score"
+		indicator.screenReaderText = __(
+			"Enter a focus keyphrase to calculate the SEO score",
+			"wordpress-seo"
 		);
 	}
 
@@ -417,5 +416,25 @@ PostDataCollector.prototype.saveContentScore = function( score ) {
 
 	$( "#yoast_wpseo_content_score" ).val( score );
 };
+
+/**
+ * Saves the inclusive language score to a hidden field.
+ *
+ * @param {number} score The score to save.
+ *
+ * @returns {void}
+ */
+PostDataCollector.prototype.saveInclusiveLanguageScore = function( score ) {
+	const indicator = getIndicatorForScore( score );
+	publishBox.updateScore( "inclusive-language", indicator.className );
+
+	if ( ! isKeywordAnalysisActive() && ! isContentAnalysisActive() ) {
+		updateTrafficLight( indicator );
+		updateAdminBar( indicator );
+	}
+
+	$( "#yoast_wpseo_inclusive_language_score" ).val( score );
+};
+
 
 export default PostDataCollector;

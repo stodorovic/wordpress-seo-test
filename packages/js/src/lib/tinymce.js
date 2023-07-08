@@ -2,11 +2,11 @@
 import {
 	forEach,
 	isUndefined,
-} from "lodash-es";
+} from "lodash";
 
 import { editorHasMarks, editorRemoveMarks } from "../decorator/tinyMCE";
 import CompatibilityHelper from "../compatibility/compatibilityHelper";
-import { setMarkerStatus } from "../redux/actions/markerButtons";
+import { actions } from "@yoast/externals/redux";
 
 let store;
 
@@ -153,7 +153,7 @@ export function addEventHandler( editorId, events, callback ) {
  */
 export function disableMarkerButtons() {
 	if ( ! isUndefined( store ) ) {
-		store.dispatch( setMarkerStatus( "disabled" ) );
+		store.dispatch( actions.setMarkerStatus( "disabled" ) );
 	}
 }
 
@@ -164,7 +164,29 @@ export function disableMarkerButtons() {
  */
 export function enableMarkerButtons() {
 	if ( ! isUndefined( store ) ) {
-		store.dispatch( setMarkerStatus( "enabled" ) );
+		store.dispatch( actions.setMarkerStatus( "enabled" ) );
+	}
+}
+
+/**
+ * Calls the function in the YoastSEO.js app that pauses to display the markers in the TinyMCE editor.
+ *
+ * @returns {void}
+ */
+export function pauseMarkers() {
+	if ( ! isUndefined( store ) ) {
+		store.dispatch( actions.setMarkerPauseStatus( true ) );
+	}
+}
+
+/**
+ * Calls the function in the YoastSEO.js app that restores showing markers in the TinyMCE editor.
+ *
+ * @returns {void}
+ */
+export function resumeMarkers() {
+	if ( ! isUndefined( store ) ) {
+		store.dispatch( actions.setMarkerPauseStatus( false ) );
 	}
 }
 
@@ -224,12 +246,18 @@ export function tinyMceEventBinder( refreshAnalysis, tinyMceId ) {
 	addEventHandler( tinyMceId, enableEvents, enableMarkerButtons );
 
 	addEventHandler( "content", [ "focus" ], function( evt ) {
-		var editor = evt.target;
+		const editor = evt.target;
 
 		if ( editorHasMarks( editor ) ) {
 			editorRemoveMarks( editor );
 
 			YoastSEO.app.disableMarkers();
 		}
+
+		pauseMarkers();
+	} );
+
+	addEventHandler( "content", [ "blur" ], function() {
+		resumeMarkers();
 	} );
 }

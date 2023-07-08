@@ -1,3 +1,4 @@
+/* global wpseoAdminL10n */
 import { Fragment } from "@wordpress/element";
 import styled from "styled-components";
 import interpolateComponents from "interpolate-components";
@@ -5,6 +6,8 @@ import PropTypes from "prop-types";
 import { __, sprintf } from "@wordpress/i18n";
 import { Alert } from "@yoast/components";
 import { makeOutboundLink } from "@yoast/helpers";
+import { addQueryArgs } from "@wordpress/url";
+import { useRootContext }  from "@yoast/externals/contexts";
 
 const PremiumInfoText = styled( Alert )`
 	p {
@@ -17,7 +20,7 @@ const YoastShortLink = makeOutboundLink();
 /**
  *
  * @param {Object} props The properties passed to this component.
- * @param {string} props.socialMedium The socialmedium platform.
+ * @param {string} props.socialMediumName The social medium platform.
  *
  * @returns {wp.Element} The FacebookView Component.
  */
@@ -25,15 +28,17 @@ const SocialUpsell = ( props ) => {
 	const previewText = sprintf(
 		/* Translators: %s expands to the social medium name, which is either Twitter or Facebook. %s expands to Yoast SEO Premium */
 		__(
-			"Do you want to preview what it will look like if people share this post on %s? You can, with %s.", "wordpress-seo"
-		), props.socialMediumName, " {{strong}}Yoast SEO Premium{{/strong}}"
+			"Want to see how your content will look when it’s shared on %s?", "wordpress-seo"
+		), props.socialMediumName
 	);
 	const upgradeText = sprintf(
 		/* Translators: %s expands to Yoast SEO Premium */
 		__(
-			"Find out why you should upgrade to %s", "wordpress-seo"
+			"Get %s to unlock social previews!", "wordpress-seo"
 		), "Yoast SEO Premium"
 	);
+
+	const { locationContext } = useRootContext();
 
 	return (
 		<Fragment>
@@ -46,7 +51,9 @@ const SocialUpsell = ( props ) => {
 				}
 				<br />
 				<YoastShortLink
-					href="https://yoast.com/reasons-to-upgrade/"
+					data-action="load-nfd-ctb"
+					data-ctb-id="f6a84663-465f-4cb5-8ba5-f7a6d72224b2"
+					href={ addQueryArgs( wpseoAdminL10n[ "shortlinks.upsell.social_preview." + props.socialMediumName.toLowerCase() ], { context: locationContext } ) }
 				>
 					<p>{ upgradeText }</p>
 				</YoastShortLink>

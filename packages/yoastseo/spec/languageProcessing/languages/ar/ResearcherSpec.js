@@ -12,11 +12,12 @@ describe( "a test for Arabic Researcher", function() {
 	const researcher = new Researcher( new Paper( "This is another paper!" ) );
 
 	it( "checks if the Arabic Researcher still inherit the Abstract Researcher", function() {
-		expect( researcher.getResearch( "getParagraphLength" ) ).toEqual( [ { text: "This is another paper!", wordCount: 4 } ] );
+		expect( researcher.getResearch( "getParagraphLength" ) ).toEqual( [ { text: "This is another paper!", countLength: 4 } ] );
 	} );
 
 	it( "returns false if the default research is deleted in Arabic Researcher", function() {
 		expect( researcher.getResearch( "getFleschReadingScore" ) ).toBe( false );
+		expect( researcher.getResearch( "wordComplexity" ) ).toBe( false );
 	} );
 
 	it( "returns false if the Arabic Researcher doesn't have a certain config", function() {
@@ -24,7 +25,7 @@ describe( "a test for Arabic Researcher", function() {
 	} );
 
 	it( "returns true if the Arabic Researcher has a specific research", function() {
-		expect( researcher.hasResearch( "getPassiveVoice" ) ).toBe( true );
+		expect( researcher.hasResearch( "getPassiveVoiceResult" ) ).toBe( true );
 	} );
 
 	it( "returns the Arabic function words", function() {

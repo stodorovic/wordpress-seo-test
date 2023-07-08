@@ -18,7 +18,11 @@ describe( "a test for the Italian Researcher", function() {
 	} );
 
 	it( "returns true if the Italian Researcher has a specific research", function() {
-		expect( researcher.hasResearch( "getPassiveVoice" ) ).toBe( true );
+		expect( researcher.hasResearch( "getPassiveVoiceResult" ) ).toBe( true );
+	} );
+
+	it( "returns false if the default research is deleted in the Italian Researcher", function() {
+		expect( researcher.getResearch( "wordComplexity" ) ).toBe( false );
 	} );
 
 	it( "returns the Italian function words filtered at the beginning", function() {
@@ -64,13 +68,8 @@ describe( "a test for the Italian Researcher", function() {
 
 	it( "splits Italian sentence into parts", function() {
 		const sentence =  "Furono tre amici quando furono bambini.";
-		expect( researcher.getHelper( "getSentenceParts" )( sentence )[ 0 ].getSentencePartText() ).toBe( "Furono tre amici" );
-		expect( researcher.getHelper( "getSentenceParts" )( sentence )[ 1 ].getSentencePartText() ).toBe( "furono bambini." );
-	} );
-
-	it( "checks if a Italian sentence is passive or not", function() {
-		expect( researcher.getHelper( "isPassiveSentencePart" )( "I gatti vengono vaccinati.", [ "vengono" ] ) ).toEqual( true );
-		expect( researcher.getHelper( "isPassiveSentencePart" )( "La ragazza ama il suo gatto.", [] ) ).toEqual( false );
+		expect( researcher.getHelper( "getClauses" )( sentence )[ 0 ].getClauseText() ).toBe( "Furono tre amici" );
+		expect( researcher.getHelper( "getClauses" )( sentence )[ 1 ].getClauseText() ).toBe( "furono bambini." );
 	} );
 
 	it( "calculates the Flesch reading score using the formula for Italian", function() {

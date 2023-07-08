@@ -10,6 +10,10 @@ use Yoast\WP\SEO\Integrations\Front_End_Integration;
 use Yoast\WP\SEO\Integrations\Third_Party\Web_Stories;
 use Yoast\WP\SEO\Models\Indexable;
 use Yoast\WP\SEO\Presentations\Indexable_Presentation;
+use Yoast\WP\SEO\Presenters\Meta_Description_Presenter;
+use Yoast\WP\SEO\Presenters\Title_Presenter;
+use Yoast\WP\SEO\Tests\Unit\Doubles\Context\Meta_Tags_Context_Mock;
+use Yoast\WP\SEO\Tests\Unit\Doubles\Models\Indexable_Mock;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
 /**
@@ -59,6 +63,18 @@ class Web_Stories_Test extends TestCase {
 	}
 
 	/**
+	 * Tests constructor.
+	 *
+	 * @covers ::__construct
+	 */
+	public function test_constructor() {
+		$this->assertInstanceOf(
+			Front_End_Integration::class,
+			$this->getPropertyValue( $this->instance, 'front_end' )
+		);
+	}
+
+	/**
 	 * Tests register hooks.
 	 *
 	 * @covers ::register_hooks
@@ -66,81 +82,99 @@ class Web_Stories_Test extends TestCase {
 	public function test_register_hooks() {
 		$this->instance->register_hooks();
 
-		\add_action( 'web_stories_enable_metadata', '__return_false' );
-		\add_action( 'web_stories_enable_schemaorg_metadata', '__return_false' );
-		\add_action( 'web_stories_enable_open_graph_metadata', '__return_false' );
-		\add_action( 'web_stories_enable_twitter_metadata', '__return_false' );
-
-		$this->assertNotFalse( \has_action( 'web_stories_enable_metadata', '__return_false' ), 'The enable metadata filter is registered.' );
+		$this->assertNotFalse( \has_filter( 'web_stories_enable_document_title', '__return_false' ), 'The enable document title filter is registered.' );
+		$this->assertNotFalse( \has_filter( 'web_stories_enable_metadata', '__return_false' ), 'The enable metadata filter is registered.' );
+		$this->assertNotFalse( \has_filter( 'wpseo_frontend_presenters', [ $this->instance, 'filter_frontend_presenters' ] ), 'The frontend presenters filter is registered.' );
 		$this->assertNotFalse( \has_action( 'web_stories_enable_schemaorg_metadata', '__return_false' ), 'The enable metadata filter is registered.' );
 		$this->assertNotFalse( \has_action( 'web_stories_enable_open_graph_metadata', '__return_false' ), 'The enable metadata filter is registered.' );
 		$this->assertNotFalse( \has_action( 'web_stories_enable_twitter_metadata', '__return_false' ), 'The enable metadata filter is registered.' );
-		$this->assertFalse( \has_action( 'web_stories_story_head', 'rel_canonical' ), 'The rel canonical action is not registered' );
-		$this->assertNotFalse( \has_action( 'web_stories_story_head', [ $this->front_end, 'call_wpseo_head' ] ), 'The wpseo head action is registered.' );
-		$this->assertNotFalse( \has_filter( 'wpseo_schema_article_post_types', [ $this->instance, 'filter_schema_article_post_types' ] ), 'The filter schema article post types function is registered.' );
+		$this->assertNotFalse( \has_action( 'web_stories_story_head', [ $this->instance, 'web_stories_story_head' ] ), 'The web-story head action is not registered' );
 		$this->assertNotFalse( \has_filter( 'wpseo_schema_article_type', [ $this->instance, 'filter_schema_article_type' ] ), 'The filter schema article type function is registered.' );
-		$this->assertNotFalse( \has_action( 'admin_enqueue_scripts', [ $this->instance, 'dequeue_admin_assets' ] ), 'The admin_enqueue_scripts action is registered.' );
 		$this->assertNotFalse( \has_filter( 'wpseo_metadesc', [ $this->instance, 'filter_meta_description' ] ), 'The metadesc action is registered.' );
 	}
 
 	/**
-	 * Tests dequeue admin assets
+	 * Tests filter_frontend_presenters method for stories.
 	 *
-	 * @covers ::dequeue_admin_assets
+	 * @covers ::filter_frontend_presenters
 	 */
-	public function test_dequeue_admin_assets() {
-		$current_screen            = Mockery::mock( '\WP_Screen' );
-		$current_screen->base      = 'foo';
-		$current_screen->post_type = 'bar';
+	public function test_filter_frontend_presenters_stories() {
+		$context                             = new Meta_Tags_Context_Mock();
+		$context->indexable                  = new Indexable_Mock();
+		$context->indexable->object_sub_type = 'web-story';
 
-		Monkey\Functions\expect( '\get_current_screen' )
-			->once()
-			->andReturn( $current_screen );
+		$title_presenter = Mockery::mock( Title_Presenter::class );
+		$other_presenter = Mockery::mock( Meta_Description_Presenter::class );
 
-		Mockery::namedMock( '\Google\Web_Stories\Story_Post_Type', Story_Post_Type_Stub::class );
+		// First case: a title presenter is already there.
+		$presenters = [
+			$title_presenter,
+			$other_presenter,
+		];
 
-		Monkey\Functions\expect( '\wp_dequeue_script' )
-			->never();
-		Monkey\Functions\expect( '\wp_dequeue_style' )
-			->never();
+		$return_presenters = $this->instance->filter_frontend_presenters( $presenters, $context );
 
-		$this->instance->dequeue_admin_assets();
+		$title_presenter_found = false;
+
+		foreach ( $return_presenters as $item ) {
+			if ( $item instanceof Title_Presenter ) {
+				$title_presenter_found = true;
+				$this->assertInstanceOf( Title_Presenter::class, $item );
+			}
+		}
+
+		$this->assertTrue( $title_presenter_found );
+
+		// Second case: a title presenter is not there yet, will be added.
+		$presenters_no_title = [
+			$other_presenter,
+		];
+
+		$return_presenters = $this->instance->filter_frontend_presenters( $presenters_no_title, $context );
+
+		$title_presenter_found = false;
+
+		foreach ( $return_presenters as $item ) {
+			if ( $item instanceof Title_Presenter ) {
+				$title_presenter_found = true;
+				$this->assertInstanceOf( Title_Presenter::class, $item );
+			}
+		}
+
+		$this->assertTrue( $title_presenter_found );
 	}
 
 	/**
-	 * Tests dequeue admin assets
+	 * Tests filter_frontend_presenters method for other types.
 	 *
-	 * @covers ::dequeue_admin_assets
+	 * @covers ::filter_frontend_presenters
 	 */
-	public function test_dequeue_admin_assets_with_screen() {
-		$current_screen            = Mockery::mock( '\WP_Screen' );
-		$current_screen->base      = 'post';
-		$current_screen->post_type = 'web-story';
+	public function test_filter_frontend_presenters_other() {
+		$context                             = new Meta_Tags_Context_Mock();
+		$context->indexable                  = new Indexable_Mock();
+		$context->indexable->object_sub_type = 'post';
 
-		Monkey\Functions\expect( '\get_current_screen' )
-			->once()
-			->andReturn( $current_screen );
+		$title_presenter = Mockery::mock( Title_Presenter::class );
+		$other_presenter = Mockery::mock( Meta_Description_Presenter::class );
 
-		Mockery::namedMock( '\Google\Web_Stories\Story_Post_Type', Story_Post_Type_Stub::class );
+		$presenters = [
+			$title_presenter,
+			$other_presenter,
+		];
 
-		Monkey\Functions\expect( '\wp_dequeue_script' )
-			->times( 4 );
-		Monkey\Functions\expect( '\wp_dequeue_style' )
-			->times( 8 );
-
-		$this->instance->dequeue_admin_assets();
+		$this->assertSame( $presenters, $this->instance->filter_frontend_presenters( $presenters, $context ) );
 	}
 
 	/**
-	 * Tests filter schema article post types.
+	 * Tests web_stories_story_head integration.
 	 *
-	 * @covers ::filter_schema_article_post_types
+	 * @covers ::web_stories_story_head
 	 */
-	public function test_filter_schema_article_post_types() {
-		Mockery::namedMock( '\Google\Web_Stories\Story_Post_Type', Story_Post_Type_Stub::class );
+	public function test_web_stories_story_head() {
+		$this->instance->web_stories_story_head();
 
-		$actual = $this->instance->filter_schema_article_post_types( [ 'post' ] );
-		$this->assertEquals( [ 'post', 'web-story' ], $actual );
+		$this->assertFalse( \has_action( 'web_stories_story_head', 'rel_canonical' ), 'The rel canonical action is not registered' );
+		$this->assertNotFalse( \has_action( 'web_stories_story_head', [ $this->front_end, 'call_wpseo_head' ] ), 'The wpseo head action is registered.' );
 	}
 
 	/**

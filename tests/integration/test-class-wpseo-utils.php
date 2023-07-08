@@ -49,20 +49,6 @@ class WPSEO_Utils_Test extends WPSEO_UnitTestCase {
 	}
 
 	/**
-	 * Tests translate_score function.
-	 *
-	 * @dataProvider translate_score_provider
-	 * @covers       WPSEO_Utils::translate_score
-	 *
-	 * @param int    $score     The decimal score to translate.
-	 * @param bool   $css_value Whether to return the i18n translated score or the CSS class value.
-	 * @param string $expected  Expected function result.
-	 */
-	public function test_translate_score( $score, $css_value, $expected ) {
-		$this->assertEquals( $expected, WPSEO_Utils::translate_score( $score, $css_value ) );
-	}
-
-	/**
 	 * Provides test data for test_translate_score().
 	 *
 	 * @return array
@@ -150,11 +136,7 @@ class WPSEO_Utils_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Utils::retrieve_enabled_features
 	 */
 	public function test_retrieve_enabled_features_with_define() {
-		// Retrieve currently defined feature flags. Set them if they do not exist yet.
-		if ( ! defined( 'YOAST_SEO_ENABLED_FEATURES' ) ) {
-			define( 'YOAST_SEO_ENABLED_FEATURES', 'some-feature' );
-		}
-		$expected = preg_split( '/,\W*/', YOAST_SEO_ENABLED_FEATURES );
+		$expected = [];
 		$this->assertEquals( $expected, WPSEO_Utils::retrieve_enabled_features() );
 	}
 
@@ -164,14 +146,10 @@ class WPSEO_Utils_Test extends WPSEO_UnitTestCase {
 	 * @covers WPSEO_Utils::retrieve_enabled_features
 	 */
 	public function test_retrieve_enabled_features_with_filter() {
-		// Retrieve currently defined feature flags. Set them if they do not exist yet.
-		if ( ! defined( 'YOAST_SEO_ENABLED_FEATURES' ) ) {
-			define( 'YOAST_SEO_ENABLED_FEATURES', 'some-feature' );
-		}
-		$expected = preg_split( '/,\W*/', YOAST_SEO_ENABLED_FEATURES );
+		$expected = [];
 
 		// Features we expect to be added by the filter.
-		$added_features = [ 'some functionality', 'other things' ];
+		$added_features = [ 'OTHER_FEATURE', 'ANOTHER_FEATURE' ];
 		// Expected features are the ones in the PHP constant + the features added by the filter.
 		$expected = array_merge( $expected, $added_features );
 
@@ -187,10 +165,7 @@ class WPSEO_Utils_Test extends WPSEO_UnitTestCase {
 	 * @return array The filtered enabled features.
 	 */
 	public function filter_wpseo_enable_feature( $enabled_features ) {
-		$second_array = [
-			'some functionality',
-			'other things',
-		];
+		$second_array = [ 'OTHER_FEATURE', 'ANOTHER_FEATURE' ];
 
 		return array_merge( $enabled_features, $second_array );
 	}
@@ -216,6 +191,11 @@ class WPSEO_Utils_Test extends WPSEO_UnitTestCase {
 	 */
 	public function sanitize_url_provider() {
 		return [
+			// Related issue: https://github.com/Yoast/wordpress-seo/issues/17099.
+			'with_at_sign_in_url_path'       => [
+				'expected'        => 'https://example.org/test1/@test2',
+				'url_to_sanitize' => 'https://example.org/test1/@test2',
+			],
 			// Related issue: https://github.com/Yoast/wordpress-seo/issues/14476.
 			'with_encoded_url'               => [
 				'expected'        => 'https://example.com/%da%af%d8%b1%d9%88%d9%87-%d8%aa%d9%84%da%af%d8%b1%d8%a7%d9%85-%d8%b3%d8%a6%d9%88/',

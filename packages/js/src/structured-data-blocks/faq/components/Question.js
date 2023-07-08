@@ -2,10 +2,9 @@
 import PropTypes from "prop-types";
 import { __ } from "@wordpress/i18n";
 import { isShallowEqualObjects } from "@wordpress/is-shallow-equal";
-
 import { Component } from "@wordpress/element";
-import { IconButton } from "@wordpress/components";
-import { RichText, MediaUpload } from "@wordpress/editor";
+import { Button } from "@wordpress/components";
+import { RichText, MediaUpload } from "@wordpress/block-editor";
 
 /* Internal dependencies */
 import appendSpace from "../../../components/higherorder/appendSpace";
@@ -47,13 +46,13 @@ export default class Question extends Component {
 	 */
 	getMediaUploadButton( props ) {
 		return (
-			<IconButton
+			<Button
 				className="schema-faq-section-button faq-section-add-media"
 				icon="insert"
 				onClick={ props.open }
 			>
 				{ __( "Add image", "wordpress-seo" ) }
-			</IconButton>
+			</Button>
 		);
 	}
 
@@ -187,13 +186,13 @@ export default class Question extends Component {
 				value={ attributes.id }
 				render={ this.getMediaUploadButton }
 			/>
-			<IconButton
+			<Button
 				className="schema-faq-section-button"
 				icon="trash"
 				label={ __( "Delete question", "wordpress-seo" ) }
 				onClick={ this.onRemoveQuestion }
 			/>
-			<IconButton
+			<Button
 				className="schema-faq-section-button"
 				icon="insert"
 				label={ __( "Insert question", "wordpress-seo" ) }
@@ -209,14 +208,14 @@ export default class Question extends Component {
 	 */
 	getMover() {
 		return <div className="schema-faq-section-mover">
-			<IconButton
+			<Button
 				className="editor-block-mover__control"
 				onClick={ this.onMoveUp }
 				icon="arrow-up-alt2"
 				label={ __( "Move question up", "wordpress-seo" ) }
 				aria-disabled={ this.props.isFirst }
 			/>
-			<IconButton
+			<Button
 				className="editor-block-mover__control"
 				onClick={ this.onMoveDown }
 				icon="arrow-down-alt2"
@@ -243,7 +242,7 @@ export default class Question extends Component {
 		} = this.props;
 
 		let newAnswer = answer.slice();
-		const image   = <img key={ media.id } alt={ media.alt } src={ media.url } />;
+		const image   = <img className={ `wp-image-${ media.id }` } alt={ media.alt } src={ media.url } style="max-width:100%;" />;
 
 		if ( newAnswer.push ) {
 			newAnswer.push( image );
@@ -323,7 +322,6 @@ export default class Question extends Component {
 	 */
 	render() {
 		const {
-			subElement,
 			attributes,
 			isSelected,
 		} = this.props;
@@ -334,30 +332,29 @@ export default class Question extends Component {
 			answer,
 		} = attributes;
 
+
 		return (
 			<div className="schema-faq-section" key={ id }>
 				<RichText
+					identifier={ id + "-question" }
 					className="schema-faq-question"
 					tagName="p"
 					key={ id + "-question" }
 					value={ question }
 					onChange={ this.onChangeQuestion }
-					isSelected={ isSelected && subElement === "question" }
 					unstableOnFocus={ this.onFocusQuestion }
 					placeholder={ __( "Enter a question", "wordpress-seo" ) }
-					keepPlaceholderOnFocus={ true }
-					formattingControls={ [ "italic", "strikethrough", "link" ] }
+					allowedFormats={ [ "core/italic", "core/strikethrough", "core/link", "core/annotation" ] }
 				/>
 				<RichText
+					identifier={ id + "-answer" }
 					className="schema-faq-answer"
 					tagName="p"
 					key={ id + "-answer" }
 					value={ answer }
 					onChange={ this.onChangeAnswer }
-					isSelected={ isSelected && subElement === "answer" }
 					unstableOnFocus={ this.onFocusAnswer }
 					placeholder={ __( "Enter the answer to the question", "wordpress-seo" ) }
-					keepPlaceholderOnFocus={ true }
 				/>
 				{ isSelected &&
 					<div className="schema-faq-section-controls-container">
@@ -379,12 +376,7 @@ Question.propTypes = {
 	onFocus: PropTypes.func.isRequired,
 	onMoveUp: PropTypes.func.isRequired,
 	onMoveDown: PropTypes.func.isRequired,
-	subElement: PropTypes.string,
 	isSelected: PropTypes.bool.isRequired,
 	isFirst: PropTypes.bool.isRequired,
 	isLast: PropTypes.bool.isRequired,
-};
-
-Question.defaultProps = {
-	subElement: "",
 };

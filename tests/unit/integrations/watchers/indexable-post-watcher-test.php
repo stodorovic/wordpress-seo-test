@@ -11,6 +11,7 @@ use Yoast\WP\SEO\Builders\Indexable_Link_Builder;
 use Yoast\WP\SEO\Conditionals\Migrations_Conditional;
 use Yoast\WP\SEO\Helpers\Author_Archive_Helper;
 use Yoast\WP\SEO\Helpers\Post_Helper;
+use Yoast\WP\SEO\Integrations\Cleanup_Integration;
 use Yoast\WP\SEO\Integrations\Watchers\Indexable_Post_Watcher;
 use Yoast\WP\SEO\Loggers\Logger;
 use Yoast\WP\SEO\Repositories\Indexable_Hierarchy_Repository;
@@ -153,7 +154,7 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			'ID'          => 0,
 		];
 
-		$indexable              = Mockery::mock();
+		$indexable              = Mockery::mock( Indexable_Mock::class );
 		$indexable->id          = 1;
 		$indexable->is_public   = true;
 		$indexable->object_type = 'post';
@@ -230,12 +231,6 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->andReturn( $post );
 
 		$this->post
-			->expects( 'is_post_indexable' )
-			->once()
-			->with( $post_id )
-			->andReturn( true );
-
-		$this->post
 			->expects( 'get_public_post_statuses' )
 			->once()
 			->andReturn( [ 'publish' ] );
@@ -245,24 +240,12 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->once()
 			->with( $indexable_mock, $post_content );
 
+		$this->instance
+			->expects( 'update_has_public_posts' )
+			->with( $indexable_mock )
+			->once();
+
 		$this->instance->build_indexable( $post_id );
-	}
-
-	/**
-	 * Tests the early return for non-indexable post.
-	 *
-	 * @covers ::build_indexable
-	 */
-	public function test_build_indexable_is_not_indexable() {
-		$id = 1;
-
-		$this->post
-			->expects( 'is_post_indexable' )
-			->once()
-			->with( $id )
-			->andReturn( false );
-
-		$this->instance->build_indexable( $id );
 	}
 
 	/**
@@ -300,12 +283,6 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->once()
 			->andReturnFalse();
 
-		$this->post
-			->expects( 'is_post_indexable' )
-			->with( $post_id )
-			->once()
-			->andReturnTrue();
-
 		$indexable_mock = Mockery::mock( Indexable_Mock::class );
 		$indexable_mock->expects( 'save' )->never();
 
@@ -332,12 +309,6 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			'post_status'  => 'publish',
 		];
 
-		$this->post
-			->expects( 'is_post_indexable' )
-			->with( $post_id )
-			->once()
-			->andReturnTrue();
-
 		$indexable_mock = Mockery::mock( Indexable_Mock::class );
 		$indexable_mock->expects( 'save' )->once();
 
@@ -360,6 +331,11 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->once()
 			->andReturn( [ 'publish' ] );
 
+		$this->instance
+			->expects( 'update_has_public_posts' )
+			->with( $indexable_mock )
+			->once();
+
 		$this->instance->build_indexable( $post_id );
 	}
 
@@ -373,84 +349,11 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->expects( 'update_relations' )
 			->never();
 
-		$old_indexable                  = Mockery::mock( Indexable_Mock::class );
-		$updated_indexable              = Mockery::mock( Indexable_Mock::class );
-		$updated_indexable->object_type = 'term';
+		$post                   = Mockery::mock( WP_Post::class );
+		$indexable              = Mockery::mock( Indexable_Mock::class );
+		$indexable->object_type = 'term';
 
-		$this->instance->updated_indexable( $updated_indexable, $old_indexable );
-	}
-
-	/**
-	 * Tests the updated indexable method with no transition in status.
-	 *
-	 * @covers ::updated_indexable
-	 */
-	public function test_updated_indexable_not_public_and_no_transition() {
-		$this->instance
-			->expects( 'update_relations' )
-			->never();
-
-		$old_indexable            = Mockery::mock( Indexable_Mock::class );
-		$old_indexable->is_public = false;
-
-		$updated_indexable              = Mockery::mock( Indexable_Mock::class );
-		$updated_indexable->object_type = 'post';
-		$updated_indexable->object_id   = 23;
-		$updated_indexable->is_public   = false;
-
-		$this->instance
-			->expects( 'update_has_public_posts' )
-			->with( $updated_indexable )
-			->once();
-
-		$post = Mockery::mock( WP_Post::class );
-
-		$this->post
-			->expects( 'get_post' )
-			->with( 23 )
-			->andReturn( $post );
-
-		$updated_indexable
-			->expects( 'save' )
-			->once();
-
-		$this->instance->updated_indexable( $updated_indexable, $old_indexable );
-	}
-
-	/**
-	 * Tests the updated indexable method with a transition in status.
-	 *
-	 * @covers ::updated_indexable
-	 */
-	public function test_updated_indexable_public_transition() {
-		$this->instance
-			->expects( 'update_relations' )
-			->with( [] )
-			->once();
-
-		$old_indexable            = Mockery::mock( Indexable_Mock::class );
-		$old_indexable->is_public = true;
-
-		$updated_indexable              = Mockery::mock( Indexable_Mock::class );
-		$updated_indexable->object_type = 'post';
-		$updated_indexable->is_public   = false;
-		$updated_indexable->object_id   = 1;
-
-		$this->post
-			->expects( 'get_post' )
-			->once()
-			->with( 1 )->andReturn( [] );
-
-		$this->instance
-			->expects( 'update_has_public_posts' )
-			->with( $updated_indexable )
-			->once();
-
-		$updated_indexable
-			->expects( 'save' )
-			->once();
-
-		$this->instance->updated_indexable( $updated_indexable, $old_indexable );
+		$this->instance->updated_indexable( $indexable, $post );
 	}
 
 	/**
@@ -459,7 +362,7 @@ class Indexable_Post_Watcher_Test extends TestCase {
 	 * @covers ::update_has_public_posts
 	 */
 	public function test_update_has_public_posts_with_post() {
-		$post_indexable                  = Mockery::mock();
+		$post_indexable                  = Mockery::mock( Indexable_Mock::class );
 		$post_indexable->object_id       = 33;
 		$post_indexable->object_sub_type = 'post';
 		$post_indexable->author_id       = 1;
@@ -494,7 +397,7 @@ class Indexable_Post_Watcher_Test extends TestCase {
 	 * @covers ::update_has_public_posts
 	 */
 	public function test_update_has_public_posts_with_post_throwing_exceptions() {
-		$post_indexable                  = Mockery::mock();
+		$post_indexable                  = Mockery::mock( Indexable_Mock::class );
 		$post_indexable->object_id       = 33;
 		$post_indexable->object_sub_type = 'post';
 		$post_indexable->author_id       = 1;
@@ -515,19 +418,89 @@ class Indexable_Post_Watcher_Test extends TestCase {
 	}
 
 	/**
+	 * Tests that update_has_public_posts does not update the author archive when
+	 * the author can't be retrieved.
+	 *
+	 * @covers ::update_has_public_posts
+	 */
+	public function test_update_has_public_posts_with_finding_user_returning_false() {
+		$post_indexable                  = Mockery::mock( Indexable_Mock::class );
+		$post_indexable->object_id       = 33;
+		$post_indexable->object_sub_type = 'post';
+		$post_indexable->author_id       = 1;
+		$post_indexable->is_public       = null;
+
+		$this->repository->expects( 'find_by_id_and_type' )
+			->with( 1, 'user' )
+			->once()
+			->andReturn( false );
+		$this->author_archive->expects( 'author_has_public_posts' )->once()->never();
+		$this->post->expects( 'update_has_public_posts_on_attachments' )
+			->once()
+			->with( 33, null )
+			->andReturnTrue();
+
+		$this->instance->update_has_public_posts( $post_indexable );
+	}
+
+	/**
+	 * Checks whether a cleanup is rescheduled when updating a post
+	 * leads to an author not having any public posts anymore.
+	 *
+	 * (When an author does not have any publicly viewable posts, it should
+	 * be removed from the indexable table).
+	 *
+	 * @covers ::reschedule_cleanup_if_author_has_no_posts
+	 */
+	public function test_reschedule_cleanup_when_author_does_not_have_posts() {
+		$post_indexable                  = Mockery::mock( Indexable_Mock::class );
+		$post_indexable->object_id       = 33;
+		$post_indexable->object_sub_type = 'post';
+		$post_indexable->author_id       = 11;
+		$post_indexable->is_public       = false;
+
+		$author_indexable            = Mockery::mock( Indexable_Mock::class );
+		$author_indexable->object_id = 11;
+
+		$author_indexable->expects( 'save' );
+
+		$this->repository->expects( 'find_by_id_and_type' )
+			->with( 11, 'user' )
+			->once()
+			->andReturn( $author_indexable );
+		$this->author_archive->expects( 'author_has_public_posts' )
+			->with( 11 )
+			->andReturnFalse();
+		$this->post->expects( 'update_has_public_posts_on_attachments' )
+			->once()
+			->with( 33, null )
+			->andReturnTrue();
+
+		Monkey\Functions\expect( 'wp_next_scheduled' )
+			->with( Cleanup_Integration::START_HOOK )
+			->andReturn( false );
+
+		Monkey\Functions\expect( 'wp_schedule_single_event' )
+			->once();
+
+		$this->instance->update_has_public_posts( $post_indexable );
+	}
+
+	/**
 	 * Tests the routine for updating the relations.
 	 *
 	 * @covers ::update_relations
 	 */
 	public function test_update_relations() {
 		$post = (object) [
-			'post_author' => 1,
-			'post_type'   => 'post',
-			'ID'          => 1,
+			'post_author'       => 1,
+			'post_type'         => 'post',
+			'ID'                => 1,
+			'post_modified_gmt' => '1234-12-12 12:12:12',
 		];
 
-		$indexable            = Mockery::mock( Indexable_Mock::class );
-		$indexable->is_public = true;
+		$indexable                       = Mockery::mock( Indexable_Mock::class );
+		$indexable->object_last_modified = '1234-12-12 00:00:00';
 		$indexable->expects( 'save' )->once();
 
 		$this->instance
@@ -537,31 +510,8 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->andReturn( [ $indexable ] );
 
 		$this->instance->update_relations( $post );
-	}
 
-	/**
-	 * Tests the routine for updating the relations.
-	 *
-	 * @covers ::update_relations
-	 */
-	public function test_update_relations_with_a_non_public_indexable() {
-		$post = (object) [
-			'post_author' => 1,
-			'post_type'   => 'post',
-			'ID'          => 1,
-		];
-
-		$indexable            = Mockery::mock( Indexable_Mock::class );
-		$indexable->is_public = false;
-		$indexable->expects( 'save' )->never();
-
-		$this->instance
-			->expects( 'get_related_indexables' )
-			->once()
-			->with( $post )
-			->andReturn( [ $indexable ] );
-
-		$this->instance->update_relations( $post );
+		$this->assertSame( '1234-12-12 12:12:12', $indexable->object_last_modified );
 	}
 
 	/**
@@ -636,6 +586,21 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->with( 1, 'another-taxonomy' )
 			->andReturnNull();
 
+		Monkey\Functions\expect( 'wp_list_pluck' )
+			->once()
+			->with(
+				[
+					(object) [
+						'term_id' => 1337,
+					],
+					(object) [
+						'term_id' => 1414,
+					],
+				],
+				'term_id'
+			)
+			->andReturn( [ 1337, 1414 ] );
+
 		$indexable = Mockery::mock( Indexable_Mock::class );
 
 		$this->repository
@@ -657,16 +622,10 @@ class Indexable_Post_Watcher_Test extends TestCase {
 			->andReturn( $indexable );
 
 		$this->repository
-			->expects( 'find_by_id_and_type' )
+			->expects( 'find_by_multiple_ids_and_type' )
 			->once()
-			->with( 1337, 'term', false )
-			->andReturn( $indexable );
-
-		$this->repository
-			->expects( 'find_by_id_and_type' )
-			->once()
-			->with( 1414, 'term', false )
-			->andReturnNull();
+			->with( [ 1337, 1414 ], 'term', false )
+			->andReturn( [ $indexable, null ] );
 
 		$this->assertEquals(
 			[ $indexable, $indexable, $indexable, $indexable ],

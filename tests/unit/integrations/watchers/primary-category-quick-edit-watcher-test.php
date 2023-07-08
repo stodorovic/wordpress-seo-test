@@ -5,14 +5,17 @@ namespace Yoast\WP\SEO\Tests\Unit\Integrations\Watchers;
 use Brain\Monkey;
 use Mockery;
 use WPSEO_Meta;
+use Yoast\WP\SEO\Builders\Indexable_Hierarchy_Builder;
 use Yoast\WP\SEO\Conditionals\Admin\Doing_Post_Quick_Edit_Save_Conditional;
 use Yoast\WP\SEO\Conditionals\Migrations_Conditional;
 use Yoast\WP\SEO\Helpers\Options_Helper;
+use Yoast\WP\SEO\Helpers\Post_Type_Helper;
 use Yoast\WP\SEO\Integrations\Watchers\Primary_Category_Quick_Edit_Watcher;
+use Yoast\WP\SEO\Repositories\Indexable_Repository;
 use Yoast\WP\SEO\Repositories\Primary_Term_Repository;
+use Yoast\WP\SEO\Tests\Unit\Doubles\Models\Indexable_Mock;
+use Yoast\WP\SEO\Tests\Unit\Doubles\Models\Primary_Term_Mock;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
-
-// phpcs:disable Yoast.NamingConventions.ObjectNameDepth.MaxExceeded -- Base class can't be written shorter without abbreviating.
 
 /**
  * Class Admin_Columns_Cache_Integration_Test.
@@ -21,6 +24,8 @@ use Yoast\WP\SEO\Tests\Unit\TestCase;
  * @group watchers
  *
  * @coversDefaultClass \Yoast\WP\SEO\Integrations\Watchers\Primary_Category_Quick_Edit_Watcher
+ *
+ * @phpcs:disable Yoast.NamingConventions.ObjectNameDepth.MaxExceeded -- Base class can't be written shorter without abbreviating.
  */
 class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 
@@ -39,6 +44,27 @@ class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 	protected $primary_term_repository;
 
 	/**
+	 * The mocked indexable repository.
+	 *
+	 * @var Mockery\MockInterface|Indexable_Repository
+	 */
+	protected $indexable_repository;
+
+	/**
+	 * The mocked indexable hierarchy builder.
+	 *
+	 * @var Mockery\MockInterface|Indexable_Hierarchy_Builder
+	 */
+	protected $indexable_hierarchy_builder;
+
+	/**
+	 * The mocked post type helper.
+	 *
+	 * @var Mockery\MockInterface|Post_Type_Helper
+	 */
+	protected $post_type_helper;
+
+	/**
 	 * Represents the instance to test.
 	 *
 	 * @var Primary_Category_Quick_Edit_Watcher
@@ -51,11 +77,18 @@ class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 	public function set_up() {
 		parent::set_up();
 
-		$this->options_helper          = Mockery::mock( Options_Helper::class );
-		$this->primary_term_repository = Mockery::mock( Primary_Term_Repository::class );
-		$this->instance                = new Primary_Category_Quick_Edit_Watcher(
+		$this->options_helper              = Mockery::mock( Options_Helper::class );
+		$this->primary_term_repository     = Mockery::mock( Primary_Term_Repository::class );
+		$this->post_type_helper            = Mockery::mock( Post_Type_Helper::class );
+		$this->indexable_repository        = Mockery::mock( Indexable_Repository::class );
+		$this->indexable_hierarchy_builder = Mockery::mock( Indexable_Hierarchy_Builder::class );
+
+		$this->instance = new Primary_Category_Quick_Edit_Watcher(
 			$this->options_helper,
-			$this->primary_term_repository
+			$this->primary_term_repository,
+			$this->post_type_helper,
+			$this->indexable_repository,
+			$this->indexable_hierarchy_builder
 		);
 	}
 
@@ -283,7 +316,7 @@ class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 			->never()
 			->with( 1337, WPSEO_Meta::$meta_prefix . 'primary_category', true );
 
-		$primary_term          = Mockery::mock();
+		$primary_term          = Mockery::mock( Primary_Term_Mock::class );
 		$primary_term->term_id = 2;
 
 		$this->primary_term_repository
@@ -321,7 +354,7 @@ class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 			->never()
 			->with( 1337, WPSEO_Meta::$meta_prefix . 'primary_category', true );
 
-		$primary_term          = Mockery::mock();
+		$primary_term          = Mockery::mock( Primary_Term_Mock::class );
 		$primary_term->term_id = 3;
 
 		$this->primary_term_repository
@@ -330,13 +363,30 @@ class Primary_Category_Quick_Edit_Watcher_Test extends TestCase {
 			->with( 1337, 'category', false )
 			->andReturn( $primary_term );
 
+		// Primary term is deleted for this post.
 		$primary_term->expects( 'delete' )->once();
 
 		Monkey\Functions\expect( 'delete_post_meta' )
 			->once()
 			->with( 1337, WPSEO_Meta::$meta_prefix . 'primary_category' );
 
+		$this->post_type_helper
+			->expects( 'is_excluded' )
+			->with( 'post' )
+			->andReturn( false );
+
+		$indexable = Mockery::mock( Indexable_Mock::class );
+
+		$this->indexable_repository
+			->expects( 'find_by_id_and_type' )
+			->with( 1337, 'post' )
+			->andReturn( $indexable );
+
+		// Indexable hierarchy should be rebuilt now the primary term has been deleted.
+		$this->indexable_hierarchy_builder
+			->expects( 'build' )
+			->with( $indexable );
+
 		$this->instance->validate_primary_category( 1337, [], [ '1', '2' ], 'category' );
 	}
 }
-// phpcs:enable Yoast.NamingConventions.ObjectNameDepth.MaxExceeded -- Base class can't be written shorter without abbreviating.

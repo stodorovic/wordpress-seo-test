@@ -1,3 +1,4 @@
+import { __, sprintf } from "@wordpress/i18n";
 import { merge } from "lodash-es";
 
 import Assessment from "../assessment";
@@ -6,18 +7,20 @@ import { createAnchorOpeningTag } from "../../../helpers/shortlinker";
 import AssessmentResult from "../../../values/AssessmentResult";
 
 const maximumLength = 600;
+
 /**
- * Represents the assessment that will calculate if the width of the page title is correct.
+ * Represents the assessment that assesses the SEO title width and gives the feedback accordingly.
  */
 export default class PageTitleWidthAssessment extends Assessment {
 	/**
 	 * Sets the identifier and the config.
 	 *
-	 * @param {Object} [config] The configuration to use.
+	 * @param {Object}  [config]        The configuration to use.
+	 * @param {boolean} allowShortTitle Whether the short title width is penalized with a bad score or not.
 	 *
 	 * @returns {void}
 	 */
-	constructor( config = {} ) {
+	constructor( config = {}, allowShortTitle = false ) {
 		super();
 
 		const defaultConfig = {
@@ -33,6 +36,7 @@ export default class PageTitleWidthAssessment extends Assessment {
 			urlCallToAction: createAnchorOpeningTag( "https://yoa.st/34i" ),
 		};
 
+		this._allowShortTitle = allowShortTitle;
 		this.identifier = "titleWidth";
 		this._config = merge( defaultConfig, config );
 	}
@@ -51,16 +55,19 @@ export default class PageTitleWidthAssessment extends Assessment {
 	 *
 	 * @param {Paper} paper The paper to use for the assessment.
 	 * @param {Researcher} researcher The researcher used for calling research.
-	 * @param {Jed} i18n The object used for translations
 	 *
 	 * @returns {AssessmentResult} The assessment result.
 	 */
-	getResult( paper, researcher, i18n ) {
+	getResult( paper, researcher ) {
 		const pageTitleWidth = researcher.getResearch( "pageTitleWidth" );
 		const assessmentResult = new AssessmentResult();
 
 		assessmentResult.setScore( this.calculateScore( pageTitleWidth ) );
-		assessmentResult.setText( this.translateScore( pageTitleWidth, i18n ) );
+		assessmentResult.setText( this.translateScore( pageTitleWidth ) );
+		if ( assessmentResult.getScore() < 9  ) {
+			assessmentResult.setHasJumps( true );
+			assessmentResult.setEditFieldName( __( "SEO title", "wordpress-seo" ) );
+		}
 
 		// Max and actual are used in the snippet editor progress bar.
 		assessmentResult.max = this._config.maxLength;
@@ -69,9 +76,9 @@ export default class PageTitleWidthAssessment extends Assessment {
 	}
 
 	/**
-	 * Returns the score for the pageTitleWidth
+	 * Returns the score for the SEO title width calculation.
 	 *
-	 * @param {number} pageTitleWidth The width of the pageTitle.
+	 * @param {number} pageTitleWidth The width of the SEO title.
 	 *
 	 * @returns {number} The calculated score.
 	 */
@@ -92,21 +99,31 @@ export default class PageTitleWidthAssessment extends Assessment {
 	}
 
 	/**
-	 * Translates the pageTitleWidth score to a message the user can understand.
+	 * Translates the score of the SEO title width calculation to a message the user can understand.
 	 *
-	 * @param {number} pageTitleWidth The width of the pageTitle.
-	 * @param {Jed} i18n The object used for translations.
+	 * @param {number} pageTitleWidth The width of the SEO title.
 	 *
 	 * @returns {string} The translated string.
 	 */
-	translateScore( pageTitleWidth, i18n ) {
+	translateScore( pageTitleWidth ) {
 		if ( inRange( pageTitleWidth, 1, 400 ) ) {
-			return i18n.sprintf(
+			if ( this._allowShortTitle ) {
+				return sprintf(
+					/* Translators: %1$s and %2$s expand to links on yoast.com, %3$s expands to the anchor end tag */
+					__(
+						"%1$sSEO title width%2$s: Good job!",
+						"wordpress-seo"
+					),
+					this._config.urlTitle,
+					"</a>"
+				);
+			}
+			return sprintf(
 				/* Translators: %1$s and %2$s expand to links on yoast.com, %3$s expands to the anchor end tag */
-				i18n.dgettext(
-					"js-text-analysis",
-					"%1$sSEO title width%3$s: The SEO title is too short. " +
-					"%2$sUse the space to add keyphrase variations or create compelling call-to-action copy%3$s."
+				__(
+					// eslint-disable-next-line max-len
+					"%1$sSEO title width%3$s: The SEO title is too short. %2$sUse the space to add keyphrase variations or create compelling call-to-action copy%3$s.",
+					"wordpress-seo"
 				),
 				this._config.urlTitle,
 				this._config.urlCallToAction,
@@ -115,11 +132,11 @@ export default class PageTitleWidthAssessment extends Assessment {
 		}
 
 		if ( inRange( pageTitleWidth, this._config.minLength, this._config.maxLength ) ) {
-			return i18n.sprintf(
+			return sprintf(
 				/* Translators:  %1$s expands to a link on yoast.com, %2$s expands to the anchor end tag */
-				i18n.dgettext(
-					"js-text-analysis",
-					"%1$sSEO title width%2$s: Good job!"
+				__(
+					"%1$sSEO title width%2$s: Good job!",
+					"wordpress-seo"
 				),
 				this._config.urlTitle,
 				"</a>"
@@ -127,11 +144,11 @@ export default class PageTitleWidthAssessment extends Assessment {
 		}
 
 		if ( pageTitleWidth > this._config.maxLength ) {
-			return i18n.sprintf(
+			return sprintf(
 				/* Translators: %1$s and %2$s expand to links on yoast.com, %3$s expands to the anchor end tag */
-				i18n.dgettext(
-					"js-text-analysis",
-					"%1$sSEO title width%3$s: The SEO title is wider than the viewable limit. %2$sTry to make it shorter%3$s."
+				__(
+					"%1$sSEO title width%3$s: The SEO title is wider than the viewable limit. %2$sTry to make it shorter%3$s.",
+					"wordpress-seo"
 				),
 				this._config.urlTitle,
 				this._config.urlCallToAction,
@@ -139,9 +156,9 @@ export default class PageTitleWidthAssessment extends Assessment {
 			);
 		}
 
-		return i18n.sprintf(
+		return sprintf(
 			/* Translators: %1$s and %2$s expand to links on yoast.com, %3$s expands to the anchor end tag */
-			i18n.dgettext( "js-text-analysis", "%1$sSEO title width%3$s: %2$sPlease create an SEO title%3$s." ),
+			__( "%1$sSEO title width%3$s: %2$sPlease create an SEO title%3$s.", "wordpress-seo" ),
 			this._config.urlTitle,
 			this._config.urlCallToAction,
 			"</a>"

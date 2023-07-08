@@ -1,4 +1,9 @@
+/**
+ * @jest-environment jsdom
+ */
 import getSentences from "../../../../src/languageProcessing/helpers/sentence/getSentences.js";
+import defaultSentenceTokenizer from "../../../../src/languageProcessing/helpers/sentence/memoizedSentenceTokenizer";
+import japaneseSentenceTokenizer from "../../../../src/languageProcessing/languages/ja/helpers/memoizedSentenceTokenizer";
 
 import {
 	paragraph1,
@@ -24,43 +29,50 @@ import { forEach } from "lodash-es";
  */
 function testGetSentences( testCases ) {
 	forEach( testCases, function( testCase ) {
-		expect( getSentences( testCase.input ) ).toEqual( testCase.expected );
+		expect( getSentences( testCase.input, defaultSentenceTokenizer ) ).toEqual( testCase.expected );
 	} );
 }
 
 describe( "Get sentences from text", function() {
+	it( "does not split sentences ending on a quotation mark without a preceding period", function() {
+		const sentence = "Hello. \"How are you\" Bye";
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Hello.", "\"How are you\" Bye" ] );
+	} );
+	it( "splits sentences ending on a quotation mark preceded by a period", function() {
+		const sentence = "Hello. \"How are you.\" Bye";
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Hello.", "\"How are you.\"", "Bye" ] );
+	} );
+	it( "splits sentences ending on a quotation mark followed by a period", function() {
+		const sentence = "Hello. \"How are you\". Bye";
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Hello.", "\"How are you\".", "Bye" ] );
+	} );
 	it( "returns sentences", function() {
 		const sentence = "Hello. How are you? Bye";
-		expect( getSentences( sentence ) ).toEqual( [ "Hello.", "How are you?", "Bye" ] );
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Hello.", "How are you?", "Bye" ] );
 	} );
 	it( "returns sentences with digits", function() {
 		const sentence = "Hello. 123 Bye";
-		expect( getSentences( sentence ) ).toEqual( [ "Hello.", "123 Bye" ] );
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Hello.", "123 Bye" ] );
 	} );
 
 	it( "returns sentences with abbreviations", function() {
 		const sentence = "It was a lot. Approx. two hundred";
-		expect( getSentences( sentence ) ).toEqual( [ "It was a lot.", "Approx. two hundred" ] );
-	} );
-
-	it( "returns sentences with a ! in it (should not be converted to . )", function() {
-		const sentence = "It was a lot. Approx! two hundred";
-		expect( getSentences( sentence ) ).toEqual( [ "It was a lot.", "Approx!", "two hundred" ] );
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "It was a lot.", "Approx. two hundred" ] );
 	} );
 
 	it( "returns sentences with multiple sentence delimiters at the end", function() {
 		const sentence = "Was it a lot!?!??! Yes, it was!";
-		expect( getSentences( sentence ) ).toEqual( [ "Was it a lot!?!??!", "Yes, it was!" ] );
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "Was it a lot!?!??!", "Yes, it was!" ] );
 	} );
 
 	it( "returns sentences with multiple periods at the end", function() {
 		const sentence = "It was a lot... Approx. two hundred.";
-		expect( getSentences( sentence ) ).toEqual( [ "It was a lot...", "Approx. two hundred." ] );
+		expect( getSentences( sentence, defaultSentenceTokenizer ) ).toEqual( [ "It was a lot...", "Approx. two hundred." ] );
 	} );
 
 	it( "returns sentences, with :", function() {
 		const sentence = "One. Two. Three: Four! Five.";
-		expect( getSentences( sentence ).length ).toBe( 4 );
+		expect( getSentences( sentence, defaultSentenceTokenizer ).length ).toBe( 4 );
 	} );
 
 	it( "returns sentences with a text with H2 tags", function() {
@@ -71,29 +83,39 @@ describe( "Get sentences from text", function() {
 		const expected = [ "Four types of comments", "The comments people leave on blogs can be divided into four types:",
 			"Positive feedback", "First, the positive feedback." ];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
 
 	it( "returns a sentence with incomplete tags", function() {
-		const text = "<p>Some text. More Text.</p>";
-		expect( getSentences( text ) ).toEqual( [ "Some text.", "More Text." ] );
+		const testCases = [
+			{
+				input: "<p>Some text. More Text.</p>",
+				expected: [ "Some text.", "More Text." ],
+			},
+			{
+				input: "<p> However, a cat with the toy looks happier. She is given raw food. Seniors don't like it.<br></br>",
+				expected: [ "However, a cat with the toy looks happier.", "She is given raw food.", "Seniors don't like it." ],
+			},
+		];
+
+		testGetSentences( testCases );
 	} );
 
 	it( "returns a sentence with incomplete tags per sentence", function() {
 		const text = "<p><span>Some text. More Text.</span></p>";
-		expect( getSentences( text ) ).toEqual( [ "Some text.", "More Text." ] );
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "Some text.", "More Text." ] );
 	} );
 
 	it( "returns a sentence with incomplete tags with a link", function() {
 		const text = "Some text. More Text with <a href='http://yoast.com'>a link</a>.";
-		expect( getSentences( text ) ).toEqual( [ "Some text.", "More Text with <a href='http://yoast.com'>a link</a>." ] );
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "Some text.", "More Text with <a href='http://yoast.com'>a link</a>." ] );
 	} );
 
 	it( "can deal with self-closing tags", function() {
-		const text = "A sentence with an image <img src='http://google.com' />";
-		expect( getSentences( text ) ).toEqual( [ "A sentence with an image <img src='http://google.com' />" ] );
+		const text = "A sentence with an image <samp src='http://google.com' />";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "A sentence with an image <samp src='http://google.com' />" ] );
 	} );
 
 	it( "can deal with newlines", function() {
@@ -146,7 +168,7 @@ describe( "Get sentences from text", function() {
 			"[Third sentence.]",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -155,7 +177,7 @@ describe( "Get sentences from text", function() {
 		const text = "A sentence with (parentheses).";
 		const expected = [ "A sentence with (parentheses)." ];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -168,9 +190,80 @@ describe( "Get sentences from text", function() {
 			"Third sentence",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
+	} );
+
+	it( "should not split text into sentences if there is no space after a full-stop", function() {
+		const texts = [
+			"What is ASP.NET.",
+			"What is ASP.net.",
+			"What is asp.NET",
+			"What is asp.net",
+		];
+		const expected = [
+			"What is ASP.NET.",
+			"What is ASP.net.",
+			"What is asp.NET",
+			"What is asp.net",
+		];
+
+		for ( let i = 0; i < texts.length; i++ ) {
+			expect( getSentences( texts[ i ], defaultSentenceTokenizer ) ).toEqual( [ expected[ i ] ] );
+		}
+	} );
+
+	it( "should not split text into sentences after unicodes, e.g. after apostrophe unicode 'you&#8217;re'", function() {
+		const texts = "<p>The results that voice gives us are always singular. Siri will set a timer, Google Home will play the song.\n" +
+			"    Joost:  &#8216;Voice results only make sense if you&#8217;re looking for a singular result. " +
+			"If you want to know something specific.\n" +
+			"    If you want to end the discussion you&#8217;re having in the car and need to know exactly how many people live in France.</p>";
+
+		expect( getSentences( texts, defaultSentenceTokenizer ) ).toEqual( [
+			"The results that voice gives us are always singular.",
+			"Siri will set a timer, Google Home will play the song.",
+			"Joost:  &#8216;Voice results only make sense if you&#8217;re looking for a singular result.",
+			"If you want to know something specific.",
+			"If you want to end the discussion you&#8217;re having in the car and need to know exactly how many people live in France.",
+		] );
+	} );
+
+	it( "splits correctly text with image tags", function() {
+		const testCases = [
+			{
+				// The input contains <br> tags and \n tag.
+				input: "<p><img class='size-medium wp-image-33' src='http://basic.wordpress.test/wp-content/uploads/2021/08/" +
+					"cat-3957861_1280-211x300.jpeg' alt='a different cat with toy' width='211' height='300'></img> " +
+					"However, a cat with the toy looks happier. She is given raw food. Seniors don't like it.<br></br>\n" +
+					"</p>",
+				expected: [ "However, a cat with the toy looks happier.", "She is given raw food.", "Seniors don't like it." ],
+			},
+			{
+				// The input contains <br> tags without \n tag.
+				input: "<p><img class='size-medium wp-image-33' src='http://basic.wordpress.test/wp-content/uploads/2021/08/" +
+					"cat-3957861_1280-211x300.jpeg' alt='a different cat with toy' width='211' height='300'></img> " +
+					"However, a cat with the toy looks happier. She is given raw food. Seniors don't like it.<br></br>\n" +
+					"</p>",
+				expected: [ "However, a cat with the toy looks happier.", "She is given raw food.", "Seniors don't like it." ],
+			},
+			{
+				// The input contains <p> tags, but doesn't contain <br> tags and \n tag.
+				input: "<p><img class='size-medium wp-image-33' src='http://basic.wordpress.test/wp-content/uploads/2021/08/" +
+					"cat-3957861_1280-211x300.jpeg' alt='a different cat with toy' width='211' height='300'></img> " +
+					"However, a cat with the toy looks happier. She is given raw food. Seniors don't like it.</p>",
+				expected: [ "However, a cat with the toy looks happier.", "She is given raw food.", "Seniors don't like it." ],
+			},
+			{
+				// The input contains the image and caption tags.
+				input: "<figure class='wp-block-image size-large'><img class='wp-image-33' src='http://basic.wordpress.test/wp-content/uploads" +
+					"/2021/08/cat-3957861_1280-719x1024.jpeg' alt='a different cat with toy'></img><figcaption class='wp-element-caption'>" +
+					"However, a cat with the toy looks happier. She is given raw food. Seniors don't like it.</figcaption></figure>",
+				expected: [ "However, a cat with the toy looks happier.", "She is given raw food.", "Seniors don't like it." ],
+			},
+		];
+
+		testGetSentences( testCases );
 	} );
 
 	it( "can deal with a longer text", function() {
@@ -204,7 +297,7 @@ describe( "Get sentences from text", function() {
 			"Read more about the SEO copywriting training -- linken naar sales pagina",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -235,22 +328,28 @@ describe( "Get sentences from text", function() {
 				input: "This should be: one sentence",
 				expected: [ "This should be: one sentence" ],
 			},
-			{
-				input: "This should be: one sentence",
-				expected: [ "This should be: one sentence" ],
-			},
 		];
 
 		testGetSentences( testCases );
 	} );
 
-	it( "should always break on ;, ? and ! even when there is no capital letter", function() {
-		const text = "First sentence; second sentence! third sentence? fourth sentence";
-		const expected = [ "First sentence;", "second sentence!", "third sentence?", "fourth sentence" ];
+	it( "should split a text with excessive paragraph tags correctly into sentences", () => {
+		const text = "<p>\n" +
+			"</p>\n" +
+			"<p>Tempeh or tempe (/ˈtɛmpeɪ/; Javanese: ꦠꦺꦩ꧀ꦥꦺ, romanized: témpé, pronounced [tempe]) is a traditional Indonesian food " +
+			"made from fermented soybeans. " +
+			"It is made by a natural culturing and controlled fermentation process that binds soybeans into a cake form. " +
+			"A fungus, Rhizopus oligosporus or Rhizopus oryzae, is used in the fermentation process and is also known as tempeh starter. </p>\n" +
+			"<p>\n" +
+			"</p>\n";
 
-		const actual = getSentences( text );
-
-		expect( actual ).toEqual( expected );
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"Tempeh or tempe (/ˈtɛmpeɪ/; Javanese: ꦠꦺꦩ꧀ꦥꦺ, romanized: témpé, pronounced [tempe]) is a " +
+			"traditional Indonesian food made from fermented soybeans.",
+			"It is made by a natural culturing and controlled fermentation process that binds soybeans into a cake form.",
+			"A fungus, Rhizopus oligosporus or Rhizopus oryzae, is used in the fermentation process and is also known as tempeh starter.",
+		]
+		);
 	} );
 
 	it( "should match correctly with quotation", function() {
@@ -285,11 +384,15 @@ describe( "Get sentences from text", function() {
 
 		testGetSentences( testCases );
 	} );
-	it( "should accept the horizontal ellipsis as sentence terminator", function() {
+
+	it( "should strip images from the sentence", function() {
 		const testCases = [
 			{
-				input: "This is the first sentence… Followed by a second one.",
-				expected: [ "This is the first sentence…", "Followed by a second one." ],
+				input: "<img class=\"size-medium wp-image-32\" src=\"https://basic.wordpress.test/wp-content/uploads/2021/" +
+					"08/cat-199969_1280-300x199.jpeg\" alt=\"\" width=\"300\" height=\"199\" /> This is a very majestic cat." +
+					" <img class=\"size-medium wp-image-32\" src=\"https://basic.wordpress.test/wp-content/uploads/2021/" +
+					"08/cat-199969_1280-300x199.jpeg\" alt=\"\" width=\"300\" height=\"199\" ></img> Second sentence.",
+				expected: [ "This is a very majestic cat.", "Second sentence." ],
 			},
 		];
 
@@ -314,7 +417,6 @@ describe( "Get sentences from text", function() {
 				input: "This is a sentence (with blockends). this is still one sentence.",
 				expected: [ "This is a sentence (with blockends). this is still one sentence." ],
 			},
-			// Second sentence starts with lower-case letter, but unlike a full stop, a "?" is an unambiguous sentence ending.
 			{
 				input: "This is a sentence (with blockends)? this is still one sentence.",
 				expected: [ "This is a sentence (with blockends)?", "this is still one sentence." ],
@@ -359,7 +461,6 @@ describe( "Get sentences from text", function() {
 				input: "This is a sentence (with blockends?). this is still one sentence.",
 				expected: [ "This is a sentence (with blockends?). this is still one sentence." ],
 			},
-			// Second sentence starts with lower-case letter, but unlike a full stop, a ? is an unambiguosu sentence ending
 			{
 				input: "This is a sentence (with blockends.)? this is a new sentence.",
 				expected: [ "This is a sentence (with blockends.)?", "this is a new sentence." ],
@@ -373,7 +474,14 @@ describe( "Get sentences from text", function() {
 		testGetSentences( testCases );
 	} );
 
-	it( "Correctly gets sentences with a '<' signs in the middle or at the start.", function() {
+	it( "should not split on semicolons", () => {
+		const text = "This house is built in 1990; a nice house. This house is built in 1990; A nice house.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"This house is built in 1990; a nice house.",
+			"This house is built in 1990; A nice house." ] );
+	} );
+
+	it( "correctly gets sentences with a '<' signs in the middle or at the start.", function() {
 		const testCases = [
 			{
 				input: "This is a sentence with a < and is still one sentence.",
@@ -417,6 +525,249 @@ describe( "Get sentences from text", function() {
 	} );
 } );
 
+describe( "a test for when texts containing sentence delimiter", () => {
+	it( "should always break on ? and ! even when it's not followed by a valid sentence beginning", function() {
+		let text = "First sentence. second sentence! third sentence? fourth sentence";
+
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"First sentence. second sentence!",
+			"third sentence?",
+			"fourth sentence" ] );
+
+		text = "First sentence. Second sentence! Third sentence? Fourth sentence";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"First sentence.",
+			"Second sentence!",
+			"Third sentence?",
+			"Fourth sentence" ] );
+	} );
+	it( "should accept the horizontal ellipsis or triple dots as sentence terminator, " +
+		"when the next character is valid sentence beginning", function() {
+		let text = "This is the first sentence… Followed by a second one.";
+
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "This is the first sentence…", "Followed by a second one." ] );
+
+		text = "This is the first sentence\u2026 Followed by a second one.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "This is the first sentence\u2026", "Followed by a second one." ] );
+
+		text = "This is the first sentence... Followed by a second one.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "This is the first sentence...", "Followed by a second one." ] );
+	} );
+	it( "should not split text into sentences if the next character after an ellipsis is not a valid sentence beginning", () => {
+		let text = "This house is built in 1990\u2026 a nice house.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"This house is built in 1990\u2026 a nice house.",
+		] );
+
+		text = "This house is built in 1990… a nice house.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"This house is built in 1990… a nice house.",
+		] );
+
+		text = "This house is built in 1990... a nice house.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [
+			"This house is built in 1990... a nice house.",
+		] );
+	} );
+	it( "should accept the horizontal ellipsis as sentence terminator in Japanese", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており…抜本的な輸送力増強を迫られていた。";
+
+		expect( getSentences( text, japaneseSentenceTokenizer ) ).toEqual( [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており…",
+			"抜本的な輸送力増強を迫られていた。" ] );
+	} );
+	it( "should accept the two dot leader as sentence terminator in Japanese", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており‥抜本的な輸送力増強を迫られていた。";
+
+		expect( getSentences( text, japaneseSentenceTokenizer ) ).toEqual( [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており‥",
+			"抜本的な輸送力増強を迫られていた。" ] );
+	} );
+
+	it( "can deal with the edge case of quotes around initials.", ()=>{
+		const text = "The reprint was favourably reviewed by \"A. B.\" in The Musical Times in 1935, who commented \"Praise is due to Mr Mercer.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual(
+			[ "The reprint was favourably reviewed by \"A. B.\" in The Musical Times in 1935, who commented \"Praise is due to Mr Mercer." ] );
+	} );
+
+	it( "should not break when the text starts with double quotation mark followed by space", ()=>{
+		let text = "\" This is a text with double quotation mark.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "\"", "This is a text with double quotation mark." ] );
+
+		text = "\" \"This is a text with two double quotation marks.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual(  [ "\"", "\"This is a text with two double quotation marks." ] );
+
+		text = "” This is a text with double quotation mark.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "”", "This is a text with double quotation mark." ] );
+
+		text = "„ This is a text with double quotation mark.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "„", "This is a text with double quotation mark." ] );
+
+		text = "» This is a text with double quotation mark.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "»", "This is a text with double quotation mark." ] );
+
+		text = "« »This is a text with two double quotation marks.";
+		expect( getSentences( text, defaultSentenceTokenizer ) ).toEqual( [ "« »This is a text with two double quotation marks." ] );
+	} );
+} );
+
+describe( "parses Japanese text", () => {
+	it( "parses a Japanese text.", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた。" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた。",
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+			"計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text with sentences that start with numerals.", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた。" +
+			"９これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。" +
+			"1959年（昭和34年）4月20日、新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年（昭和39年）" +
+			"10月1日に開業した。⑳計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された。㊉新丹那トンネル熱海口で起工式を行って着工し、" +
+			"東京オリンピック開会直前の1964年。㈠東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた。",
+			"９これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+			"1959年（昭和34年）4月20日、新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年（昭和39年）10月1日に開業した。",
+			"⑳計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された。",
+			"㊉新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年。",
+			"㈠東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており。" ];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text with sentences that end with different types of sentence delimiters.", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、⁇" +
+			"９これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定‼" +
+			"1959年（昭和34年）4月20日、新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年（昭和39年）" +
+			"10月1日に開業した‥⑳計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された…㊉新丹那トンネル熱海口で起工式を行って着工し、" +
+			"東京オリンピック開会直前の1964年。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、⁇",
+			"９これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定‼",
+			"1959年（昭和34年）4月20日、新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年（昭和39年）10月1日に開業した‥",
+			"⑳計画段階では「東海道新線」と呼ばれていたが、開業時には「東海道新幹線」と命名された…",
+			"㊉新丹那トンネル熱海口で起工式を行って着工し、東京オリンピック開会直前の1964年。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text which contains quotation marks.", function() {
+		const text = "『東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、』抜本的な輸送力増強を迫られていた。" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。";
+		const expected = [
+			"『東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、』抜本的な輸送力増強を迫られていた。",
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text which contains a single katakana middle dot.", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた・" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた・" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text which contains English question mark.", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた?" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた?",
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	it( "parses a Japanese text which a free standing quotation block.", function() {
+		const text = "「もちろん院卒でも歓迎してくれる企業はありますから、そうしたところに行けばいいだけです。ただ、つらくないわけではないですよね。" +
+			"あるお笑い芸人の方が、いまいちブレークできない理由として『人見知り』『お酒が飲めない』『軍団に入らない』の三つを挙げていましたが、まさに私はこれでした」";
+		const expected =   [
+			"「もちろん院卒でも歓迎してくれる企業はありますから、そうしたところに行けばいいだけです。",
+			"ただ、つらくないわけではないですよね。",
+			"あるお笑い芸人の方が、いまいちブレークできない理由として『人見知り』『お酒が飲めない』『軍団に入らない』の三つを挙げていましたが、まさに私はこれでした」",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	xit( "parses a Japanese text which contains sentence delimiter inside quotation block.", function() {
+		const text = "彼女は「明日休みだね。なにしようか？」と言った。";
+		const expected = [
+			"彼女は「明日休みだね。",
+			"なにしようか？",
+			"」と言った。" ];
+
+		const actual = getSentences( text, defaultSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	xit( "parses a Japanese text which contains sentence delimiter inside quotation block.", function() {
+		const text = "すると音声を一度ミュートにした息子から、「ママ、静かにして。ママの声が先生に聞こえそう」と、秋田の独り言が先生に聞こえそうだと注意を受けたのだとか。";
+		const expected =  [
+			"すると音声を一度ミュートにした息子から、「ママ、静かにして。",
+			"ママの声が先生に聞こえそう」と、秋田の独り言が先生に聞こえそうだと注意を受けたのだとか。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	xit( "parses a Japanese text which contains a space as sentence delimiter.", function() {
+		const text = "『東海道新幹線の開業前、 東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、』抜本的な輸送力増強を迫られていた。";
+		const expected = [
+			"『東海道新幹線の開業前、",
+			"東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、』抜本的な輸送力増強を迫られていた。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	xit( "parses a Japanese text where delimiters are used in the middle of a sentence outside a quotation bracket.", function() {
+		const text = "スカパー! が、50チャンネルの番組に一発で飛ぶことができる 「スカパー オリジナルのテレビリモコン」を抽選で50人にプレゼントするという情報が編集部に寄せられた。";
+		const expected = [
+			"スカパー! が、50チャンネルの番組に一発で飛ぶことができる 「スカパー オリジナルのテレビリモコン」を抽選で50人にプレゼントするという情報が編集部に寄せられた。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+	xit( "parses a Japanese text which contains two katakana middle dots. The text should be split on the two katakana middle dots" +
+		" (we don't cover this case for now).", function() {
+		const text = "東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた・・" +
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。";
+		const expected = [
+			"東海道新幹線の開業前、東西の大動脈である東海道本線は高度経済成長下で線路容量が逼迫しており、抜本的な輸送力増強を迫られていた・・",
+			"これに対し日本国有鉄道（国鉄）は、十河信二国鉄総裁と技師長の島秀雄の下、高速運転が可能な標準軌新線を建設することを決定。",
+		];
+
+		const actual = getSentences( text, japaneseSentenceTokenizer );
+
+		expect( actual ).toEqual( expected );
+	} );
+} );
+
 describe( "Parse languages written right-to-left", function() {
 	it( "parses a Hebrew text", function() {
 		const text = "רקע היסטורי תאורטי\n" +
@@ -442,11 +793,11 @@ describe( "Parse languages written right-to-left", function() {
 			"כי התפתחות הציור מקבילה להתפתחותו האינטלקטואלית של הילד, המתבטאת בהתפתחות הראייה " +
 			"ההנדסית והמרחבית (ארגון המרחב, שליטה ובקרה בעיצוב הקו), ובהתאם להתפתחות החשיבה.",
 			"בשנת 1947 תיאר איש החינוך לאמנות ויקטור לוונפלד ((אנ')‏ Viktor Lowenfeld) " +
-			"שישה שלבים עיקריים בהתפתחות הגרפית של ילדים, וזאת על בסיס עבודתו של ברט ובדומה לתאוריית ההתפתחות הקוגניטיבית של פיאז'ה;",
-			"עבודתו זו מהווה עד היום בסיס לבחינת התפתחות ציורי ילדים.",
+			"שישה שלבים עיקריים בהתפתחות הגרפית של ילדים," +
+			" וזאת על בסיס עבודתו של ברט ובדומה לתאוריית ההתפתחות הקוגניטיבית של פיאז'ה; עבודתו זו מהווה עד היום בסיס לבחינת התפתחות ציורי ילדים.",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -512,7 +863,7 @@ describe( "Parse languages written right-to-left", function() {
 			"برزت عبر السنوات عدة شخصيات شريرة مناوئة لباتمان حقق بعضها شهرة واسعة بين محبي وهواة القصص المصورة، يبقى الجوكر أبرزها بلا منازع.",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -535,7 +886,7 @@ describe( "Parse languages written right-to-left", function() {
 			"أنَّ ليختنشتاين ألغت جيشها في عام 1868 لأنه كان مُكلفًا للغاية لها؟",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -578,7 +929,7 @@ describe( "Parse languages written right-to-left", function() {
 			"تابوت کوروش بین میز و نیمکت قرار داشت.",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -602,7 +953,7 @@ describe( "Parse languages written right-to-left", function() {
 			"1980ء میں یونیسکو نے اسے یونیسکو عالمی ثقافتی ورثہ قرار دیا۔",
 		];
 
-		const actual = getSentences( text );
+		const actual = getSentences( text, defaultSentenceTokenizer );
 
 		expect( actual ).toEqual( expected );
 	} );
@@ -769,8 +1120,7 @@ describe( "Get sentences from texts that have been processed for the keyphrase d
 					"Shortcodes, in the classic editor, didn’t have such a discovery method.",
 					"Re-usable blocks allow you to easily create content you can re-use across posts or pages, see this <a href=\"https://" +
 					"www.wpbeginner.com/beginners-guide/how-to-create-a-reusable-block-in-wordpress/\">nice tutorial on WP Beginner</a>.",
-					"There are many more nice features;",
-					"please share yours in the comments!",
+					"There are many more nice features; please share yours in the comments!",
 				],
 			},
 		];

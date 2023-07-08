@@ -1,23 +1,16 @@
 /* global wpseoScriptData, wp */
-import ReplaceVar from "../../values/replaceVar";
-import {
-	forEach,
-	filter,
-	trim,
-	isUndefined,
-} from "lodash-es";
 // @wordpress/api loads directly from the wp-api script handle.
-import {
-	loadPromise,
-	models,
-} from "@wordpress/api";
-import {
+import { loadPromise, models } from "@wordpress/api";
+import { actions } from "@yoast/externals/redux";
+import { filter, forEach, isUndefined, trim } from "lodash";
+import isBlockEditor from "../../helpers/isBlockEditor";
+import ReplaceVar from "../../values/replaceVar";
+
+const {
 	removeReplacementVariable,
 	updateReplacementVariable,
 	refreshSnippetEditor,
-} from "../../redux/actions/snippetEditor";
-
-import isBlockEditor from "../../helpers/isBlockEditor";
+} = actions;
 
 var modifiableFields = [
 	"content",
@@ -65,19 +58,26 @@ var YoastReplaceVarPlugin = function( app, store ) {
  * @returns {void}
  */
 YoastReplaceVarPlugin.prototype.registerReplacements = function() {
-	this.addReplacement( new ReplaceVar( "%%currentdate%%",     "currentdate" ) );
-	this.addReplacement( new ReplaceVar( "%%currentday%%",      "currentday" ) );
-	this.addReplacement( new ReplaceVar( "%%currentmonth%%",    "currentmonth" ) );
-	this.addReplacement( new ReplaceVar( "%%currenttime%%",     "currenttime" ) );
-	this.addReplacement( new ReplaceVar( "%%currentyear%%",     "currentyear" ) );
-	this.addReplacement( new ReplaceVar( "%%date%%",            "date" ) );
-	this.addReplacement( new ReplaceVar( "%%userid%%",          "userid" ) );
-	this.addReplacement( new ReplaceVar( "%%id%%",              "id" ) );
-	this.addReplacement( new ReplaceVar( "%%page%%",            "page" ) );
-	this.addReplacement( new ReplaceVar( "%%searchphrase%%",    "searchphrase" ) );
-	this.addReplacement( new ReplaceVar( "%%sitedesc%%",        "sitedesc" ) );
-	this.addReplacement( new ReplaceVar( "%%sitename%%",        "sitename" ) );
-	this.addReplacement( new ReplaceVar( "%%category%%",        "category" ) );
+	this.addReplacement( new ReplaceVar( "%%author_first_name%%", "author_first_name" ) );
+	this.addReplacement( new ReplaceVar( "%%author_last_name%%",  "author_last_name" ) );
+	this.addReplacement( new ReplaceVar( "%%category%%",          "category" ) );
+	this.addReplacement( new ReplaceVar( "%%category_title%%",    "category_title" ) );
+	this.addReplacement( new ReplaceVar( "%%currentdate%%",       "currentdate" ) );
+	this.addReplacement( new ReplaceVar( "%%currentday%%",        "currentday" ) );
+	this.addReplacement( new ReplaceVar( "%%currentmonth%%",      "currentmonth" ) );
+	this.addReplacement( new ReplaceVar( "%%currenttime%%",       "currenttime" ) );
+	this.addReplacement( new ReplaceVar( "%%currentyear%%",       "currentyear" ) );
+	this.addReplacement( new ReplaceVar( "%%date%%",              "date" ) );
+	this.addReplacement( new ReplaceVar( "%%id%%",                "id" ) );
+	this.addReplacement( new ReplaceVar( "%%page%%",              "page" ) );
+	this.addReplacement( new ReplaceVar( "%%permalink%%",         "permalink" ) );
+	this.addReplacement( new ReplaceVar( "%%post_content%%",      "post_content" ) );
+	this.addReplacement( new ReplaceVar( "%%post_month%%",        "post_month" ) );
+	this.addReplacement( new ReplaceVar( "%%post_year%%",         "post_year" ) );
+	this.addReplacement( new ReplaceVar( "%%searchphrase%%",      "searchphrase" ) );
+	this.addReplacement( new ReplaceVar( "%%sitedesc%%",          "sitedesc" ) );
+	this.addReplacement( new ReplaceVar( "%%sitename%%",          "sitename" ) );
+	this.addReplacement( new ReplaceVar( "%%userid%%",            "userid" ) );
 
 	this.addReplacement( new ReplaceVar( "%%focuskw%%", "keyword", {
 		source: "app",
@@ -152,7 +152,7 @@ YoastReplaceVarPlugin.prototype.subscribeToGutenberg = function() {
 	const fetchedParents = { 0: "" };
 
 	let currentParent = null;
-	const wpData      = wp.data;
+	const wpData = wp.data;
 	wpData.subscribe( () => {
 		const newParent = wpData.select( "core/editor" ).getEditedPostAttribute( "parent" );
 		if ( typeof newParent === "undefined" || currentParent === newParent ) {
@@ -174,7 +174,7 @@ YoastReplaceVarPlugin.prototype.subscribeToGutenberg = function() {
 			page.fetch().then(
 				response => {
 					this._currentParentPageTitle = response.title.rendered;
-					fetchedParents[ newParent ]  = this._currentParentPageTitle;
+					fetchedParents[ newParent ] = this._currentParentPageTitle;
 					this.declareReloaded();
 				}
 			).fail(
@@ -254,7 +254,7 @@ YoastReplaceVarPlugin.prototype.replaceByStore = function( data ) {
 			return;
 		}
 
-		data = data.replace( "%%"  + replacementVariable.name + "%%", replacementVariable.value );
+		data = data.replace( "%%" + replacementVariable.name + "%%", replacementVariable.value );
 	} );
 
 	return data;
@@ -430,7 +430,7 @@ YoastReplaceVarPlugin.prototype.bindTaxonomyEvents = function( index, taxonomyEl
  */
 YoastReplaceVarPlugin.prototype.replaceCustomTaxonomy = function( text ) {
 	forEach( taxonomyElements, function( taxonomy, taxonomyName ) {
-		var generatedPlaceholder = "%%ct_" + taxonomyName  + "%%";
+		var generatedPlaceholder = "%%ct_" + taxonomyName + "%%";
 
 		if ( taxonomyName === "category" ) {
 			generatedPlaceholder = "%%" + taxonomyName + "%%";
@@ -465,7 +465,7 @@ YoastReplaceVarPlugin.prototype.getTaxonomyReplaceVar = function( taxonomyName )
 
 		filtered.push( item.label );
 	} );
-	return jQuery.unique( filtered ).join( ", " );
+	return jQuery.uniqueSort( filtered ).join( ", " );
 };
 
 /*

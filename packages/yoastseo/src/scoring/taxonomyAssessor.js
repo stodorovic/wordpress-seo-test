@@ -4,15 +4,15 @@ import IntroductionKeywordAssessment from "./assessments/seo/IntroductionKeyword
 import KeyphraseLengthAssessment from "./assessments/seo/KeyphraseLengthAssessment";
 import KeywordDensityAssessment from "./assessments/seo/KeywordDensityAssessment";
 import MetaDescriptionKeywordAssessment from "./assessments/seo/MetaDescriptionKeywordAssessment";
-import TitleKeywordAssessment from "./assessments/seo/TitleKeywordAssessment";
-import UrlKeywordAssessment from "./assessments/seo/UrlKeywordAssessment";
+import KeyphraseInSEOTitleAssessment from "./assessments/seo/KeyphraseInSEOTitleAssessment";
+import SlugKeywordAssessment from "./assessments/seo/UrlKeywordAssessment";
 import Assessor from "./assessor";
 import MetaDescriptionLengthAssessment from "./assessments/seo/MetaDescriptionLengthAssessment";
 import TextLengthAssessment from "./assessments/seo/TextLengthAssessment";
 import PageTitleWidthAssessment from "./assessments/seo/PageTitleWidthAssessment";
 import FunctionWordsInKeyphrase from "./assessments/seo/FunctionWordsInKeyphraseAssessment";
 import SingleH1Assessment from "./assessments/seo/SingleH1Assessment";
-import { createAnchorOpeningTag } from "../helpers/shortlinker";
+import { createAnchorOpeningTag } from "../helpers";
 
 /**
  * Returns the text length assessment to use.
@@ -28,20 +28,20 @@ export const getTextLengthAssessment = function() {
 		veryFarBelowMinimum: 50,
 		urlTitle: createAnchorOpeningTag( "https://yoa.st/34j" ),
 		urlCallToAction: createAnchorOpeningTag( "https://yoa.st/34k" ),
+		customContentType: "taxonomyAssessor",
 	} );
 };
 
 /**
  * Creates the Assessor used for taxonomy pages.
  *
- * @param {object} i18n         The i18n object used for translations.
- * @param {object} researcher   The researcher used for the analysis.
- * @param {Object} options      The options for this assessor.
+ * @param {Researcher} researcher   The researcher used for the analysis.
+ * @param {Object?} options         The options for this assessor.
  * @constructor
  */
-const TaxonomyAssessor = function( i18n, researcher, options ) {
-	Assessor.call( this, i18n, researcher, options );
-	this.type = "TaxonomyAssessor";
+const TaxonomyAssessor = function( researcher, options ) {
+	Assessor.call( this, researcher, options );
+	this.type = "taxonomyAssessor";
 
 	this._assessments = [
 		new IntroductionKeywordAssessment(),
@@ -50,9 +50,15 @@ const TaxonomyAssessor = function( i18n, researcher, options ) {
 		new MetaDescriptionKeywordAssessment(),
 		new MetaDescriptionLengthAssessment(),
 		getTextLengthAssessment(),
-		new TitleKeywordAssessment(),
-		new PageTitleWidthAssessment(),
-		new UrlKeywordAssessment(),
+		new KeyphraseInSEOTitleAssessment(),
+		new PageTitleWidthAssessment(
+			{
+				scores: {
+					widthTooShort: 9,
+				},
+			}, true
+		),
+		new SlugKeywordAssessment(),
 		new FunctionWordsInKeyphrase(),
 		new SingleH1Assessment(),
 	];

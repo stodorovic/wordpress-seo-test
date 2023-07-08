@@ -1,32 +1,18 @@
-import SnippetPreview from "./snippetPreview/snippetPreview.js";
-
-import { defaultsDeep } from "lodash-es";
-import { isObject } from "lodash-es";
-import { isString } from "lodash-es";
+import { setLocaleData } from "@wordpress/i18n";
+import { debounce, defaultsDeep, forEach, isArray, isEmpty, isFunction, isObject, isString, isUndefined, merge, noop, throttle } from "lodash-es";
 import MissingArgument from "./errors/missingArgument";
-import { isUndefined } from "lodash-es";
-import { isEmpty } from "lodash-es";
-import { isFunction } from "lodash-es";
-import { isArray } from "lodash-es";
-import { forEach } from "lodash-es";
-import { debounce } from "lodash-es";
-import { throttle } from "lodash-es";
-import { merge } from "lodash-es";
-
-import Jed from "jed";
-import SEOAssessor from "./scoring/seoAssessor.js";
-import KeyphraseDistributionAssessment from "./scoring/assessments/seo/KeyphraseDistributionAssessment.js";
-import ContentAssessor from "./scoring/contentAssessor.js";
-import CornerstoneSEOAssessor from "./scoring/cornerstone/seoAssessor.js";
-import CornerstoneContentAssessor from "./scoring/cornerstone/contentAssessor.js";
-import AssessorPresenter from "./scoring/renderers/AssessorPresenter.js";
-import Pluggable from "./pluggable.js";
-import Paper from "./values/Paper.js";
 import { measureTextWidth } from "./helpers/createMeasurementElement.js";
 
 import removeHtmlBlocks from "./languageProcessing/helpers/html/htmlParser.js";
+import Pluggable from "./pluggable.js";
+import ContentAssessor from "./scoring/contentAssessor.js";
+import CornerstoneContentAssessor from "./scoring/cornerstone/contentAssessor.js";
+import CornerstoneSEOAssessor from "./scoring/cornerstone/seoAssessor.js";
+import AssessorPresenter from "./scoring/renderers/AssessorPresenter.js";
 
-const keyphraseDistribution = new KeyphraseDistributionAssessment();
+import SEOAssessor from "./scoring/seoAssessor.js";
+import SnippetPreview from "./snippetPreview/snippetPreview.js";
+import Paper from "./values/Paper.js";
 
 var inputDebounceDelay = 800;
 
@@ -37,19 +23,19 @@ var inputDebounceDelay = 800;
  */
 var defaults = {
 	callbacks: {
-		bindElementEvents: function() {},
-		updateSnippetValues: function() {},
-		saveScores: function() {},
-		saveContentScore: function() {},
-		updatedContentResults: function() {},
-		updatedKeywordsResults: function() {},
+		bindElementEvents: noop,
+		updateSnippetValues: noop,
+		saveScores: noop,
+		saveContentScore: noop,
+		updatedContentResults: noop,
+		updatedKeywordsResults: noop,
 	},
 	sampleText: {
 		baseUrl: "example.org/",
 		snippetCite: "example-post/",
-		title: "This is an example title - edit by clicking here",
+		title: "",
 		keyword: "Choose a focus keyword",
-		meta: "Modify your meta description by editing it right here",
+		meta: "",
 		text: "Start writing your text!",
 	},
 	queue: [ "wordCount",
@@ -59,7 +45,7 @@ var defaults = {
 		"fleschReading",
 		"linkCount",
 		"imageCount",
-		"urlKeyword",
+		"slugKeyword",
 		"urlLength",
 		"metaDescription",
 		"pageTitleKeyword",
@@ -72,10 +58,10 @@ var defaults = {
 	dynamicDelay: true,
 	locale: "en_US",
 	translations: {
-		domain: "js-text-analysis",
+		domain: "wordpress-seo",
 		// eslint-disable-next-line camelcase
 		locale_data: {
-			"js-text-analysis": {
+			"wordpress-seo": {
 				"": {},
 			},
 		},
@@ -83,7 +69,7 @@ var defaults = {
 	replaceTarget: [],
 	resetTarget: [],
 	elementTarget: [],
-	marker: function() {},
+	marker: noop,
 	keywordAnalysisActive: true,
 	contentAnalysisActive: true,
 	hasSnippetPreview: true,
@@ -265,7 +251,8 @@ var App = function( args ) {
 	this._pureRefresh = throttle( this._pureRefresh.bind( this ), this.config.typeDelay );
 
 	this.callbacks = this.config.callbacks;
-	this.i18n = this.constructI18n( this.config.translations );
+
+	setLocaleData( this.config.translations.locale_data[ "wordpress-seo" ], "wordpress-seo" );
 
 	this.initializeAssessors( args );
 
@@ -287,7 +274,6 @@ var App = function( args ) {
 		app.*/
 		if ( this.snippetPreview.refObj !== this ) {
 			this.snippetPreview.refObj = this;
-			this.snippetPreview._i18n = this.i18n;
 		}
 	} else if ( args.hasSnippetPreview ) {
 		this.snippetPreview = createDefaultSnippetPreview.call( this );
@@ -295,7 +281,6 @@ var App = function( args ) {
 
 	this._assessorOptions = {
 		useCornerStone: false,
-		useKeywordDistribution: false,
 	};
 
 	this.initSnippetPreview();
@@ -344,12 +329,9 @@ App.prototype.changeAssessorOptions = function( assessorOptions ) {
  * @returns {Assessor} The assessor instance.
  */
 App.prototype.getSeoAssessor = function() {
-	const { useCornerStone, useKeywordDistribution } = this._assessorOptions;
+	const { useCornerStone } = this._assessorOptions;
 
 	const assessor = useCornerStone ? this.cornerStoneSeoAssessor : this.defaultSeoAssessor;
-	if ( useKeywordDistribution && isUndefined( assessor.getAssessment( "keyphraseDistribution" ) ) ) {
-		assessor.addAssessment( "keyphraseDistribution", keyphraseDistribution );
-	}
 
 	return assessor;
 };
@@ -361,12 +343,7 @@ App.prototype.getSeoAssessor = function() {
  */
 App.prototype.getContentAssessor = function() {
 	const { useCornerStone } = this._assessorOptions;
-
-	if ( useCornerStone ) {
-		return this.cornerStoneContentAssessor;
-	}
-
-	return this.defaultContentAssessor;
+	return useCornerStone ? this.cornerStoneContentAssessor : this.defaultContentAssessor;
 };
 
 /**
@@ -391,8 +368,8 @@ App.prototype.initializeSEOAssessor = function( args ) {
 		return;
 	}
 
-	this.defaultSeoAssessor = new SEOAssessor( this.i18n, { marker: this.config.marker } );
-	this.cornerStoneSeoAssessor = new CornerstoneSEOAssessor( this.i18n, { marker: this.config.marker } );
+	this.defaultSeoAssessor = new SEOAssessor( { marker: this.config.marker } );
+	this.cornerStoneSeoAssessor = new CornerstoneSEOAssessor( { marker: this.config.marker } );
 
 	// Set the assessor
 	if ( isUndefined( args.seoAssessor ) ) {
@@ -413,8 +390,8 @@ App.prototype.initializeContentAssessor = function( args ) {
 		return;
 	}
 
-	this.defaultContentAssessor = new ContentAssessor( this.i18n, { marker: this.config.marker, locale: this.config.locale }  );
-	this.cornerStoneContentAssessor = new CornerstoneContentAssessor( this.i18n, { marker: this.config.marker, locale: this.config.locale } );
+	this.defaultContentAssessor = new ContentAssessor( { marker: this.config.marker, locale: this.config.locale }  );
+	this.cornerStoneContentAssessor = new CornerstoneContentAssessor( { marker: this.config.marker, locale: this.config.locale } );
 
 	// Set the content assessor
 	if ( isUndefined( args._contentAssessor ) ) {
@@ -457,29 +434,6 @@ App.prototype.extendSampleText = function( sampleText ) {
 	}
 
 	return sampleText;
-};
-
-/**
- * Initializes i18n object based on passed configuration
- *
- * @param {Object}  translations    The translations to be used in the current instance.
- * @returns {void}
- */
-App.prototype.constructI18n = function( translations ) {
-	var defaultTranslations = {
-		domain: "js-text-analysis",
-		// eslint-disable-next-line camelcase
-		locale_data: {
-			"js-text-analysis": {
-				"": {},
-			},
-		},
-	};
-
-	// Use default object to prevent Jed from erroring out.
-	translations = translations || defaultTranslations;
-
-	return new Jed( translations );
 };
 
 /**
@@ -585,7 +539,7 @@ App.prototype.initSnippetPreview = function() {
 };
 
 /**
- * Initializes the assessorpresenters for content and SEO.
+ * Initializes the assessor presenters for content and SEO.
  *
  * @returns {void}
  */
@@ -597,7 +551,6 @@ App.prototype.initAssessorPresenters = function() {
 				output: this.config.targets.output,
 			},
 			assessor: this.seoAssessor,
-			i18n: this.i18n,
 		} );
 	}
 
@@ -608,7 +561,6 @@ App.prototype.initAssessorPresenters = function() {
 				output: this.config.targets.contentOutput,
 			},
 			assessor: this.contentAssessor,
-			i18n: this.i18n,
 		} );
 	}
 };
@@ -695,7 +647,7 @@ App.prototype.runAnalyzer = function() {
 		keyword: this.analyzerData.keyword,
 		synonyms: this.analyzerData.synonyms,
 		description: this.analyzerData.meta,
-		url: this.analyzerData.url,
+		slug: this.analyzerData.slug,
 		title: this.analyzerData.metaTitle,
 		titleWidth: titleWidth,
 		locale: this.config.locale,

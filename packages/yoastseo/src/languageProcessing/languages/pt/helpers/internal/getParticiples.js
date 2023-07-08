@@ -1,27 +1,35 @@
-import { forEach, includes } from "lodash-es";
 import { languageProcessing } from "yoastseo";
 const { getWords } = languageProcessing;
 
-import participles from "../../config/internal/passiveVoiceParticiples";
-import PortugueseParticiple from "../../values/PortugueseParticiple";
+import participleStems from "../../config/internal/passiveVoiceParticiples";
 
 /**
- * Creates participle objects for the participles found in a sentence part.
- *
- * @param {string} sentencePartText The sentence part to find participles in.
- * @param {Array} auxiliaries The list of auxiliaries from the sentence part.
- *
- * @returns {Array} The list with participle objects.
+ * Checks if a Portuguese word is a participle.
+ * @param {string} word A Portuguese word.
+ * @returns {boolean} Returns true if word is a Portuguese participle, and false otherwise.
  */
-export default function getParticiples( sentencePartText, auxiliaries ) {
-	const words = getWords( sentencePartText );
-	const foundParticiples = [];
-
-	forEach( words, function( word ) {
-		if ( includes( participles, word ) ) {
-			foundParticiples.push( new PortugueseParticiple( word, sentencePartText,
-				{ auxiliaries: auxiliaries, type: "irregular", language: "pt" } ) );
+function isParticiple( word ) {
+	const participleSuffixes = [ "a", "o", "as", "os" ];
+	// For each participle suffixes, check if the word ends in one of them.
+	return participleSuffixes.some( suffix => {
+		// Make sure only possible participles are targeted (minimum length being "> 3")
+		if ( word.length > 3 && word.endsWith( suffix ) ) {
+			// If the word ends with one of the suffixes, retrieve the stem.
+			const stem = word.slice( 0, -( suffix.length ) );
+			// Check if the stem is in the list of participle stems: return true if it is, otherwise return false.
+			return participleStems.includes( stem );
 		}
 	} );
-	return foundParticiples;
+}
+
+/**
+ * Creates an array of participles for the participles found in a clause.
+ *
+ * @param {string} clauseText The clause to find participles in.
+ *
+ * @returns {Array} The list with participles.
+ */
+export default function getParticiples( clauseText ) {
+	const words = getWords( clauseText );
+	return words.filter( word => isParticiple( word ) );
 }

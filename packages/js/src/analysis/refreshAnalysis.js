@@ -1,10 +1,6 @@
-import {
-	setOverallReadabilityScore,
-	setOverallSeoScore,
-	setReadabilityResults,
-	setSeoResultsForKeyword,
-} from "yoast-components";
-import { refreshSnippetEditor } from "../redux/actions/snippetEditor";
+import { doAction } from "@wordpress/hooks";
+import { actions } from "@yoast/externals/redux";
+import { Paper } from "yoastseo";
 import handleWorkerError from "./handleWorkerError";
 
 let isInitialized = false;
@@ -32,14 +28,15 @@ export function sortResultsByIdentifier( results ) {
  * @returns {void}
  */
 export default function refreshAnalysis( worker, collectData, applyMarks, store, dataCollector ) {
-	const paper = collectData();
-
 	if ( ! isInitialized ) {
 		return;
 	}
 
+	const paper = Paper.parse( collectData() );
+
 	worker.analyze( paper )
-		.then( ( { result: { seo, readability } } ) => {
+		.then( results => {
+			const { result: { seo, readability, inclusiveLanguage } } = results;
 			if ( seo ) {
 				// Only update the main results, which are located under the empty string key.
 				const seoResults = seo[ "" ];
@@ -51,10 +48,9 @@ export default function refreshAnalysis( worker, collectData, applyMarks, store,
 
 				seoResults.results = sortResultsByIdentifier( seoResults.results );
 
-				store.dispatch( setSeoResultsForKeyword( paper.getKeyword(), seoResults.results ) );
-				store.dispatch( setOverallSeoScore( seoResults.score, paper.getKeyword() ) );
-				store.dispatch( refreshSnippetEditor() );
-
+				store.dispatch( actions.setSeoResultsForKeyword( paper.getKeyword(), seoResults.results ) );
+				store.dispatch( actions.setOverallSeoScore( seoResults.score, paper.getKeyword() ) );
+				store.dispatch( actions.refreshSnippetEditor() );
 				dataCollector.saveScores( seoResults.score, paper.getKeyword() );
 			}
 
@@ -65,13 +61,28 @@ export default function refreshAnalysis( worker, collectData, applyMarks, store,
 				} );
 
 				readability.results = sortResultsByIdentifier( readability.results );
-
-				store.dispatch( setReadabilityResults( readability.results ) );
-				store.dispatch( setOverallReadabilityScore( readability.score ) );
-				store.dispatch( refreshSnippetEditor() );
+				store.dispatch( actions.setReadabilityResults( readability.results ) );
+				store.dispatch( actions.setOverallReadabilityScore( readability.score ) );
+				store.dispatch( actions.refreshSnippetEditor() );
 
 				dataCollector.saveContentScore( readability.score );
 			}
+
+			if ( inclusiveLanguage ) {
+				// Recreate the getMarker function after the worker is done.
+				inclusiveLanguage.results.forEach( result => {
+					result.getMarker = () => () => applyMarks( paper, result.marks );
+				} );
+
+				inclusiveLanguage.results = sortResultsByIdentifier( inclusiveLanguage.results );
+				store.dispatch( actions.setInclusiveLanguageResults( inclusiveLanguage.results ) );
+				store.dispatch( actions.setOverallInclusiveLanguageScore( inclusiveLanguage.score ) );
+				store.dispatch( actions.refreshSnippetEditor() );
+
+				dataCollector.saveInclusiveLanguageScore( inclusiveLanguage.score );
+			}
+
+			doAction( "yoast.analysis.refresh", results, { paper, worker, collectData, applyMarks, store, dataCollector } );
 		} )
 		.catch( handleWorkerError );
 }

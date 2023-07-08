@@ -1,5 +1,7 @@
 import getAllWordsFromPaper from "../../../../src/languageProcessing/helpers/morphology/getAllWordsFromPaper";
 import Paper from "../../../../src/values/Paper";
+import buildTree from "../../../specHelpers/parse/buildTree";
+import EnglishResearcher from "../../../../src/languageProcessing/languages/en/Researcher";
 
 const text = "Codenamed SN8, the uncrewed rocket lifted away from the Boca Chica R&D facility on what had been billed as a brief flight" +
 	" to 12.5km (41,000ft). The 50m-tall vehicle crashed on touchdown but Mr Musk was delighted with how much the test outing achieved." +
@@ -14,11 +16,13 @@ const testPaper = new Paper( text, {
 	titleWidth: 450,
 	locale: "en_EN",
 	permalink: "https://www.bbc.com/news/science-environment-55239628",
-	url: "science-environment-55239628",
+	slug: "science-environment-55239628",
 } );
 
 describe( "Test for getting all words found in the text, title, slug and meta description of a given paper", () => {
 	it( "gets all words found in the text, title, slug and meta description of a given paper", () => {
+		const researcher = new EnglishResearcher( testPaper );
+		buildTree( testPaper, researcher );
 		expect( getAllWordsFromPaper( testPaper ) ).toEqual(  [ "Codenamed", "SN8", "the", "uncrewed", "rocket",
 			"lifted", "away", "from", "the", "Boca", "Chica", "R&D", "facility", "on", "what", "had", "been", "billed",
 			"as", "a", "brief", "flight", "to", "12\\.5km", "41,000ft", "The", "50m-tall", "vehicle", "crashed", "on",
@@ -30,7 +34,8 @@ describe( "Test for getting all words found in the text, title, slug and meta de
 			"envisages", "the", "vehicle", "travelling", "to", "the", "Moon", "and", "Mars", "The", "SpaceX", "CEO", "praised",
 			"his", "team", "adding", "that", "the", "demonstration", "had", "acquired", "all", "the", "data", "we", "needed",
 			"Mars", "here", "we", "come", "he", "tweeted", "Elon", "Musk's", "Starship", "prototype", "makes", "a",
-			"big", "impact", "science", "environment", "55239628", "US", "entrepreneur", "Elon", "Musk", "has", "launched",
-			"the", "latest", "prototype", "of", "his", "Starship", "vehicle", "from", "Texas", "a", "test" ] );
+			"big", "impact", "science-environment-55239628", "science", "environment", "55239628", "US", "entrepreneur",
+			"Elon", "Musk", "has", "launched", "the", "latest", "prototype", "of", "his", "Starship", "vehicle", "from",
+			"Texas", "a", "test" ] );
 	} );
 } );

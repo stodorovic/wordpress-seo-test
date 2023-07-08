@@ -2,6 +2,7 @@ import createRegexFromDoubleArray from "../helpers/regex/createRegexFromDoubleAr
 import getSentences from "../helpers/sentence/getSentences.js";
 import { normalizeSingle as normalizeSingleQuotes } from "../helpers/sanitize/quotes.js";
 import { isWordInSentence as matchWordInSentence } from "../helpers/word/matchWordInSentence.js";
+import removeHtmlBlocks from "../helpers/html/htmlParser";
 
 import { flattenDeep } from "lodash-es";
 
@@ -55,25 +56,30 @@ const matchTransitionWords = function( sentence, transitionWords ) {
  * @param {Array} sentences The sentences to match against.
  * @param {Array} transitionWords The array containing transition words.
  * @param {Array} twoPartTransitionWords The array containing two part transition words.
+ * @param {function} matchTransitionWordsHelper The language-specific helper function to match transition words in a sentence.
  *
  * @returns {Array} Array of sentence objects containing the complete sentence and the transition words.
  */
-const checkSentencesForTransitionWords = function( sentences, transitionWords, twoPartTransitionWords ) {
+const checkSentencesForTransitionWords = function( sentences, transitionWords, twoPartTransitionWords, matchTransitionWordsHelper ) {
 	const results = [];
 
 	sentences.forEach( sentence => {
-		const twoPartMatches = matchTwoPartTransitionWords( sentence, twoPartTransitionWords );
+		if ( twoPartTransitionWords ) {
+			const twoPartMatches = matchTwoPartTransitionWords( sentence, twoPartTransitionWords );
 
-		if ( twoPartMatches !== null ) {
-			results.push( {
-				sentence: sentence,
-				transitionWords: twoPartMatches,
-			} );
+			if ( twoPartMatches !== null ) {
+				results.push( {
+					sentence: sentence,
+					transitionWords: twoPartMatches,
+				} );
 
-			return;
+				return;
+			}
 		}
 
-		const transitionWordMatches = matchTransitionWords( sentence, transitionWords );
+		const transitionWordMatches = matchTransitionWordsHelper
+			? matchTransitionWordsHelper( sentence, transitionWords )
+			: matchTransitionWords( sentence, transitionWords );
 
 		if ( transitionWordMatches.length !== 0 ) {
 			results.push( {
@@ -97,10 +103,15 @@ const checkSentencesForTransitionWords = function( sentences, transitionWords, t
  *                   and the total number of sentences containing one or more transition words.
  */
 export default function( paper, researcher ) {
+	const matchTransitionWordsHelper = researcher.getHelper( "matchTransitionWordsHelper" );
 	const transitionWords = researcher.getConfig( "transitionWords" );
 	const twoPartTransitionWords = researcher.getConfig( "twoPartTransitionWords" );
-	const sentences = getSentences( paper.getText() );
-	const sentenceResults = checkSentencesForTransitionWords( sentences, transitionWords, twoPartTransitionWords );
+	const memoizedTokenizer = researcher.getHelper( "memoizedTokenizer" );
+
+	let text = paper.getText();
+	text = removeHtmlBlocks( text );
+	const sentences = getSentences( text, memoizedTokenizer );
+	const sentenceResults = checkSentencesForTransitionWords( sentences, transitionWords, twoPartTransitionWords, matchTransitionWordsHelper );
 
 	return {
 		totalSentences: sentences.length,

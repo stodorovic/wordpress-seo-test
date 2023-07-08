@@ -20,8 +20,8 @@ class WPSEO_Admin_Recommended_Replace_Vars_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Set up the class which will be tested.
 	 */
-	public function setUp() {
-		parent::setUp();
+	public function set_up() {
+		parent::set_up();
 
 		$this->class_instance = new WPSEO_Admin_Recommended_Replace_Vars();
 		add_filter( 'wpseo_recommended_replace_vars', [ $this, 'filter_recommended_replacevars' ] );
@@ -217,7 +217,7 @@ class WPSEO_Admin_Recommended_Replace_Vars_Test extends WPSEO_UnitTestCase {
 			[ 'post_tag', [ 'sitename', 'term_title', 'sep' ] ],
 			[ 'post_format', [ 'sitename', 'term_title', 'sep', 'page' ] ],
 			// Custom taxonomy.
-			[ 'term-in-custom-taxomomy', [ 'sitename', 'term_title', 'sep', 'term_hierarchy' ] ],
+			[ 'term-in-custom-taxonomy', [ 'sitename', 'term_title', 'sep', 'term_hierarchy' ] ],
 
 			// Settings - archive pages.
 			[ 'author_archive', [ 'sitename', 'title', 'sep', 'page' ] ],

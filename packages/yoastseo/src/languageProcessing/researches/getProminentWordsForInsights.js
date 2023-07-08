@@ -6,6 +6,8 @@ import {
 	retrieveAbbreviations,
 	sortProminentWords,
 } from "../helpers/prominentWords/determineProminentWords";
+import removeURLs from "../helpers/sanitize/removeURLs.js";
+import removeEmailAddresses from "../helpers/sanitize/removeEmailAddresses";
 
 /**
  * Retrieves the prominent words from the given paper.
@@ -17,12 +19,21 @@ import {
  */
 function getProminentWordsForInsights( paper, researcher ) {
 	const functionWords = researcher.getConfig( "functionWords" );
-	const stemmer = researcher.getHelper( "getStemmer" )( researcher );
-	const text = paper.getText();
+	// An optional custom helper to return custom function to return the stem of a word.
+	const customStemmer = researcher.getHelper( "customGetStemmer" );
+	const stemmer = customStemmer ? customStemmer( researcher ) : researcher.getHelper( "getStemmer" )( researcher );
+	// An optional custom helper to get words from the text.
+	const getWordsCustomHelper = researcher.getHelper( "getWordsCustomHelper" );
 
-	const abbreviations = retrieveAbbreviations( text );
+	let text = paper.getText();
+	// We don't want to include URLs or email addresses in prominent words.
+	text = removeURLs( text );
+	text = removeEmailAddresses( text );
 
-	const prominentWordsFromText = getProminentWords( text, abbreviations, stemmer, functionWords );
+	// If the language has a custom helper to get words from the text, we don't retrieve the abbreviation.
+	const abbreviations = getWordsCustomHelper ? [] : retrieveAbbreviations( text );
+
+	const prominentWordsFromText = getProminentWords( text, abbreviations, stemmer, functionWords, getWordsCustomHelper );
 
 	const collapsedWords = collapseProminentWordsOnStem( prominentWordsFromText );
 	sortProminentWords( collapsedWords );

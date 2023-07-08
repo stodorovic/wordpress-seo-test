@@ -5,7 +5,7 @@ import AnalysisChecklist from "../components/AnalysisChecklist";
 import {
 	maybeAddReadabilityCheck,
 	maybeAddSEOCheck,
-	maybeAddSchemaBlocksValidationCheck,
+	maybeAddInclusiveLanguageCheck,
 } from "../helpers/addCheckToChecklist";
 
 /**
@@ -17,14 +17,14 @@ import {
  */
 export function mapSelectToProps( select ) {
 	const yoastStore = select( "yoast-seo/editor" );
-	const yoastSchemaStore = select( "yoast-seo/schema-blocks" );
-	const wpEditorStore = select( "core/editor" );
 
 	const checklist = [];
 
 	maybeAddReadabilityCheck( checklist, yoastStore );
 	maybeAddSEOCheck( checklist, yoastStore );
-	maybeAddSchemaBlocksValidationCheck( checklist, yoastSchemaStore, wpEditorStore );
+	maybeAddInclusiveLanguageCheck( checklist, yoastStore );
+
+	checklist.push( ...Object.values( yoastStore.getChecklistItems() ) );
 
 	return { checklist };
 }

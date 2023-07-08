@@ -71,7 +71,7 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 		$this->link_builder     = Mockery::mock( Indexable_Link_Builder::class );
 		$this->post_type_helper = Mockery::mock( Post_Type_Helper::class );
 		$this->repository       = Mockery::mock( Indexable_Repository::class );
-		$this->wpdb             = Mockery::mock( 'wpdb' );
+		$this->wpdb             = Mockery::mock( wpdb::class );
 		$this->wpdb->posts      = 'wp_posts';
 
 		$this->instance = new Post_Link_Indexing_Action(
@@ -99,8 +99,8 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 	/**
 	 * Tests getting the total unindexed.
 	 *
-	 * @covers ::get_query
-	 * @covers \Yoast\WP\SEO\Actions\Indexation\Abstract_Link_Indexing_Action::get_total_unindexed
+	 * @covers ::get_count_query
+	 * @covers \Yoast\WP\SEO\Actions\Indexing\Abstract_Link_Indexing_Action::get_total_unindexed
 	 */
 	public function test_get_total_unindexed() {
 		Functions\expect( 'get_transient' )
@@ -108,12 +108,16 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 			->with( Post_Link_Indexing_Action::UNINDEXED_COUNT_TRANSIENT )
 			->andReturn( false );
 
+		Functions\expect( 'set_transient' )
+			->once()
+			->with( Post_Link_Indexing_Action::UNINDEXED_COUNT_TRANSIENT, 0, ( \MINUTE_IN_SECONDS * 15 ) )
+			->andReturn( true );
+
 		$this->post_type_helper
-			->expects( 'get_accessible_post_types' )
+			->expects( 'get_indexable_post_types' )
 			->once()
 			->andReturn( [ 'post', 'page' ] );
 
-		$empty_string   = '';
 		$expected_query = "SELECT COUNT(P.ID)
 			FROM wp_posts AS P
 			LEFT JOIN wp_yoast_indexable AS I
@@ -128,9 +132,7 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 				AND L.target_post_id != 0
 			WHERE ( I.object_id IS NULL OR L.post_id IS NOT NULL )
 				AND P.post_status = 'publish'
-				AND P.post_type IN (%s, %s)
-			$empty_string
-			";
+				AND P.post_type IN (%s, %s)";
 
 		$this->wpdb
 			->expects( 'prepare' )
@@ -148,10 +150,63 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 	}
 
 	/**
+	 * Tests getting get_limited_unindexed_count method with a limit.
+	 *
+	 * @covers ::get_count_query
+	 * @covers ::get_total_unindexed
+	 * @covers ::get_limited_unindexed_count
+	 */
+	public function test_get_limited_unindexed_count() {
+		Functions\expect( 'get_transient' )
+			->once()
+			->with( Post_Link_Indexing_Action::UNINDEXED_COUNT_TRANSIENT )
+			->andReturn( false );
+
+		Functions\expect( 'set_transient' )
+			->once()
+			->with( Post_Link_Indexing_Action::UNINDEXED_COUNT_TRANSIENT, 0, ( \MINUTE_IN_SECONDS * 15 ) )
+			->andReturn( true );
+
+		$this->post_type_helper
+			->expects( 'get_indexable_post_types' )
+			->once()
+			->andReturn( [ 'post', 'page' ] );
+
+		$expected_query = "SELECT COUNT(P.ID)
+			FROM wp_posts AS P
+			LEFT JOIN wp_yoast_indexable AS I
+				ON P.ID = I.object_id
+				AND I.link_count IS NOT NULL
+				AND I.object_type = 'post'
+			LEFT JOIN wp_yoast_seo_links AS L
+				ON L.post_id = P.ID
+				AND L.target_indexable_id IS NULL
+				AND L.type = 'internal'
+				AND L.target_post_id IS NOT NULL
+				AND L.target_post_id != 0
+			WHERE ( I.object_id IS NULL OR L.post_id IS NOT NULL )
+				AND P.post_status = 'publish'
+				AND P.post_type IN (%s, %s)";
+
+		$this->wpdb
+			->expects( 'prepare' )
+			->once()
+			->with( $expected_query, [ 'post', 'page' ] )
+			->andReturn( 'query' );
+
+		$this->wpdb
+			->expects( 'get_var' )
+			->once()
+			->with( 'query' )
+			->andReturn( null );
+
+		$this->assertFalse( $this->instance->get_limited_unindexed_count() );
+	}
+
+	/**
 	 * Tests the index function.
 	 *
 	 * @covers ::get_objects
-	 * @covers ::get_query
 	 */
 	public function test_index() {
 		Filters\expectApplied( 'wpseo_link_indexing_limit' );
@@ -172,11 +227,12 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 		];
 
 		$this->post_type_helper
-			->expects( 'get_accessible_post_types' )
+			->expects( 'get_indexable_post_types' )
 			->once()
 			->andReturn( [ 'post', 'page' ] );
 
-		$expected_query = "SELECT P.ID, P.post_content
+		$expected_query = "
+			SELECT P.ID, P.post_content
 			FROM wp_posts AS P
 			LEFT JOIN wp_yoast_indexable AS I
 				ON P.ID = I.object_id
@@ -191,8 +247,7 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 			WHERE ( I.object_id IS NULL OR L.post_id IS NOT NULL )
 				AND P.post_status = 'publish'
 				AND P.post_type IN (%s, %s)
-			LIMIT %d
-			";
+			LIMIT %d";
 
 		$this->wpdb
 			->expects( 'prepare' )
@@ -225,18 +280,17 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 	 * Tests the index function.
 	 *
 	 * @covers ::get_objects
-	 * @covers ::get_query
-	 * @covers \Yoast\WP\SEO\Actions\Indexation\Abstract_Link_Indexing_Action::index
 	 */
 	public function test_index_without_link_count() {
 		Filters\expectApplied( 'wpseo_link_indexing_limit' );
 
 		$this->post_type_helper
-			->expects( 'get_accessible_post_types' )
+			->expects( 'get_indexable_post_types' )
 			->once()
 			->andReturn( [ 'post', 'page' ] );
 
-		$expected_query = "SELECT P.ID, P.post_content
+		$expected_query = "
+			SELECT P.ID, P.post_content
 			FROM wp_posts AS P
 			LEFT JOIN wp_yoast_indexable AS I
 				ON P.ID = I.object_id
@@ -251,8 +305,7 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 			WHERE ( I.object_id IS NULL OR L.post_id IS NOT NULL )
 				AND P.post_status = 'publish'
 				AND P.post_type IN (%s, %s)
-			LIMIT %d
-			";
+			LIMIT %d";
 
 		$this->wpdb
 			->expects( 'prepare' )
@@ -291,6 +344,52 @@ class Post_Link_Indexing_Action_Test extends TestCase {
 		$this->link_builder->expects( 'build' )->times( 3 )->with( $indexable, 'foo' );
 
 		Functions\expect( 'delete_transient' )->once()->with( Post_Link_Indexing_Action::UNINDEXED_COUNT_TRANSIENT );
+
+		$this->instance->index();
+	}
+
+	/**
+	 * Tests that the transients are not deleted when no indexables have been created.
+	 *
+	 * @covers ::get_objects
+	 */
+	public function test_index_no_indexables_created() {
+		Filters\expectApplied( 'wpseo_link_indexing_limit' );
+
+		$this->post_type_helper
+			->expects( 'get_indexable_post_types' )
+			->once()
+			->andReturn( [ 'post', 'page' ] );
+
+		$expected_query = "
+			SELECT P.ID, P.post_content
+			FROM wp_posts AS P
+			LEFT JOIN wp_yoast_indexable AS I
+				ON P.ID = I.object_id
+				AND I.link_count IS NOT NULL
+				AND I.object_type = 'post'
+			LEFT JOIN wp_yoast_seo_links AS L
+				ON L.post_id = P.ID
+				AND L.target_indexable_id IS NULL
+				AND L.type = 'internal'
+				AND L.target_post_id IS NOT NULL
+				AND L.target_post_id != 0
+			WHERE ( I.object_id IS NULL OR L.post_id IS NOT NULL )
+				AND P.post_status = 'publish'
+				AND P.post_type IN (%s, %s)
+			LIMIT %d";
+
+		$this->wpdb
+			->expects( 'prepare' )
+			->once()
+			->with( $expected_query, [ 'post', 'page', 5 ] )
+			->andReturn( 'query' );
+
+		$this->wpdb
+			->expects( 'get_results' )
+			->once()
+			->with( 'query' )
+			->andReturn( [] );
 
 		$this->instance->index();
 	}

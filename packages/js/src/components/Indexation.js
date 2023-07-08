@@ -1,10 +1,13 @@
 /* global yoastIndexingData */
 import { Component, Fragment } from "@wordpress/element";
 import { __ } from "@wordpress/i18n";
-import { ProgressBar, NewButton, Alert } from "@yoast/components";
+import { Alert, NewButton, ProgressBar } from "@yoast/components";
 import { colors } from "@yoast/style-guide";
 import PropTypes from "prop-types";
-import { removeSearchParam, addHistoryState } from "../helpers/urlHelpers";
+import { addHistoryState, removeSearchParam } from "../helpers/urlHelpers";
+import IndexingError from "./IndexingError";
+import RequestError from "../errors/RequestError";
+import ParseError from "../errors/ParseError";
 
 const STATE = {
 	/**
@@ -28,7 +31,7 @@ const STATE = {
 /**
  * Indexes the site and shows a progress bar indicating the indexing process' progress.
  */
-export class Indexation extends Component {
+class Indexation extends Component {
 	/**
 	 * Indexing constructor.
 	 *
@@ -42,8 +45,11 @@ export class Indexation extends Component {
 		this.state = {
 			state: STATE.IDLE,
 			processed: 0,
+			error: null,
 			amount: parseInt( this.settings.amount, 10 ),
-			firstTime: ( this.settings.firstTime === "1" ),
+			firstTime: (
+				this.settings.firstTime === "1"
+			),
 		};
 
 		this.startIndexing = this.startIndexing.bind( this );
@@ -66,11 +72,23 @@ export class Indexation extends Component {
 			},
 		} );
 
-		const data = await response.json();
+		const responseText = await response.text();
+
+		let data;
+		try {
+			/*
+			 * Sometimes, in case of a fatal error, or if WP_DEBUG is on and a DB query fails,
+			 * non-JSON is dumped into the HTTP response body, so account for that here.
+			 */
+			data = JSON.parse( responseText );
+		} catch ( error ) {
+			throw new ParseError( "Error parsing the response to JSON.", responseText );
+		}
 
 		// Throw an error when the response's status code is not in the 200-299 range.
 		if ( ! response.ok ) {
-			throw new Error( data.message );
+			const stackTrace = data.data ? data.data.stackTrace : "";
+			throw new RequestError( data.message, url, "POST", response.status, stackTrace );
 		}
 
 		return data;
@@ -111,7 +129,7 @@ export class Indexation extends Component {
 	 * @returns {Promise} The indexing promise.
 	 */
 	async doIndexing( endpoint ) {
-		let url = this.settings.restApi.root + this.settings.restApi.endpoints[ endpoint ];
+		let url = this.settings.restApi.root + this.settings.restApi.indexing_endpoints[ endpoint ];
 
 		while ( this.isState( STATE.IN_PROGRESS ) && url !== false ) {
 			try {
@@ -130,6 +148,7 @@ export class Indexation extends Component {
 			} catch ( error ) {
 				this.setState( {
 					state: STATE.ERRORED,
+					error: error,
 					firstTime: false,
 				} );
 			}
@@ -142,7 +161,7 @@ export class Indexation extends Component {
 	 * @returns {Promise<void>} The indexing promise.
 	 */
 	async index() {
-		for ( const endpoint of Object.keys( this.settings.restApi.endpoints ) ) {
+		for ( const endpoint of Object.keys( this.settings.restApi.indexing_endpoints ) ) {
 			await this.doIndexing( endpoint );
 		}
 		/*
@@ -202,6 +221,8 @@ export class Indexation extends Component {
 			return;
 		}
 
+		this.props.indexingStateCallback( this.state.amount === 0 ? "completed" : this.state.state );
+
 		const shouldStart = new URLSearchParams( window.location.search ).get( "start-indexation" ) === "true";
 
 		if ( shouldStart ) {
@@ -209,6 +230,20 @@ export class Indexation extends Component {
 			addHistoryState( null, document.title, currentURL );
 
 			this.startIndexing();
+		}
+	}
+
+	/**
+	 * Signals state changes to an optional callback function.
+	 *
+	 * @param {Object} _prevProps The previous props, unused in the current implementation.
+	 * @param {Object} prevState  The previous state.
+	 *
+	 * @returns {void}
+	 */
+	componentDidUpdate( _prevProps, prevState ) {
+		if ( this.state.state !== prevState.state ) {
+			this.props.indexingStateCallback( this.state.state );
 		}
 	}
 
@@ -310,10 +345,10 @@ export class Indexation extends Component {
 	 * @returns {JSX.Element} The error alert.
 	 */
 	renderErrorAlert() {
-		return <Alert type={ "error" }>
-			{ __( "Oops, something has gone wrong and we couldn't complete the optimization of your SEO data. " +
-				  "Please click the button again to re-start the process.", "wordpress-seo" ) }
-		</Alert>;
+		return <IndexingError
+			message={ yoastIndexingData.errorMessage }
+			error={ this.state.error }
+		/>;
 	}
 
 	/**
@@ -356,11 +391,13 @@ export class Indexation extends Component {
 Indexation.propTypes = {
 	indexingActions: PropTypes.object,
 	preIndexingActions: PropTypes.object,
+	indexingStateCallback: PropTypes.func,
 };
 
 Indexation.defaultProps = {
 	indexingActions: {},
 	preIndexingActions: {},
+	indexingStateCallback: () => {},
 };
 
 export default Indexation;

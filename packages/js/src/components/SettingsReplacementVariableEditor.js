@@ -1,7 +1,6 @@
 /* External dependencies */
 import { Component } from "@wordpress/element";
 import PropTypes from "prop-types";
-import { __ } from "@wordpress/i18n";
 import {
 	replacementVariablesShape,
 	recommendedReplacementVariablesShape,
@@ -32,9 +31,11 @@ class SettingsReplacementVariableEditor extends Component {
 			labels,
 			descriptionPlaceholder,
 			hasNewBadge,
+			isDisabled,
+			hasPremiumBadge,
 		} = this.props;
 
-		const placeholder = descriptionPlaceholder || __( "Modify your meta description by editing it right here", "wordpress-seo" );
+		const placeholder = descriptionPlaceholder || "";
 
 		return (
 			<SnippetPreviewSection
@@ -65,6 +66,8 @@ class SettingsReplacementVariableEditor extends Component {
 					} }
 					labels={ labels }
 					hasNewBadge={ hasNewBadge }
+					isDisabled={ isDisabled }
+					hasPremiumBadge={ hasPremiumBadge }
 				/>
 			</SnippetPreviewSection>
 		);
@@ -86,11 +89,15 @@ SettingsReplacementVariableEditor.propTypes = {
 	} ),
 	descriptionPlaceholder: PropTypes.string,
 	hasNewBadge: PropTypes.bool,
+	isDisabled: PropTypes.bool,
+	hasPremiumBadge: PropTypes.bool,
 };
 
 SettingsReplacementVariableEditor.defaultProps = {
 	hasPaperStyle: true,
 	hasNewBadge: false,
+	isDisabled: false,
+	hasPremiumBadge: false,
 };
 
 export default linkHiddenFields( props => {

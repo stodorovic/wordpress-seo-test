@@ -1,4 +1,4 @@
-<?php
+<?php // phpcs:ignore Yoast.Files.FileName.InvalidClassFileName -- Reason: this explicitly concerns the Yoast head fields.
 
 namespace Yoast\WP\SEO\Tests\Unit\Routes;
 
@@ -15,7 +15,7 @@ use Yoast\WP\SEO\Tests\Unit\TestCase;
 /**
  * Yoast_Head_REST_Field_Test class.
  *
- * @coversDefaultClass Yoast\WP\SEO\Routes\Yoast_Head_REST_Field
+ * @coversDefaultClass \Yoast\WP\SEO\Routes\Yoast_Head_REST_Field
  *
  * @group routes
  * @group indexables
@@ -112,12 +112,12 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 	 */
 	public function test_register_routes() {
 		$this->post_type_helper
-			->expects( 'get_public_post_types' )
+			->expects( 'get_indexable_post_types' )
 			->once()
 			->andReturn( [ 'post_type' ] );
 
 		$this->taxonomy_helper
-			->expects( 'get_public_taxonomies' )
+			->expects( 'get_indexable_taxonomies' )
 			->once()
 			->andReturn( [ 'taxonomy', 'post_tag' ] );
 
@@ -125,7 +125,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->once()
 			->with(
 				'post_type',
-				Yoast_Head_REST_Field::YOAST_HEAD_FIELD_NAME,
+				Yoast_Head_REST_Field::YOAST_HEAD_ATTRIBUTE_NAME,
 				[ 'get_callback' => [ $this->instance, 'for_post' ] ]
 			);
 
@@ -133,7 +133,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->once()
 			->with(
 				'taxonomy',
-				Yoast_Head_REST_Field::YOAST_HEAD_FIELD_NAME,
+				Yoast_Head_REST_Field::YOAST_HEAD_ATTRIBUTE_NAME,
 				[ 'get_callback' => [ $this->instance, 'for_term' ] ]
 			);
 
@@ -141,7 +141,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->once()
 			->with(
 				'tag',
-				Yoast_Head_REST_Field::YOAST_HEAD_FIELD_NAME,
+				Yoast_Head_REST_Field::YOAST_HEAD_ATTRIBUTE_NAME,
 				[ 'get_callback' => [ $this->instance, 'for_term' ] ]
 			);
 
@@ -149,7 +149,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->once()
 			->with(
 				'user',
-				Yoast_Head_REST_Field::YOAST_HEAD_FIELD_NAME,
+				Yoast_Head_REST_Field::YOAST_HEAD_ATTRIBUTE_NAME,
 				[ 'get_callback' => [ $this->instance, 'for_author' ] ]
 			);
 
@@ -157,7 +157,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->once()
 			->with(
 				'type',
-				Yoast_Head_REST_Field::YOAST_HEAD_FIELD_NAME,
+				Yoast_Head_REST_Field::YOAST_HEAD_ATTRIBUTE_NAME,
 				[ 'get_callback' => [ $this->instance, 'for_post_type_archive' ] ]
 			);
 
@@ -183,12 +183,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			->expects( $method )
 			->once()
 			->with( $input )
-			->andReturn(
-				(object) [
-					'status' => 200,
-					'head'   => 'this is the head',
-				]
-			);
+			->andReturn( $this->get_head() );
 
 		if ( $method === 'for_post' ) {
 			$this->post_helper->expects( 'is_post_indexable' )->once()->with( $params['id'] )->andReturnTrue();
@@ -198,7 +193,9 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 			$this->post_type_helper->expects( 'has_archive' )->with( $input )->andReturnTrue();
 		}
 
-		$this->assertEquals( 'this is the head', $this->instance->{$method}( $params ) );
+		$output = $this->instance->{$method}( $params );
+
+		$this->assertEquals( 'this is the HTML head', $output );
 	}
 
 	/**
@@ -210,14 +207,11 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 		$this->head_action
 			->expects( 'for_posts_page' )
 			->once()
-			->andReturn(
-				(object) [
-					'status' => 200,
-					'head'   => 'this is the head',
-				]
-			);
+			->andReturn( $this->get_head() );
 
-		$this->assertEquals( 'this is the head', $this->instance->for_post_type_archive( [ 'slug' => 'post' ] ) );
+		$output = $this->instance->for_post_type_archive( [ 'slug' => 'post' ] );
+
+		$this->assertEquals( 'this is the HTML head', $output );
 	}
 
 	/**
@@ -228,7 +222,7 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 	public function test_adding_yoast_head_to_post_type_without_archive() {
 		$this->post_type_helper->expects( 'has_archive' )->with( 'no-archive' )->andReturnFalse();
 
-		$this->assertNull( $this->instance->for_post_type_archive( [ 'slug' => 'no-archive' ] ) );
+		$this->assertEquals( '', $this->instance->for_post_type_archive( [ 'slug' => 'no-archive' ] ) );
 	}
 
 	/**
@@ -314,6 +308,22 @@ class Yoast_Head_REST_Field_Test extends TestCase {
 				[ 'slug' => 'type' ],
 				'type',
 			],
+		];
+	}
+
+	/**
+	 * Stub the Meta result.
+	 *
+	 * @param string $html The HTML setup.
+	 * @param string $json The JSON setup.
+	 *
+	 * @return object The mocked result.
+	 */
+	protected function get_head( $html = 'this is the HTML head', $json = 'this is the JSON head' ) {
+		return (object) [
+			'html'   => $html,
+			'json'   => $json,
+			'status' => 200,
 		];
 	}
 }

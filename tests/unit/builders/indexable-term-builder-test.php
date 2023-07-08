@@ -4,23 +4,27 @@ namespace Yoast\WP\SEO\Tests\Unit\Builders;
 
 use Brain\Monkey;
 use Mockery;
+use WP_Error;
+use wpdb;
 use Yoast\WP\Lib\ORM;
 use Yoast\WP\SEO\Builders\Indexable_Term_Builder;
 use Yoast\WP\SEO\Exceptions\Indexable\Invalid_Term_Exception;
 use Yoast\WP\SEO\Exceptions\Indexable\Term_Not_Found_Exception;
 use Yoast\WP\SEO\Helpers\Image_Helper;
 use Yoast\WP\SEO\Helpers\Open_Graph\Image_Helper as OG_Image_Helper;
+use Yoast\WP\SEO\Helpers\Post_Helper;
 use Yoast\WP\SEO\Helpers\Taxonomy_Helper;
 use Yoast\WP\SEO\Helpers\Twitter\Image_Helper as Twitter_Image_Helper;
 use Yoast\WP\SEO\Models\Indexable;
 use Yoast\WP\SEO\Tests\Unit\Doubles\Builders\Indexable_Term_Builder_Double;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
+use Yoast\WP\SEO\Values\Indexables\Indexable_Builder_Versions;
 
 /**
  * Class Indexable_Term_Builder_Test.
  *
- * @group indexables
- * @group builders
+ * @group  indexables
+ * @group  builders
  *
  * @coversDefaultClass \Yoast\WP\SEO\Builders\Indexable_Term_Builder
  * @covers \Yoast\WP\SEO\Builders\Indexable_Term_Builder
@@ -70,6 +74,27 @@ class Indexable_Term_Builder_Test extends TestCase {
 	protected $twitter_image;
 
 	/**
+	 * The indexable builder versions
+	 *
+	 * @var Indexable_Builder_Versions|Mockery\MockInterface
+	 */
+	protected $versions;
+
+	/**
+	 * The post helper
+	 *
+	 * @var Post_Helper|Mockery\MockInterface
+	 */
+	protected $post_helper;
+
+	/**
+	 * The wpdb instance
+	 *
+	 * @var wpdb|Mockery\MockInterface
+	 */
+	protected $wpdb;
+
+	/**
 	 * Sets up the tests.
 	 */
 	protected function set_up() {
@@ -77,10 +102,24 @@ class Indexable_Term_Builder_Test extends TestCase {
 
 		$this->stubTranslationFunctions();
 
-		$this->taxonomy = Mockery::mock( Taxonomy_Helper::class );
+		$this->taxonomy                 = Mockery::mock( Taxonomy_Helper::class );
+		$this->versions                 = Mockery::mock( Indexable_Builder_Versions::class );
+		$this->post_helper              = Mockery::mock( Post_Helper::class );
+		$this->wpdb                     = Mockery::mock( wpdb::class );
+		$this->wpdb->posts              = 'wp_posts';
+		$this->wpdb->term_relationships = 'wp_term_relationships';
+		$this->wpdb->term_taxonomy      = 'wp_term_taxonomy';
+
+		$this->versions
+			->expects( 'get_latest_version_for_type' )
+			->with( 'term' )
+			->andReturn( 1 );
 
 		$this->instance = new Indexable_Term_Builder_Double(
-			$this->taxonomy
+			$this->taxonomy,
+			$this->versions,
+			$this->post_helper,
+			$this->wpdb
 		);
 
 		$this->image            = Mockery::mock( Image_Helper::class );
@@ -160,11 +199,9 @@ class Indexable_Term_Builder_Test extends TestCase {
 	 * @covers ::__construct
 	 */
 	public function test_constructor() {
-		$instance = new Indexable_Term_Builder( $this->taxonomy );
-
 		$this->assertInstanceOf(
-			Taxonomy_Helper::class,
-			$this->getPropertyValue( $instance, 'taxonomy' )
+			Indexable_Term_Builder::class,
+			$this->instance
 		);
 	}
 
@@ -182,33 +219,61 @@ class Indexable_Term_Builder_Test extends TestCase {
 		];
 
 		Monkey\Functions\expect( 'get_term' )->once()->with( 1 )->andReturn( $term );
-		Monkey\Functions\expect( 'get_term_link' )->once()->with( $term, 'category' )->andReturn( 'https://example.org/category/1' );
+		Monkey\Functions\expect( 'get_term_link' )
+			->once()
+			->with( $term, 'category' )
+			->andReturn( 'https://example.org/category/1' );
 		Monkey\Functions\expect( 'is_wp_error' )->twice()->andReturn( false );
+		$this->taxonomy->expects( 'get_indexable_taxonomies' )->andReturn( [ 'category' ] );
 
 		$this->taxonomy->expects( 'get_term_meta' )
 			->once()
 			->with( $term )
 			->andReturn(
 				[
-					'wpseo_focuskw'               => 'focuskeyword',
-					'wpseo_linkdex'               => '75',
-					'wpseo_noindex'               => 'noindex',
-					'wpseo_meta-robots-adv'       => '',
-					'wpseo_content_score'         => '50',
-					'wpseo_canonical'             => 'https://canonical-term',
-					'wpseo_meta-robots-nofollow'  => '1',
-					'wpseo_title'                 => 'title',
-					'wpseo_desc'                  => 'description',
-					'wpseo_opengraph-title'       => 'open_graph_title',
-					'wpseo_opengraph-image'       => 'open_graph_image',
-					'wpseo_opengraph-image-id'    => 'open_graph_image_id',
-					'wpseo_opengraph-description' => 'open_graph_description',
-					'wpseo_twitter-title'         => 'twitter_title',
-					'wpseo_twitter-image'         => 'twitter_image',
-					'wpseo_twitter-image-id'      => 'twitter_image_id',
-					'wpseo_twitter-description'   => 'twitter_description',
+					'wpseo_focuskw'                  => 'focuskeyword',
+					'wpseo_linkdex'                  => '75',
+					'wpseo_noindex'                  => 'noindex',
+					'wpseo_meta-robots-adv'          => '',
+					'wpseo_content_score'            => '50',
+					'wpseo_inclusive_language_score' => '42',
+					'wpseo_canonical'                => 'https://canonical-term',
+					'wpseo_meta-robots-nofollow'     => '1',
+					'wpseo_title'                    => 'title',
+					'wpseo_desc'                     => 'description',
+					'wpseo_opengraph-title'          => 'open_graph_title',
+					'wpseo_opengraph-image'          => 'open_graph_image',
+					'wpseo_opengraph-image-id'       => 'open_graph_image_id',
+					'wpseo_opengraph-description'    => 'open_graph_description',
+					'wpseo_twitter-title'            => 'twitter_title',
+					'wpseo_twitter-image'            => 'twitter_image',
+					'wpseo_twitter-image-id'         => 'twitter_image_id',
+					'wpseo_twitter-description'      => 'twitter_description',
 				]
 			);
+		$this->post_helper->expects( 'get_public_post_statuses' )->once()->andReturn( [ 'publish' ] );
+
+		$this->wpdb->expects( 'prepare' )->once()->with(
+			"
+			SELECT MAX(p.post_modified_gmt) AS last_modified, MIN(p.post_date_gmt) AS published_at
+			FROM	{$this->wpdb->posts} AS p
+			INNER JOIN {$this->wpdb->term_relationships} AS term_rel
+				ON		term_rel.object_id = p.ID
+			INNER JOIN {$this->wpdb->term_taxonomy} AS term_tax
+				ON		term_tax.term_taxonomy_id = term_rel.term_taxonomy_id
+				AND		term_tax.taxonomy = %s
+				AND		term_tax.term_id = %d
+			WHERE	p.post_status IN (%s)
+				AND		p.post_password = ''
+		",
+			[ 'category', 1, 'publish' ]
+		)->andReturn( 'PREPARED_QUERY' );
+		$this->wpdb->expects( 'get_row' )->once()->with( 'PREPARED_QUERY' )->andReturn(
+			(object) [
+				'last_modified' => '1234-12-12 00:00:00',
+				'published_at'  => '1234-12-12 00:00:00',
+			]
+		);
 
 		$indexable_mock      = Mockery::mock( Indexable::class );
 		$indexable_mock->orm = Mockery::mock( ORM::class );
@@ -239,6 +304,8 @@ class Indexable_Term_Builder_Test extends TestCase {
 			'primary_focus_keyword'       => 'focuskeyword',
 			'primary_focus_keyword_score' => 75,
 			'readability_score'           => 50,
+			'inclusive_language_score'    => 42,
+			'version'                     => 1,
 		];
 
 		$this->set_indexable_set_expectations( $indexable_mock, $indexable_expectations );
@@ -293,6 +360,8 @@ class Indexable_Term_Builder_Test extends TestCase {
 
 		Monkey\Functions\expect( 'get_current_blog_id' )->once()->andReturn( 1 );
 		$indexable_mock->orm->expects( 'set' )->with( 'blog_id', 1 );
+		$indexable_mock->orm->expects( 'set' )->with( 'object_published_at', '1234-12-12 00:00:00' );
+		$indexable_mock->orm->expects( 'set' )->with( 'object_last_modified', '1234-12-12 00:00:00' );
 
 		$this->instance->build( 1, $indexable_mock );
 	}
@@ -319,7 +388,7 @@ class Indexable_Term_Builder_Test extends TestCase {
 	 * @covers ::build
 	 */
 	public function test_build_term_error() {
-		$error = Mockery::mock( '\WP_Error' );
+		$error = Mockery::mock( WP_Error::class );
 		$error
 			->expects( 'get_error_message' )
 			->andReturn( 'An error message' );
@@ -342,7 +411,8 @@ class Indexable_Term_Builder_Test extends TestCase {
 	public function test_build_term_link_error() {
 		$term = (object) [ 'taxonomy' => 'tax' ];
 
-		$error = Mockery::mock( '\WP_Error' );
+		$this->taxonomy->expects( 'get_indexable_taxonomies' )->andReturn( [ 'tax' ] );
+		$error = Mockery::mock( WP_Error::class );
 		$error
 			->expects( 'get_error_message' )
 			->andReturn( 'An error message' );
@@ -414,6 +484,8 @@ class Indexable_Term_Builder_Test extends TestCase {
 			'source' => 'first-content-image',
 		];
 		$actual   = $this->instance->find_alternative_image( $indexable_mock );
+
+		$this->assertSame( $expected, $actual );
 	}
 
 	/**

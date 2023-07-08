@@ -1,10 +1,9 @@
 import AssessmentResult from "../../../src/values/AssessmentResult";
 import Mark from "../../../src/values/Mark";
 import Paper from "../../../src/values/Paper";
-import Participle from "../../../src/values/Participle";
-import Sentence from "../../../src/values/Sentence";
-import SentencePart from "../../../src/values/SentencePart";
-import ProminentWord from "../../../src/values/ProminentWord";
+import Sentence from "../../../src/languageProcessing/values/Sentence";
+import Clause from "../../../src/languageProcessing/values/Clause";
+import ProminentWord from "../../../src/languageProcessing/values/ProminentWord";
 import serialize from "../../../src/worker/transporter/serialize";
 
 describe( "serialize", () => {
@@ -63,7 +62,10 @@ describe( "serialize", () => {
 		thing.setText( "Good job!" );
 
 		expect( serialize( thing ) ).toEqual( {
+			_hasBetaBadge: false,
+			_hasJumps: false,
 			_parseClass: "AssessmentResult",
+			editFieldName: "",
 			identifier: "",
 			marks: [],
 			score: 666,
@@ -78,6 +80,9 @@ describe( "serialize", () => {
 			locale: "en_US",
 			permalink: "https://example.com/page-0",
 			title: "A text about a keyword.",
+			date: "8 September 2021",
+			customData: { hasGlobalIdentifier: true, hasVariants: true },
+			textTitle: "The title of the text",
 		} );
 
 		expect( serialize( thing ) ).toEqual( {
@@ -90,7 +95,11 @@ describe( "serialize", () => {
 			title: "A text about a keyword.",
 			synonyms: "",
 			titleWidth: 0,
-			url: "",
+			slug: "",
+			date: "8 September 2021",
+			customData: { hasGlobalIdentifier: true, hasVariants: true },
+			textTitle: "The title of the text",
+			writingDirection: "LTR",
 		} );
 	} );
 
@@ -102,6 +111,7 @@ describe( "serialize", () => {
 
 		expect( serialize( thing ) ).toEqual( {
 			_parseClass: "Mark",
+			fieldsToMark: [],
 			original: "<h1>A heading</h1>",
 			marked: "<yoastmark class='yoast-text-mark'><h1>A heading</h1></yoastmark>",
 		} );
@@ -118,29 +128,11 @@ describe( "serialize", () => {
 		} );
 	} );
 
-	it( "serializes Participles", () => {
-		const thing = new Participle( "geschlossen", "Es wird geschlossen worden sein.",
-			{ auxiliaries: [ "wird", "worden" ], type: "irregular", language: "de" } );
-
-		const expected = {
-			_parseClass: "Participle",
-			attributes: {
-				auxiliaries: [ "wird", "worden" ],
-				language: "de",
-				type: "irregular",
-			},
-			determinesSentencePartIsPassive: false,
-			participle: "geschlossen",
-			sentencePart: "Es wird geschlossen worden sein.",
-		};
-
-		expect( serialize( thing ) ).toEqual( expected );
-	} );
-
 	it( "serializes Sentences", () => {
 		const thing = new Sentence( "This is a sample text." );
 		const expected = {
 			_parseClass: "Sentence",
+			clauses: [],
 			isPassive: false,
 			sentenceText: "This is a sample text.",
 		};
@@ -148,15 +140,16 @@ describe( "serialize", () => {
 		expect( serialize( thing ) ).toEqual( expected );
 	} );
 
-	it( "serializes SentenceParts", () => {
-		const thing = new SentencePart( "wird geschlossen", [ "wird" ] );
+	it( "serializes Clause", () => {
+		const thing = new Clause( "wird geschlossen", [ "wird" ] );
 		thing.setPassive( true );
 
 		const expected = {
-			_parseClass: "SentencePart",
+			_parseClass: "Clause",
 			auxiliaries: [ "wird" ],
+			clauseText: "wird geschlossen",
 			isPassive: true,
-			sentencePartText: "wird geschlossen",
+			participles: [],
 		};
 
 		expect( serialize( thing ) ).toEqual( expected );

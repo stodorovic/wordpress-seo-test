@@ -1,8 +1,7 @@
 // External dependencies.
-import React from "react";
+import React, { Component } from "react";
 import styled from "styled-components";
 import { __ } from "@wordpress/i18n";
-import { Component } from "react";
 import PropTypes from "prop-types";
 
 // Yoast dependencies
@@ -76,7 +75,7 @@ class ModeSwitcher extends Component {
 		const desktopInputId = desktopModeInputId.length > 0 ? desktopModeInputId : "yoast-google-preview-mode-desktop";
 
 		return ( <Switcher>
-			<SwitcherTitle>{ __( "Preview as:", "yoast-components" ) }</SwitcherTitle>
+			<SwitcherTitle>{ __( "Preview as:", "wordpress-seo" ) }</SwitcherTitle>
 			<ModeRadio
 				onChange={ this.switchToMobile }
 				type="radio"
@@ -88,7 +87,7 @@ class ModeSwitcher extends Component {
 				} }
 			/>
 			<ModeLabel for={ mobileInputId }>
-				{ __( "Mobile result", "yoast-components" ) }
+				{ __( "Mobile result", "wordpress-seo" ) }
 			</ModeLabel>
 			<ModeRadio
 				onChange={ this.switchToDesktop }
@@ -101,7 +100,7 @@ class ModeSwitcher extends Component {
 				} }
 			/>
 			<ModeLabel for={ desktopInputId }>
-				{ __( "Desktop result", "yoast-components" ) }
+				{ __( "Desktop result", "wordpress-seo" ) }
 			</ModeLabel>
 		</Switcher> );
 	}

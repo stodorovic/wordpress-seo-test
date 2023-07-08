@@ -1,34 +1,33 @@
-/* External dependencies */
+import { updateCategory } from "@wordpress/blocks";
+import { dispatch, select } from "@wordpress/data";
 import {
-	PluginPrePublishPanel,
-	PluginPostPublishPanel,
 	PluginDocumentSettingPanel,
+	PluginPostPublishPanel,
+	PluginPrePublishPanel,
 	PluginSidebar,
 	PluginSidebarMoreMenuItem,
 } from "@wordpress/edit-post";
-import { registerPlugin } from "@wordpress/plugins";
 import { Fragment } from "@wordpress/element";
-import { updateCategory } from "@wordpress/blocks";
-import { select, dispatch } from "@wordpress/data";
 import { __, sprintf } from "@wordpress/i18n";
+import { registerPlugin } from "@wordpress/plugins";
 import { registerFormatType } from "@wordpress/rich-text";
-import { get } from "lodash-es";
-import { Slot } from "@wordpress/components";
-
-
-/* Internal dependencies */
-import PluginIcon from "../containers/PluginIcon";
-import SidebarFill from "../containers/SidebarFill";
-import MetaboxPortal from "../components/portals/MetaboxPortal";
-import { setMarkerStatus } from "../redux/actions";
-import { isAnnotationAvailable } from "../decorator/gutenberg";
-import SidebarSlot from "../components/slots/SidebarSlot";
-import { link } from "../inline-links/edit-link";
-import PrePublish from "../containers/PrePublish";
-import DocumentSidebar from "../containers/DocumentSidebar";
-import PostPublish from "../containers/PostPublish";
+import { Root } from "@yoast/externals/contexts";
+import { actions } from "@yoast/externals/redux";
+import { get } from "lodash";
+import initializeWordProofForBlockEditor from "../../../../vendor_prefixed/wordproof/wordpress-sdk/resources/js/initializers/blockEditor";
 import getL10nObject from "../analysis/getL10nObject";
 import YoastIcon from "../components/PluginIcon";
+import MetaboxPortal from "../components/portals/MetaboxPortal";
+import SidebarSlot from "../components/slots/SidebarSlot";
+import DocumentSidebar from "../containers/DocumentSidebar";
+import PluginIcon from "../containers/PluginIcon";
+import PostPublish from "../containers/PostPublish";
+import PrePublish from "../containers/PrePublish";
+import SidebarFill from "../containers/SidebarFill";
+import WincherPostPublish from "../containers/WincherPostPublish";
+import { isAnnotationAvailable } from "../decorator/gutenberg";
+import { isWordProofIntegrationActive } from "../helpers/wordproof";
+import { link } from "../inline-links/edit-link";
 
 /**
  * Registers the Yoast inline link format.
@@ -39,6 +38,13 @@ import YoastIcon from "../components/PluginIcon";
  */
 function registerFormats() {
 	if ( typeof get( window, "wp.blockEditor.__experimentalLinkControl" ) === "function" ) {
+		const unknownSettings = select( "core/rich-text" )
+			.getFormatType( "core/unknown" );
+
+		if ( typeof( unknownSettings ) !== "undefined" ) {
+			dispatch( "core/rich-text" ).removeFormatTypes( "core/unknown" );
+		}
+
 		[
 			link,
 		].forEach( ( { name, replaces, ...settings } ) => {
@@ -49,6 +55,10 @@ function registerFormats() {
 				registerFormatType( name, settings );
 			}
 		} );
+
+		if ( typeof( unknownSettings ) !== "undefined" ) {
+			registerFormatType( "core/unknown", unknownSettings );
+		}
 	} else {
 		console.warn(
 			__( "Marking links with nofollow/sponsored has been disabled for WordPress installs < 5.4.", "wordpress-seo" ) +
@@ -67,7 +77,8 @@ function registerFormats() {
  * @returns {void}
  */
 function initiallyOpenDocumentSettings() {
-	const firstLoad = ! select( "core/edit-post" ).getPreferences().panels[ "yoast-seo/document-panel" ];
+	const openedPanels = select( "core/preferences" ).get( "core/edit-post", "openPanels" );
+	const firstLoad = ! openedPanels.includes( "yoast-seo/document-panel" );
 	if ( firstLoad ) {
 		dispatch( "core/edit-post" ).toggleEditorPanelOpened( "yoast-seo/document-panel" );
 	}
@@ -95,8 +106,11 @@ function registerFills( store ) {
 	};
 	const preferences = store.getState().preferences;
 	const analysesEnabled = preferences.isKeywordAnalysisActive || preferences.isContentAnalysisActive;
-	const showZapierPanel = preferences.isZapierIntegrationActive && ! preferences.isZapierConnected;
+	const showWincherPanel = preferences.isKeywordAnalysisActive && preferences.isWincherIntegrationActive;
 	initiallyOpenDocumentSettings();
+
+	const blockSidebarContext = { locationContext: "block-sidebar" };
+	const blockMetaboxContext = { locationContext: "block-metabox" };
 
 	/**
 	 * Renders the yoast editor fills.
@@ -115,11 +129,15 @@ function registerFills( store ) {
 				name="seo-sidebar"
 				title={ pluginTitle }
 			>
-				<SidebarSlot store={ store } theme={ theme } />
+				<Root context={ blockSidebarContext }>
+					<SidebarSlot store={ store } theme={ theme } />
+				</Root>
 			</PluginSidebar>
 			<Fragment>
 				<SidebarFill store={ store } theme={ theme } />
-				<MetaboxPortal target="wpseo-metabox-root" store={ store } theme={ theme } />
+				<Root context={ blockMetaboxContext }>
+					<MetaboxPortal target="wpseo-metabox-root" store={ store } theme={ theme } />
+				</Root>
 			</Fragment>
 			{ analysesEnabled && <PluginPrePublishPanel
 				className="yoast-seo-sidebar-panel"
@@ -129,14 +147,6 @@ function registerFills( store ) {
 			>
 				<PrePublish />
 			</PluginPrePublishPanel> }
-			{ isPremium && showZapierPanel && <PluginPrePublishPanel
-				className="yoast-seo-sidebar-panel"
-				title="Zapier"
-				initialOpen={ true }
-				icon={ <Fragment /> }
-			>
-				<Slot name="YoastZapierPrePublish" />
-			</PluginPrePublishPanel> }
 			<PluginPostPublishPanel
 				className="yoast-seo-sidebar-panel"
 				title={ __( "Yoast SEO", "wordpress-seo" ) }
@@ -144,6 +154,7 @@ function registerFills( store ) {
 				icon={ <Fragment /> }
 			>
 				<PostPublish />
+				{ showWincherPanel && <WincherPostPublish /> }
 			</PluginPostPublishPanel>
 			{ analysesEnabled && <PluginDocumentSettingPanel
 				name="document-panel"
@@ -171,7 +182,7 @@ function registerFills( store ) {
  */
 function initializeAnnotations( store ) {
 	if ( isAnnotationAvailable() ) {
-		store.dispatch( setMarkerStatus( "enabled" ) );
+		store.dispatch( actions.setMarkerStatus( "enabled" ) );
 	}
 }
 
@@ -186,4 +197,8 @@ export default function initBlockEditorIntegration( store ) {
 	registerFills( store );
 	registerFormats();
 	initializeAnnotations( store );
+
+	if ( isWordProofIntegrationActive() ) {
+		initializeWordProofForBlockEditor();
+	}
 }

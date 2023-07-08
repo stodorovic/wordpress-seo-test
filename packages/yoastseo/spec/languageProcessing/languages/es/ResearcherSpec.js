@@ -7,8 +7,11 @@ import firstWordExceptions from "../../../../src/languageProcessing/languages/es
 import twoPartTransitionWords from "../../../../src/languageProcessing/languages/es/config/twoPartTransitionWords";
 import stopWords from "../../../../src/languageProcessing/languages/es/config/stopWords";
 import syllables from "../../../../src/languageProcessing/languages/es/config/syllables.json";
-const morphologyDataES = getMorphologyData( "es" );
+import checkIfWordIsComplex from "../../../../src/languageProcessing/languages/es/helpers/checkIfWordIsComplex";
+import wordComplexityConfig from "../../../../src/languageProcessing/languages/es/config/wordComplexity";
 import sentenceLength from "../../../../src/languageProcessing/languages/es/config/sentenceLength";
+
+const morphologyDataES = getMorphologyData( "es" );
 
 describe( "a test for the Spanish Researcher", function() {
 	const researcher = new Researcher( new Paper( "Este es un documento nuevo!" ) );
@@ -18,7 +21,14 @@ describe( "a test for the Spanish Researcher", function() {
 	} );
 
 	it( "returns true if the English Researcher has a specific research", function() {
-		expect( researcher.hasResearch( "getPassiveVoice" ) ).toBe( true );
+		expect( researcher.hasResearch( "getPassiveVoiceResult" ) ).toBe( true );
+	} );
+
+	it( "checks if a word is complex in Spanish", function() {
+		researcher.addHelper( "checkIfWordIsComplex", checkIfWordIsComplex );
+
+		expect( researcher.getHelper( "checkIfWordIsComplex" )( wordComplexityConfig, "situados" ) ).toEqual( true );
+		expect( researcher.getHelper( "checkIfWordIsComplex" )( wordComplexityConfig, "sobre" ) ).toEqual( false );
 	} );
 
 	it( "returns the Spanish function words", function() {
@@ -62,14 +72,10 @@ describe( "a test for the Spanish Researcher", function() {
 		expect( researcher.getHelper( "getStemmer" )( researcher )( "gatos" ) ).toEqual( "gat" );
 	} );
 
-	it( "splits Spanish sentence into parts", function() {
+	it( "splits Spanish sentence into clauses and checks if the clauses are passive or not", function() {
 		const sentence = "Ellos eran tres amigos cuando los conocí.";
-		expect( researcher.getHelper( "getSentenceParts" )( sentence )[ 0 ].getSentencePartText() ).toBe( "eran tres amigos" );
-	} );
-
-	it( "checks if a Spanish sentence is passive or not", function() {
-		expect( researcher.getHelper( "isPassiveSentencePart" )( "Una manzana será comida por mí.", [ "será" ] ) ).toEqual( true );
-		expect( researcher.getHelper( "isPassiveSentencePart" )( "Yo comeré una manzana.", [] ) ).toEqual( false );
+		expect( researcher.getHelper( "getClauses" )( sentence )[ 0 ].getClauseText() ).toBe( "eran tres amigos" );
+		expect( researcher.getHelper( "getClauses" )( sentence )[ 0 ].isPassive() ).toBe( false );
 	} );
 
 	it( "calculates the Flesch reading score using the formula for Spanish", function() {

@@ -6,7 +6,7 @@ use Yoast\WP\SEO\Helpers\Language_Helper;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
 /**
- * Class Language_Helper_Test
+ * Class Language_Helper_Test.
  *
  * @coversDefaultClass \Yoast\WP\SEO\Helpers\Language_Helper
  *
@@ -48,7 +48,7 @@ class Language_Helper_Test extends TestCase {
 	 * @return string[][] The dataset.
 	 */
 	public function supported_language_provider() {
-		return [ [ 'de' ], [ 'en' ], [ 'es' ], [ 'fr' ], [ 'it' ], [ 'nl' ], [ 'ru' ], [ 'id' ], [ 'pt' ], [ 'pl' ], [ 'ar' ], [ 'sv' ], [ 'he' ], [ 'hu' ], [ 'nb' ], [ 'tr' ], [ 'cs'] ];
+		return [ [ 'de' ], [ 'en' ], [ 'es' ], [ 'fr' ], [ 'it' ], [ 'nl' ], [ 'ru' ], [ 'id' ], [ 'pt' ], [ 'pl' ], [ 'ar' ], [ 'sv' ], [ 'he' ], [ 'hu' ], [ 'nb' ], [ 'tr' ], [ 'cs' ], [ 'sk' ], [ 'el' ], [ 'ja' ] ];
 	}
 
 	/**
@@ -87,7 +87,23 @@ class Language_Helper_Test extends TestCase {
 			[ 'hu' ],
 			[ 'nb' ],
 			[ 'tr' ],
-            [ 'cs' ],
+			[ 'cs' ],
+			[ 'sk' ],
+			[ 'fa' ],
+			[ 'el' ],
+			[ 'ja' ],
 		];
+	}
+
+	/**
+	 * Tests if all the languages that have inclusive language support are
+	 * set to be supported in the code.
+	 *
+	 * @covers ::has_inclusive_language_support
+	 *
+	 * @return void
+	 */
+	public function test_has_inclusive_language_support() {
+		$this->assertTrue( $this->instance->has_inclusive_language_support( 'en' ) );
 	}
 }

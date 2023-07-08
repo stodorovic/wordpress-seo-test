@@ -45,6 +45,28 @@ export function getIsElementorEditor( state ) {
 }
 
 /**
+ * Returns whether this is the taxonomy editor or not.
+ *
+ * @param {Object} state The state.
+ *
+ * @returns {Boolean} Whether this is a taxonomy editor.
+ */
+export function getIsTerm( state ) {
+	return get( state, "editorContext.isTerm", false );
+}
+
+/**
+ * Returns whether this is a draft post or not.
+ *
+ * @param {Object} state The state.
+ *
+ * @returns {Boolean} Whether this is a draft post.
+ */
+export function getIsDraft( state ) {
+	return [ "draft", "auto-draft" ].includes( get( state, "editorContext.postStatus", "" ) );
+}
+
+/**
  * Returns which type of editor this is.
  *
  * @param {Object} state The state.

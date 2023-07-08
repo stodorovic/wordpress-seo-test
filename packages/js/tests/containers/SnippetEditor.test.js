@@ -5,6 +5,7 @@ describe( "SnippetEditor container", () => {
 		const select = jest.fn( name => {
 			if ( name === "yoast-seo/editor" ) {
 				return {
+					getSiteName: jest.fn().mockReturnValue( "Site Name" ),
 					getBaseUrlFromSettings: jest.fn().mockReturnValue( "https://localhost.test" ),
 					getDateFromSettings: jest.fn().mockReturnValue( "01-01-1970" ),
 					getFocusKeyphrase: jest.fn().mockReturnValue( "active" ),
@@ -35,11 +36,15 @@ describe( "SnippetEditor container", () => {
 					getSnippetEditorMode: jest.fn().mockReturnValue( "desktop" ),
 					getSnippetEditorPreviewImageUrl: jest.fn().mockReturnValue( "https://localhost.test/wp-content/uploads/2021/01/WordPress2.jpg" ),
 					getSnippetEditorWordsToHighlight: jest.fn().mockReturnValue( [ "active" ] ),
+					isCornerstoneContent: jest.fn().mockReturnValue( true ),
+					getIsTerm: jest.fn().mockReturnValue( true ),
+					getContentLocale: jest.fn().mockReturnValue( "en" ),
 				};
 			}
 		} );
 
 		const expected = {
+			siteName: "Site Name",
 			baseUrl: "https://localhost.test",
 			data: {
 				title: "Title",
@@ -70,6 +75,9 @@ describe( "SnippetEditor container", () => {
 				price: "&euro; 123",
 			},
 			wordsToHighlight: [ "active" ],
+			isCornerstone: true,
+			isTaxonomy: true,
+			locale: "en",
 		};
 
 		const result = mapSelectToProps( select );
@@ -95,7 +103,9 @@ describe( "SnippetEditor container", () => {
 			}
 		} );
 
-		const result = mapDispatchToProps( dispatch );
+		const result = mapDispatchToProps( dispatch, null, { select: jest.fn(
+			() => ( { getPostId: jest.fn() } )
+		) } );
 
 		expect( typeof result.onChange ).toEqual( "function" );
 		expect( result.onChangeAnalysisData ).toBe( yoastEditorDispatch.updateAnalysisData );

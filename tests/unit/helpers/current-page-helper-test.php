@@ -4,6 +4,8 @@ namespace Yoast\WP\SEO\Tests\Unit\Helpers;
 
 use Brain\Monkey;
 use Mockery;
+use WP_Post;
+use WP_Query;
 use Yoast\WP\SEO\Helpers\Current_Page_Helper;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 use Yoast\WP\SEO\Wrappers\WP_Query_Wrapper;
@@ -39,17 +41,37 @@ class Current_Page_Helper_Test extends TestCase {
 	private $instance;
 
 	/**
+	 * The original value of $_GET['page'].
+	 *
+	 * @var string
+	 */
+	private $original_get_page;
+
+	/**
 	 * Sets up the test class.
 	 */
 	protected function set_up() {
 		parent::set_up();
 
 		$this->wp_query_wrapper = Mockery::mock( WP_Query_Wrapper::class );
-		$this->wp_query         = Mockery::mock();
+		$this->wp_query         = Mockery::mock( WP_Query::class );
 
 		$this->instance = Mockery::mock( Current_Page_Helper::class, [ $this->wp_query_wrapper ] )
 			->makePartial()
 			->shouldAllowMockingProtectedMethods();
+
+		if ( isset( $_GET['page'] ) ) {
+			$this->original_get_page = $_GET['page'];
+		}
+	}
+
+	/**
+	 * Performs the operations to restore the status quo ante.
+	 */
+	protected function tear_down() {
+		$_GET['page'] = $this->original_get_page;
+
+		parent::tear_down();
 	}
 
 	/**
@@ -58,7 +80,7 @@ class Current_Page_Helper_Test extends TestCase {
 	 * @covers ::get_non_cached_date_archive_permalink
 	 */
 	public function test_get_non_cached_date_archive_permalink_day() {
-		$wp_query = Mockery::mock( 'WP_Query' );
+		$wp_query = Mockery::mock( WP_Query::class );
 		$wp_query->expects( 'is_day' )->once()->andReturnTrue();
 		$wp_query->expects( 'is_month' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_year' )->once()->andReturnFalse();
@@ -84,7 +106,7 @@ class Current_Page_Helper_Test extends TestCase {
 	 * @covers ::get_non_cached_date_archive_permalink
 	 */
 	public function test_get_non_cached_date_archive_permalink_month() {
-		$wp_query = Mockery::mock( 'WP_Query' );
+		$wp_query = Mockery::mock( WP_Query::class );
 		$wp_query->expects( 'is_day' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_month' )->once()->andReturnTrue();
 		$wp_query->expects( 'is_year' )->once()->andReturnFalse();
@@ -109,7 +131,7 @@ class Current_Page_Helper_Test extends TestCase {
 	 * @covers ::get_non_cached_date_archive_permalink
 	 */
 	public function test_get_non_cached_date_archive_permalink_year() {
-		$wp_query = Mockery::mock( 'WP_Query' );
+		$wp_query = Mockery::mock( WP_Query::class );
 		$wp_query->expects( 'is_day' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_month' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_year' )->once()->andReturnTrue();
@@ -133,7 +155,7 @@ class Current_Page_Helper_Test extends TestCase {
 	 * @covers ::get_non_cached_date_archive_permalink
 	 */
 	public function test_get_non_cached_date_archive_permalink_fallback() {
-		$wp_query = Mockery::mock( 'WP_Query' );
+		$wp_query = Mockery::mock( WP_Query::class );
 		$wp_query->expects( 'is_day' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_month' )->once()->andReturnFalse();
 		$wp_query->expects( 'is_year' )->once()->andReturnFalse();
@@ -425,74 +447,71 @@ class Current_Page_Helper_Test extends TestCase {
 	}
 
 	/**
-	 * Tests that is_static_posts_page returns false if the page_for_posts option is "0".
+	 * Tests that is_static_posts_page returns false if the query is not for the posts page.
 	 *
 	 * @covers ::is_static_posts_page
 	 */
 	public function test_is_static_posts_page_invalid_page_for_posts() {
-		$wp_query = Mockery::mock( 'WP_Query' );
+		$wp_query = Mockery::mock( WP_Query::class );
 
 		$this->wp_query_wrapper
 			->expects( 'get_main_query' )
 			->once()
 			->andReturn( $wp_query );
 
-		Monkey\Functions\expect( 'get_option' )
-			->with( 'page_for_posts' )
+		$wp_query->is_posts_page = true;
+		$wp_query
+			->expects( 'get_queried_object' )
 			->once()
-			->andReturn( '0' );
+			->andReturn( null );
 
 		$this->assertFalse( $this->instance->is_static_posts_page() );
 	}
 
 	/**
-	 * Tests that is_static_posts_page returns true if the page_for_posts option is the same as the
-	 * queried object id.
+	 * Tests that is_static_posts_page returns true if the query is for the posts page
+	 * and the queried object is a WP_Post.
 	 *
 	 * @covers ::is_static_posts_page
 	 */
-	public function test_is_static_posts_page_same_object_id() {
-		$wp_query = Mockery::mock( 'WP_Query' );
-		$wp_query
-			->expects( 'get_queried_object_id' )
-			->once()
-			->andReturn( 1 );
+	public function test_is_static_posts_page_posts_page_and_post() {
+		$wp_query = Mockery::mock( WP_Query::class );
 
 		$this->wp_query_wrapper
 			->expects( 'get_main_query' )
 			->once()
 			->andReturn( $wp_query );
 
-		Monkey\Functions\expect( 'get_option' )
-			->with( 'page_for_posts' )
+		$post_mock            = Mockery::mock( WP_Post::class );
+		$post_mock->post_type = 'page';
+
+		$wp_query->is_posts_page = true;
+		$wp_query
+			->expects( 'get_queried_object' )
 			->once()
-			->andReturn( '1' );
+			->andReturn( $post_mock );
 
 		$this->assertTrue( $this->instance->is_static_posts_page() );
 	}
 
 	/**
-	 * Tests that is_static_posts_page returns true if the page_for_posts option is different than
-	 * the queried object id.
+	 * Tests that is_static_posts_page returns false if the query is not for the posts page.
 	 *
 	 * @covers ::is_static_posts_page
 	 */
-	public function test_is_static_posts_page_different_object_id() {
-		$wp_query = Mockery::mock( 'WP_Query' );
-		$wp_query
-			->expects( 'get_queried_object_id' )
-			->once()
-			->andReturn( 2 );
+	public function test_is_static_posts_page_not_posts_page() {
+		$wp_query = Mockery::mock( WP_Query::class );
 
 		$this->wp_query_wrapper
 			->expects( 'get_main_query' )
 			->once()
 			->andReturn( $wp_query );
 
-		Monkey\Functions\expect( 'get_option' )
-			->with( 'page_for_posts' )
+		$wp_query->is_posts_page = false;
+		$wp_query
+			->expects( 'get_queried_object' )
 			->once()
-			->andReturn( '1' );
+			->andReturn( null );
 
 		$this->assertFalse( $this->instance->is_static_posts_page() );
 	}
@@ -753,5 +772,93 @@ class Current_Page_Helper_Test extends TestCase {
 		$this->instance->expects( 'count_queried_terms' )->andReturn( 10 );
 
 		$this->assertTrue( $this->instance->is_multiple_terms_page() );
+	}
+
+	/**
+	 * Test is_yoast_seo_page function.
+	 *
+	 * @covers ::is_yoast_seo_page
+	 */
+	public function test_is_yoast_seo_page() {
+		$_GET['page'] = 'wpseo_something';
+
+		$this->assertEquals( true, $this->instance->is_yoast_seo_page() );
+	}
+
+	/**
+	 * Test is_yoast_seo_page function when page is not set.
+	 *
+	 * @covers ::is_yoast_seo_page
+	 */
+	public function test_is_yoast_seo_page_page_not_set() {
+		unset( $_GET['page'] );
+
+		$this->assertEquals( null, $this->instance->is_yoast_seo_page() );
+	}
+
+	/**
+	 * Test is_yoast_seo_page function when page is null.
+	 *
+	 * @covers ::is_yoast_seo_page
+	 */
+	public function test_is_yoast_seo_page_page_is_null() {
+		$_GET['page'] = null;
+
+		$this->assertEquals( null, $this->instance->is_yoast_seo_page() );
+	}
+
+	/**
+	 * Test is_yoast_seo_page function when page is something else than a string.
+	 *
+	 * @covers ::is_yoast_seo_page
+	 */
+	public function test_is_yoast_seo_page_page_is_int() {
+		$_GET['page'] = 13;
+
+		$this->assertEquals( null, $this->instance->is_yoast_seo_page() );
+	}
+
+	/**
+	 * Test get_current_yoast_seo_page function.
+	 *
+	 * @covers ::get_current_yoast_seo_page
+	 */
+	public function test_get_current_yoast_seo_page() {
+		$_GET['page'] = 'wpseo_something';
+
+		$this->assertEquals( 'wpseo_something', $this->instance->get_current_yoast_seo_page() );
+	}
+
+	/**
+	 * Test get_current_yoast_seo_page function when page is not set.
+	 *
+	 * @covers ::get_current_yoast_seo_page
+	 */
+	public function test_get_current_yoast_seo_page_page_not_set() {
+		unset( $_GET['page'] );
+
+		$this->assertEquals( null, $this->instance->get_current_yoast_seo_page() );
+	}
+
+	/**
+	 * Test get_current_yoast_seo_page function when page is null.
+	 *
+	 * @covers ::get_current_yoast_seo_page
+	 */
+	public function test_get_current_yoast_seo_page_page_is_null() {
+		$_GET['page'] = null;
+
+		$this->assertEquals( null, $this->instance->get_current_yoast_seo_page() );
+	}
+
+	/**
+	 * Test get_current_yoast_seo_page function when page is something else than a string.
+	 *
+	 * @covers ::get_current_yoast_seo_page
+	 */
+	public function test_get_current_yoast_seo_page_page_is_int() {
+		$_GET['page'] = 13;
+
+		$this->assertEquals( null, $this->instance->get_current_yoast_seo_page() );
 	}
 }

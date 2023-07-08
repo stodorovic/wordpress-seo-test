@@ -20,6 +20,7 @@ const { stripHTMLTags } = strings;
  * @param {string} data.title               The snippet preview title.
  * @param {string} data.url                 The snippet preview url: baseUrl with the slug.
  * @param {string} data.description         The snippet preview description.
+ * @param {string} data.filteredSEOTitle	The SEO title without separator and site title.
  * @param {Object} context                  The context surrounding the snippet editor form data.
  * @param {string} context.shortenedBaseUrl The baseUrl of the snippet preview url.
  *
@@ -57,6 +58,7 @@ const mapEditorDataToPreview = ( data, context ) => {
 		url: data.url,
 		title: stripHTMLTags( applyModifications( "data_page_title", data.title ) ),
 		description: stripHTMLTags( applyModifications( "data_meta_desc", data.description ) ),
+		filteredSEOTitle: stripHTMLTags( applyModifications( "data_page_title", data.filteredSEOTitle ) ),
 	};
 };
 
@@ -116,6 +118,9 @@ export default compose( [
 			getSnippetEditorIsLoading,
 			getSnippetEditorMode,
 			getSnippetEditorWordsToHighlight,
+			isCornerstoneContent,
+			getContentLocale,
+			getSiteName,
 		} = select( "yoast-seo/editor" );
 
 		return {
@@ -130,6 +135,9 @@ export default compose( [
 			recommendedReplacementVariables: getRecommendedReplaceVars(),
 			replacementVariables: getCurrentReplacementVariablesForEditor(),
 			wordsToHighlight: getSnippetEditorWordsToHighlight(),
+			isCornerstone: isCornerstoneContent(),
+			locale: getContentLocale(),
+			siteName: getSiteName(),
 		};
 	} ),
 	withDispatch( dispatch => {
@@ -156,9 +164,7 @@ export default compose( [
 						break;
 				}
 			},
-			onChangeAnalysisData: analysisData => {
-				updateAnalysisData( analysisData );
-			},
+			onChangeAnalysisData: updateAnalysisData,
 			onLoad: loadSnippetEditorData,
 		};
 	} ),

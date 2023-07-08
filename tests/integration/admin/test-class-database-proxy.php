@@ -27,8 +27,8 @@ class WPSEO_Database_Proxy_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Instantiates a reusable table proxy and creates the table.
 	 */
-	public static function setUpBeforeClass() {
-		parent::setUpBeforeClass();
+	public static function set_up_before_class() {
+		parent::set_up_before_class();
 
 		global $wpdb;
 
@@ -51,8 +51,8 @@ class WPSEO_Database_Proxy_Test extends WPSEO_UnitTestCase {
 	 *
 	 * @return void
 	 */
-	public function setUp() {
-		parent::setUp();
+	public function set_up() {
+		parent::set_up();
 
 		global $wpdb;
 
@@ -63,14 +63,14 @@ class WPSEO_Database_Proxy_Test extends WPSEO_UnitTestCase {
 	/**
 	 * Drops the table from the proxy.
 	 */
-	public static function tearDownAfterClass() {
-		parent::tearDownAfterClass();
-
+	public static function tear_down_after_class() {
 		global $wpdb;
 
 		$full_table_name = self::$proxy->get_table_name();
 
 		$wpdb->query( "DROP TABLE {$full_table_name}" );
+
+		parent::tear_down_after_class();
 	}
 
 	/**
@@ -431,7 +431,6 @@ class WPSEO_Database_Proxy_Test extends WPSEO_UnitTestCase {
 		global $wpdb;
 
 		$proxy_table_name = self::$proxy_table_name . '_duplicate';
-		$proxy            = new WPSEO_Database_Proxy( $wpdb, $proxy_table_name, true );
 
 		$this->assertTrue( in_array( $proxy_table_name, $wpdb->tables, true ) );
 	}
@@ -445,7 +444,6 @@ class WPSEO_Database_Proxy_Test extends WPSEO_UnitTestCase {
 		global $wpdb;
 
 		$proxy_table_name = self::$proxy_table_name . '_duplicate';
-		$proxy            = new WPSEO_Database_Proxy( $wpdb, $proxy_table_name, true, true );
 
 		$this->assertTrue( in_array( $proxy_table_name, $wpdb->ms_global_tables, true ) );
 	}

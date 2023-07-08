@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import styled from "styled-components";
 import { __ } from "@wordpress/i18n";
 import { speak } from "@wordpress/a11y";
-import { get, toString } from "lodash-es";
+import { get, toString } from "lodash";
 
 /* Internal dependencies */
 import HowToStep from "./HowToStep";
@@ -11,7 +11,7 @@ import buildDurationString from "../utils/buildDurationString";
 import appendSpace from "../../../components/higherorder/appendSpace";
 
 import { RichText, InspectorControls } from "@wordpress/block-editor";
-import { IconButton, PanelBody, TextControl, ToggleControl } from "@wordpress/components";
+import { Button, PanelBody, TextControl, ToggleControl } from "@wordpress/components";
 import { Component, renderToString, createRef } from "@wordpress/element";
 
 const RichTextWithAppendedSpace = appendSpace( RichText.Content );
@@ -325,7 +325,7 @@ export default class HowTo extends Component {
 			return null;
 		}
 
-		const [ focusIndex, subElement ] = this.state.focus.split( ":" );
+		const [ focusIndex ] = this.state.focus.split( ":" );
 
 		return this.props.attributes.steps.map( ( step, index ) => {
 			return (
@@ -337,7 +337,6 @@ export default class HowTo extends Component {
 					insertStep={ this.insertStep }
 					removeStep={ this.removeStep }
 					onFocus={ this.setFocusToStep }
-					subElement={ subElement }
 					onMoveUp={ this.moveStepUp }
 					onMoveDown={ this.moveStepDown }
 					isFirst={ index === 0 }
@@ -375,7 +374,7 @@ export default class HowTo extends Component {
 	}
 
 	/**
-	 * Renders the how to steps.
+	 * Renders the how-to steps.
 	 *
 	 * @param {array} steps The steps data.
 	 *
@@ -453,13 +452,13 @@ export default class HowTo extends Component {
 	 */
 	getAddStepButton() {
 		return (
-			<IconButton
+			<Button
 				icon="insert"
 				onClick={ this.onAddStepButtonClick }
 				className="schema-how-to-add-step"
 			>
 				{ __( "Add step", "wordpress-seo" ) }
-			</IconButton>
+			</Button>
 		);
 	}
 
@@ -508,7 +507,7 @@ export default class HowTo extends Component {
 	}
 
 	/**
-	 * Handles the on change event for the how to description field.
+	 * Handles the on change event for the how-to description field.
 	 *
 	 * @param {string} value The new description.
 	 *
@@ -601,14 +600,14 @@ export default class HowTo extends Component {
 
 		if ( ! attributes.hasDuration ) {
 			return (
-				<IconButton
+				<Button
 					onClick={ this.addDuration }
 					className="schema-how-to-duration-button"
 					ref={ this.addDurationButton }
 					icon="insert"
 				>
 					{ __( "Add total time", "wordpress-seo" ) }
-				</IconButton>
+				</Button>
 			);
 		}
 
@@ -665,7 +664,7 @@ export default class HowTo extends Component {
 							onChange={ this.onChangeMinutes }
 							placeholder="MM"
 						/>
-						<IconButton
+						<Button
 							className="schema-how-to-duration-delete-button"
 							icon="trash"
 							label={ __( "Delete total time", "wordpress-seo" ) }
@@ -731,14 +730,13 @@ export default class HowTo extends Component {
 			<div className={ classNames }>
 				{ this.getDuration() }
 				<RichText
+					identifier="description"
 					tagName="p"
 					className="schema-how-to-description"
 					value={ attributes.description }
-					isSelected={ this.state.focus === "description" }
 					unstableOnFocus={ this.focusDescription }
 					onChange={ this.onChangeDescription }
 					placeholder={ __( "Enter a description", "wordpress-seo" ) }
-					keepPlaceholderOnFocus={ true }
 				/>
 				<ul className={ listClassNames }>
 					{ this.getSteps() }

@@ -123,7 +123,7 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 
 			for ( $page_counter = 0; $page_counter < $max_pages; $page_counter++ ) {
 
-				$current_page = ( $max_pages > 1 ) ? ( $page_counter + 1 ) : '';
+				$current_page = ( $page_counter === 0 ) ? '' : ( $page_counter + 1 );
 
 				if ( ! is_array( $tax->object_type ) || count( $tax->object_type ) === 0 ) {
 					continue;
@@ -246,10 +246,11 @@ class WPSEO_Taxonomy_Sitemap_Provider implements WPSEO_Sitemap_Provider {
 				continue;
 			}
 
-			$url['loc'] = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'canonical' );
+			$canonical  = WPSEO_Taxonomy_Meta::get_term_meta( $term, $term->taxonomy, 'canonical' );
+			$url['loc'] = get_term_link( $term, $term->taxonomy );
 
-			if ( ! is_string( $url['loc'] ) || $url['loc'] === '' ) {
-				$url['loc'] = get_term_link( $term, $term->taxonomy );
+			if ( is_string( $canonical ) && $canonical !== '' && $canonical !== $url['loc'] ) {
+				continue;
 			}
 
 			$url['mod'] = $wpdb->get_var( $wpdb->prepare( $sql, $term->taxonomy, $term->term_id ) );

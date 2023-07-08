@@ -9,6 +9,7 @@ use Yoast\WP\SEO\Conditionals\Migrations_Conditional;
 use Yoast\WP\SEO\Helpers\Primary_Term_Helper;
 use Yoast\WP\SEO\Helpers\Site_Helper;
 use Yoast\WP\SEO\Integrations\Watchers\Primary_Term_Watcher;
+use Yoast\WP\SEO\Models\Primary_Term;
 use Yoast\WP\SEO\Repositories\Primary_Term_Repository;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
@@ -100,8 +101,8 @@ class Primary_Term_Watcher_Test extends TestCase {
 	public function test_register_hooks() {
 		$this->instance->register_hooks();
 
-		$this->assertNotFalse( Monkey\Actions\has( 'set_object_terms', [ $this->instance, 'save_primary_terms' ] ) );
-		$this->assertNotFalse( Monkey\Actions\has( 'delete_post', [ $this->instance, 'delete_primary_terms' ] ) );
+		self::assertNotFalse( Monkey\Actions\has( 'save_post', [ $this->instance, 'save_primary_terms' ] ) );
+		self::assertNotFalse( Monkey\Actions\has( 'delete_post', [ $this->instance, 'delete_primary_terms' ] ) );
 	}
 
 	/**
@@ -116,7 +117,7 @@ class Primary_Term_Watcher_Test extends TestCase {
 			->with( 1 )
 			->andReturn( [ (object) [ 'name' => 'category' ] ] );
 
-		$primary_term = Mockery::mock();
+		$primary_term = Mockery::mock( Primary_Term::class );
 		$primary_term->expects( 'delete' )->once();
 
 		$this->repository
@@ -168,16 +169,25 @@ class Primary_Term_Watcher_Test extends TestCase {
 	 * Tests the saving of the primary terms.
 	 *
 	 * @covers ::save_primary_terms
+	 * @covers ::save_primary_term
 	 */
 	public function test_save_primary_terms() {
+		$post_id = 2;
+
 		$this->site
 			->expects( 'is_multisite_and_switched' )
 			->andReturnFalse();
 
+		$this->primary_term
+			->expects( 'get_primary_term_taxonomies' )
+			->once()
+			->with( $post_id )
+			->andReturn( [ (object) [ 'name' => 'category' ] ] );
+
 		$this->primary_term_builder
 			->expects( 'build' )
-			->with( 2 );
+			->with( $post_id );
 
-		$this->instance->save_primary_terms( 2 );
+		$this->instance->save_primary_terms( $post_id );
 	}
 }

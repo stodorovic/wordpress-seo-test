@@ -1,6 +1,10 @@
 import { strings } from "@yoast/helpers";
 import measureTextWidth from "../../../helpers/measureTextWidth";
-import {
+import { selectors } from "@yoast/externals/redux";
+
+import { applyModifications } from "../../initializers/pluggable";
+
+const {
 	getBaseUrlFromSettings,
 	getContentLocale,
 	getEditorDataContent,
@@ -8,8 +12,8 @@ import {
 	getSnippetEditorDescriptionWithTemplate,
 	getSnippetEditorSlug,
 	getSnippetEditorTitleWithTemplate,
-} from "../../../redux/selectors";
-import { applyModifications } from "../../initializers/pluggable";
+	getDateFromSettings,
+} = selectors;
 
 /**
  * Gets the analysis data.
@@ -44,7 +48,8 @@ export const getAnalysisData = ( state ) => {
 		description,
 		locale: getContentLocale( state ),
 		titleWidth: measureTextWidth( title ),
-		url: slug,
+		slug: slug,
 		permalink: baseUrl + slug,
+		date: getDateFromSettings( state ),
 	};
 };

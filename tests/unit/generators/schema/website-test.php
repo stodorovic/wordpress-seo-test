@@ -90,13 +90,14 @@ class Website_Test extends TestCase {
 	 * @covers ::internal_search_section
 	 */
 	public function test_generate() {
+		$this->meta_tags_context->alternate_site_name       = '';
 		$this->meta_tags_context->site_url                  = 'https://example.com/';
 		$this->meta_tags_context->site_name                 = 'My site';
 		$this->meta_tags_context->site_represents_reference = 'https://example.com/#publisher';
 
 		$this->html
 			->expects( 'smart_strip_tags' )
-			->twice()
+			->once()
 			->andReturnArg( 0 );
 
 		$this->language->expects( 'add_piece_language' )
@@ -109,23 +110,20 @@ class Website_Test extends TestCase {
 				}
 			);
 
-		$this->options->expects( 'get' )
-			->with( 'alternate_website_name', '' )
-			->once()
-			->andReturn( 'Alternate site name' );
-
 		$expected = [
 			'@type'           => 'WebSite',
 			'@id'             => 'https://example.com/#website',
 			'url'             => 'https://example.com/',
 			'name'            => 'My site',
 			'publisher'       => 'https://example.com/#publisher',
-			'alternateName'   => 'Alternate site name',
 			'description'     => 'description',
 			'potentialAction' => [
 				[
 					'@type'       => 'SearchAction',
-					'target'      => 'https://example.com/?s={search_term_string}',
+					'target'      => [
+						'@type'       => 'EntryPoint',
+						'urlTemplate' => 'https://example.com/?s={search_term_string}',
+					],
 					'query-input' => 'required name=search_term_string',
 				],
 			],
@@ -148,13 +146,14 @@ class Website_Test extends TestCase {
 			->with( false )
 			->andReturn( true );
 
+		$this->meta_tags_context->alternate_site_name       = '';
 		$this->meta_tags_context->site_url                  = 'https://example.com/';
 		$this->meta_tags_context->site_name                 = 'My site';
 		$this->meta_tags_context->site_represents_reference = 'https://example.com/#publisher';
 
 		$this->html
 			->expects( 'smart_strip_tags' )
-			->twice()
+			->once()
 			->andReturnArg( 0 );
 
 		$this->language->expects( 'add_piece_language' )
@@ -167,18 +166,12 @@ class Website_Test extends TestCase {
 				}
 			);
 
-		$this->options->expects( 'get' )
-			->with( 'alternate_website_name', '' )
-			->once()
-			->andReturn( 'Alternate site name' );
-
 		$expected = [
 			'@type'           => 'WebSite',
 			'@id'             => 'https://example.com/#website',
 			'url'             => 'https://example.com/',
 			'name'            => 'My site',
 			'publisher'       => 'https://example.com/#publisher',
-			'alternateName'   => 'Alternate site name',
 			'description'     => 'description',
 			'inLanguage'      => 'language',
 		];

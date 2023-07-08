@@ -9,13 +9,7 @@ import BlockSuggestions from "./BlockSuggestionsPresenter";
 import { createAnalysisMessages, SidebarWarning } from "./SidebarWarningPresenter";
 import { YOAST_SCHEMA_BLOCKS_STORE_NAME } from "../redux";
 import { BlockValidationResult } from "../../core/validation";
-import logger from "../logger";
 import LabelWithHelpLink from "./LabelWithHelpLinkPresenter";
-
-interface SchemaAnalysisProps {
-	recommendedBlocks: string[];
-	requiredBlocks: string[];
-}
 
 /**
  * Retrieves the validation results from the Redux store.
@@ -38,14 +32,28 @@ function useValidationResults(): BlockValidationResult[] {
  *
  * @constructor
  */
-export function SchemaAnalysis( props: SchemaAnalysisProps ): ReactElement {
+export function SchemaAnalysis(): ReactElement {
 	const validationResults = useValidationResults();
 
 	let warnings: SidebarWarning[] = [];
 
+	const {
+		requiredBlocks,
+		recommendedBlocks,
+	} = useSelect( select => {
+		const {
+			getRequiredBlockNames,
+			getRecommendedBlockNames,
+		} = select( "yoast-seo/schema-blocks" );
+
+		return {
+			requiredBlocks: getRequiredBlockNames() || [],
+			recommendedBlocks: getRecommendedBlockNames() || [],
+		};
+	} );
+
 	if ( validationResults ) {
 		warnings = createAnalysisMessages( validationResults );
-		logger.debug( "Warnings:", warnings );
 	}
 
 	const [ jobTitle, setJobTitle ] = useState( "" );
@@ -61,18 +69,18 @@ export function SchemaAnalysis( props: SchemaAnalysisProps ): ReactElement {
 
 	return <div key={ "schema-analysis" } className={ "yoast-schema-analysis" }>
 		<LabelWithHelpLink
-			text={ __( "Job Posting schema", "yoast-schema-blocks" ) }
+			text={ __( "JobPosting schema", "wordpress-seo" ) }
 			URL={ "https://yoa.st/4dk" }
 		/>
 		<TextControl onChange={ onChange } value={ jobTitle } label={ "Job title" } />
 		<WarningList warnings={ warnings } />
 		<BlockSuggestions
-			heading={ __( "Required information", "yoast-schema-blocks" ) }
-			blockNames={ props.requiredBlocks }
+			heading={ __( "Required information", "wordpress-seo" ) }
+			blockNames={ requiredBlocks }
 		/>
 		<BlockSuggestions
-			heading={ __( "Recommended information", "yoast-schema-blocks" ) }
-			blockNames={ props.recommendedBlocks }
+			heading={ __( "Recommended information", "wordpress-seo" ) }
+			blockNames={ recommendedBlocks }
 		/>
 	</div>;
 }
@@ -92,7 +100,7 @@ function WarningList( props: WarningListProps ): ReactElement {
 	return (
 		<Fragment>
 			<div className="yoast-block-sidebar-warnings">
-				<div className="yoast-block-sidebar-title">{ __( "Analysis", "yoast-schema-blocks" ) }</div>
+				<div className="yoast-block-sidebar-title">{ __( "Analysis", "wordpress-seo" ) }</div>
 				<ul className="yoast-block-sidebar-warnings">
 					{ ...props.warnings.map( warning => <Warning warning={ warning } key={ warning.text } /> ) }
 				</ul>

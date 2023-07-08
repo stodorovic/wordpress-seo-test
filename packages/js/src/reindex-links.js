@@ -63,7 +63,7 @@ function doReindexRequest( progressbar, resolve ) {
 		beforeSend: ( xhr ) => {
 			xhr.setRequestHeader( "X-WP-Nonce", settings.restApi.nonce );
 		},
-		success: function( response ) {
+		success: response => {
 			const totalIndexed = parseInt( response, 10 );
 			if ( totalIndexed !== 0 ) {
 				progressbar.update( totalIndexed );
@@ -124,10 +124,10 @@ function startReindexing() {
  * @returns {void}
  */
 function openLinkIndexing() {
-	jQuery( "#general-tab" ).click();
+	jQuery( "#general-tab" ).trigger( "click" );
 
 	if ( linkIndexingCompleted === false ) {
-		jQuery( "#openLinkIndexing" ).click();
+		jQuery( "#openLinkIndexing" ).trigger( "click" );
 	}
 }
 
@@ -146,7 +146,7 @@ function init() {
 		}
 	} );
 
-	jQuery( "#noticeRunLinkIndex" ).click( openLinkIndexing );
+	jQuery( "#noticeRunLinkIndex" ).on( "click", openLinkIndexing );
 
 	if ( window.location.href.indexOf( "&reIndexLinks=1" ) !== -1 ) {
 		jQuery( openLinkIndexing );

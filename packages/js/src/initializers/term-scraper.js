@@ -2,15 +2,11 @@
 
 // External dependencies.
 import { App, TaxonomyAssessor } from "yoastseo";
-import {
-	setReadabilityResults,
-	setSeoResultsForKeyword,
-} from "yoast-components";
 import { isShallowEqualObjects } from "@wordpress/is-shallow-equal";
 import {
 	isUndefined,
 	debounce,
-} from "lodash-es";
+} from "lodash";
 
 // Internal dependencies.
 import { termsTmceId } from "../lib/tinymce";
@@ -30,22 +26,31 @@ import getIndicatorForScore from "../analysis/getIndicatorForScore";
 import getTranslations from "../analysis/getTranslations";
 import isKeywordAnalysisActive from "../analysis/isKeywordAnalysisActive";
 import isContentAnalysisActive from "../analysis/isContentAnalysisActive";
-import snippetEditorHelpers from "../analysis/snippetEditor";
+import {
+	getDataFromCollector,
+	getDataFromStore,
+	getDataWithoutTemplates,
+	getDataWithTemplates,
+	getTemplatesFromL10n,
+} from "../analysis/snippetEditor";
 import TermDataCollector from "../analysis/TermDataCollector";
 import CustomAnalysisData from "../analysis/CustomAnalysisData";
 import getApplyMarks from "../analysis/getApplyMarks";
 import { refreshDelay } from "../analysis/constants";
 import handleWorkerError from "../analysis/handleWorkerError";
-
-// Redux dependencies.
-import { refreshSnippetEditor, updateData } from "../redux/actions/snippetEditor";
-import { setWordPressSeoL10n, setYoastComponentsL10n } from "../helpers/i18n";
-import { setFocusKeyword } from "../redux/actions/focusKeyword";
-import { setCornerstoneContent } from "../redux/actions/cornerstoneContent";
 import initializeUsedKeywords from "./used-keywords-assessment";
+import { actions } from "@yoast/externals/redux";
+import isInclusiveLanguageAnalysisActive from "../analysis/isInclusiveLanguageAnalysisActive";
 
-setYoastComponentsL10n();
-setWordPressSeoL10n();
+const {
+	refreshSnippetEditor,
+	updateData,
+	setFocusKeyword,
+	setCornerstoneContent,
+	setMarkerStatus,
+	setReadabilityResults,
+	setSeoResultsForKeyword,
+} = actions;
 
 window.yoastHideMarkers = true;
 
@@ -153,14 +158,10 @@ export default function initTermScraper( $, store, editorData ) {
 	/**
 	 * Initializes keyword analysis.
 	 *
-	 * @param {TermDataCollector} termScraper The post scraper object.
-	 *
 	 * @returns {void}
 	 */
-	function initializeKeywordAnalysis( termScraper ) {
+	function initializeKeywordAnalysis() {
 		var savedKeywordScore = $( "#hidden_wpseo_linkdex" ).val();
-
-		termScraper.initKeywordTabTemplate();
 
 		var indicator = getIndicatorForScore( savedKeywordScore );
 
@@ -177,6 +178,20 @@ export default function initTermScraper( $, store, editorData ) {
 		var savedContentScore = $( "#hidden_wpseo_content_score" ).val();
 
 		var indicator = getIndicatorForScore( savedContentScore );
+
+		updateTrafficLight( indicator );
+		updateAdminBar( indicator );
+	}
+
+	/**
+	 * Initializes the inclusive language analysis.
+	 *
+	 * @returns {void}
+	 */
+	function initializeInclusiveLanguageAnalysis() {
+		const savedContentScore = $( "#hidden_wpseo_inclusive_language_score" ).val();
+
+		const indicator = getIndicatorForScore( savedContentScore );
 
 		updateTrafficLight( indicator );
 		updateAdminBar( indicator );
@@ -290,6 +305,9 @@ export default function initTermScraper( $, store, editorData ) {
 		}
 
 		if ( isContentAnalysisActive() ) {
+			// Hide marker buttons.
+			store.dispatch( setMarkerStatus( "hidden" ) );
+
 			args.callbacks.saveContentScore = termScraper.saveContentScore.bind( termScraper );
 			args.callbacks.updatedContentResults = function( results ) {
 				store.dispatch( setReadabilityResults( results ) );
@@ -347,11 +365,9 @@ export default function initTermScraper( $, store, editorData ) {
 		store.subscribe( handleStoreChange.bind( null, store, app.refresh ) );
 
 		if ( isKeywordAnalysisActive() ) {
-			app.seoAssessor = new TaxonomyAssessor( app.i18n, app.config.researcher );
+			app.seoAssessor = new TaxonomyAssessor( app.config.researcher );
 			app.seoAssessorPresenter.assessor = app.seoAssessor;
 		}
-
-		termScraper.initKeywordTabTemplate();
 
 		// Init Plugins.
 		window.YoastSEO.wp = {};
@@ -370,11 +386,15 @@ export default function initTermScraper( $, store, editorData ) {
 		), refreshDelay ) );
 
 		if ( isKeywordAnalysisActive() ) {
-			initializeKeywordAnalysis( termScraper );
+			initializeKeywordAnalysis();
 		}
 
 		if ( isContentAnalysisActive() ) {
 			initializeContentAnalysis();
+		}
+
+		if ( isInclusiveLanguageAnalysisActive() ) {
+			initializeInclusiveLanguageAnalysis();
 		}
 
 		// Initialize the analysis worker.
@@ -393,10 +413,10 @@ export default function initTermScraper( $, store, editorData ) {
 		};
 
 		// Initialize the snippet editor data.
-		let snippetEditorData = snippetEditorHelpers.getDataFromCollector( termScraper );
+		let snippetEditorData = getDataFromCollector( termScraper );
 		initializeCornerstoneContentAnalysis( app );
-		const snippetEditorTemplates = snippetEditorHelpers.getTemplatesFromL10n( wpseoScriptData.metabox );
-		snippetEditorData = snippetEditorHelpers.getDataWithTemplates( snippetEditorData, snippetEditorTemplates );
+		const snippetEditorTemplates = getTemplatesFromL10n( wpseoScriptData.metabox );
+		snippetEditorData = getDataWithTemplates( snippetEditorData, snippetEditorTemplates );
 
 		// Set the initial snippet editor data.
 		store.dispatch( updateData( snippetEditorData ) );
@@ -422,8 +442,8 @@ export default function initTermScraper( $, store, editorData ) {
 				refreshAfterFocusKeywordChange();
 			}
 
-			const data = snippetEditorHelpers.getDataFromStore( store );
-			const dataWithoutTemplates = snippetEditorHelpers.getDataWithoutTemplates( data, snippetEditorTemplates );
+			const data = getDataFromStore( store );
+			const dataWithoutTemplates = getDataWithoutTemplates( data, snippetEditorTemplates );
 
 			if ( snippetEditorData.title !== data.title ) {
 				termScraper.setDataFromSnippet( dataWithoutTemplates.title, "snippet_title" );

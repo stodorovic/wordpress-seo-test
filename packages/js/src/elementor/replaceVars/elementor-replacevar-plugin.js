@@ -46,7 +46,13 @@ const getReplacements = ( scope = "" ) => {
 	switch ( scope ) {
 		case "post":
 			return [
+				"authorFirstName",
+				"authorLastName",
 				"category",
+				"categoryTitle",
+				"currentDate",
+				"currentDay",
+				"currentMonth",
 				"currentYear",
 				"date",
 				"excerpt",
@@ -58,6 +64,11 @@ const getReplacements = ( scope = "" ) => {
 				"primaryCategory",
 				"pageNumber",
 				"pageTotal",
+				"permalink",
+				"postContent",
+				"postDay",
+				"postMonth",
+				"postYear",
 				"postTypeNamePlural",
 				"postTypeNameSingular",
 				"searchPhrase",
@@ -70,7 +81,13 @@ const getReplacements = ( scope = "" ) => {
 			];
 		case "page":
 			return [
+				"authorFirstName",
+				"authorLastName",
 				"category",
+				"categoryTitle",
+				"currentDate",
+				"currentDay",
+				"currentMonth",
 				"currentYear",
 				"date",
 				"excerpt",
@@ -82,6 +99,11 @@ const getReplacements = ( scope = "" ) => {
 				"primaryCategory",
 				"pageNumber",
 				"pageTotal",
+				"permalink",
+				"postContent",
+				"postDay",
+				"postMonth",
+				"postYear",
 				"postTypeNamePlural",
 				"postTypeNameSingular",
 				"searchPhrase",
@@ -122,9 +144,12 @@ const createReplaceFunction = ( { getReplacement, regexp } ) => {
  */
 const registerReplacementVariables = replacements => {
 	replacements.forEach( name => {
-		const replace = createReplaceFunction( replacementVariables[ name ] );
-
-		registerModifications( replace );
+		// eslint-disable-next-line import/namespace
+		const replacementVariable = replacementVariables?.[ name ];
+		if ( replacementVariable ) {
+			const replace = createReplaceFunction( replacementVariable );
+			registerModifications( replace );
+		}
 	} );
 };
 
@@ -152,7 +177,8 @@ export { default as ReplaceVar } from "../../values/replaceVar";
  */
 const getCurrentReplacementVariables = () => {
 	if ( currentReplaceVars === null ) {
-		currentReplaceVars = getReplacements().map( name => replacementVariables[ name ] );
+		// eslint-disable-next-line import/namespace
+		currentReplaceVars = getReplacements().map( name => replacementVariables?.[ name ] ).filter( Boolean );
 	}
 
 	return currentReplaceVars;
@@ -168,12 +194,18 @@ const getCurrentReplacementVariables = () => {
 export const getCurrentReplacementVariablesForEditor = () => {
 	if ( currentReplaceVarsForEditor === null ) {
 		currentReplaceVarsForEditor = [];
+
+		const hiddenReplaceVars = get( window, "wpseoScriptData.analysis.plugins.replaceVars.hidden_replace_vars", [] );
+
 		getCurrentReplacementVariables().forEach( replacementVariable => {
+			const shouldBeHidden = hiddenReplaceVars.includes( replacementVariable.name );
+
 			// Add the main replacement variable.
 			currentReplaceVarsForEditor.push( {
 				name: replacementVariable.name,
 				label: replacementVariable.label,
 				value: replacementVariable.placeholder,
+				hidden: shouldBeHidden,
 			} );
 
 			// Add the aliases.
@@ -182,6 +214,7 @@ export const getCurrentReplacementVariablesForEditor = () => {
 					name: alias.name,
 					label: alias.label,
 					value: alias.placeholder,
+					hidden: shouldBeHidden,
 				} );
 			} );
 		} );

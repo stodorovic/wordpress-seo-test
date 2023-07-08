@@ -2,7 +2,10 @@ import { decodeHTML } from "@yoast/helpers";
 
 export const SWITCH_MODE = "SNIPPET_EDITOR_SWITCH_MODE";
 export const UPDATE_DATA = "SNIPPET_EDITOR_UPDATE_DATA";
+export const FIND_CUSTOM_FIELDS = "SNIPPET_EDITOR_FIND_CUSTOM_FIELDS";
+export const CUSTOM_FIELD_RESULTS = "SNIPPET_EDITOR_CUSTOM_FIELD_RESULTS";
 export const UPDATE_REPLACEMENT_VARIABLE = "SNIPPET_EDITOR_UPDATE_REPLACEMENT_VARIABLE";
+export const HIDE_REPLACEMENT_VARIABLES = "SNIPPET_EDITOR_HIDE_REPLACEMENT_VARIABLES";
 export const REMOVE_REPLACEMENT_VARIABLE = "SNIPPET_EDITOR_REMOVE_REPLACEMENT_VARIABLE";
 export const REFRESH = "SNIPPET_EDITOR_REFRESH";
 export const UPDATE_WORDS_TO_HIGHLIGHT = "SNIPPET_EDITOR_UPDATE_WORDS_TO_HIGHLIGHT";
@@ -40,15 +43,37 @@ export function updateData( data ) {
 }
 
 /**
- * Updates replacement variables in redux.
+ * Triggers a control to fetch new replacement variables from the API and then adds them.
  *
- * @param {string} name  The name of the replacement variable.
- * @param {string} value The value of the replacement variable.
- * @param {string} label The label of the replacement variable (optional).
+ * @param {string} query  The search query.
+ * @param {int}    postId The post ID.
  *
  * @returns {Object} An action for redux.
  */
-export function updateReplacementVariable( name, value, label = "" ) {
+export function* findCustomFields( query, postId ) {
+	const results = yield{
+		type: FIND_CUSTOM_FIELDS,
+		query,
+		postId,
+	};
+
+	return {
+		type: CUSTOM_FIELD_RESULTS,
+		results,
+	};
+}
+
+/**
+ * Updates replacement variables in redux.
+ *
+ * @param {string} name   The name of the replacement variable.
+ * @param {string} value  The value of the replacement variable.
+ * @param {string} label  The label of the replacement variable (optional).
+ * @param {bool}   hidden Should the replacement variable be searchable in the replacement variable editor.
+ *
+ * @returns {Object} An action for redux.
+ */
+export function updateReplacementVariable( name, value, label = "", hidden = false ) {
 	const unescapedValue = ( typeof value === "string" )
 		? decodeHTML( value )
 		: value;
@@ -57,13 +82,14 @@ export function updateReplacementVariable( name, value, label = "" ) {
 		name,
 		value: unescapedValue,
 		label,
+		hidden,
 	};
 }
 
 /**
  * Updates the words to highlight in the snippet editor.
  *
- * @param {Array} wordsToHighlight  The snippet editor keyword forms.
+ * @param {Array} wordsToHighlight The snippet editor keyword forms.
  *
  * @returns {Object} An action for redux.
  */
@@ -97,5 +123,19 @@ export function refreshSnippetEditor() {
 	return {
 		type: REFRESH,
 		time: ( new Date() ).getMilliseconds(),
+	};
+}
+
+/**
+ * Removes a replacement variable in redux.
+ *
+ * @param {array} replacementVariableNamesToBeHidden An array or replacement variables names that should be hidden in the replacement variable editor.
+ *
+ * @returns {Object} An action for redux.
+ */
+export function hideReplacementVariables( replacementVariableNamesToBeHidden ) {
+	return {
+		type: HIDE_REPLACEMENT_VARIABLES,
+		data: replacementVariableNamesToBeHidden,
 	};
 }

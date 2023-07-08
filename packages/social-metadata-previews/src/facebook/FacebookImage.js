@@ -3,35 +3,23 @@ import React, { Component } from "react";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 import { __ } from "@wordpress/i18n";
+import { noop } from "lodash";
 
 /* Yoast dependencies */
+import { FACEBOOK_IMAGE_SIZES } from "@yoast/social-metadata-forms";
 import { colors } from "@yoast/style-guide";
 
 /* Internal dependencies */
-import {
-	handleImage,
-	FACEBOOK_IMAGE_SIZES,
-} from "../helpers/determineImageProperties";
+import { SocialImage } from "../shared/SocialImage";
+import { handleImage } from "../helpers/determineImageProperties";
 
 const FacebookImageContainer = styled.div`
 	position: relative;
-	height: ${ props => props.dimensions.height };
-	${ props => props.mode === "landscape" ? `max-width: ${ props.dimensions.width }` : `min-width: ${ props.dimensions.width }` };
+	${ props => props.mode === "landscape"
+		? `max-width: ${props.dimensions.width}`
+		: `min-width: ${props.dimensions.width}; height: ${props.dimensions.height}` };
 	overflow: hidden;
 	background-color: ${ colors.$color_white };
-`;
-
-// Adding && for specificity, competing styles coming from blockeditor
-const StyledImage = styled.img`
-	&& {
-		max-width: ${ props => props.imageProperties.width }px;
-		height: ${ props => props.imageProperties.height }px;
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		max-width: none;
-	}
 `;
 
 const PlaceholderImage = styled.div`
@@ -160,7 +148,7 @@ class FacebookImage extends Component {
 					onMouseEnter={ this.props.onMouseEnter }
 					onMouseLeave={ this.props.onMouseLeave }
 				>
-					{ __( "Select image", "yoast-components" ) }
+					{ __( "Select image", "wordpress-seo" ) }
 				</PlaceholderImage>
 			);
 		}
@@ -173,10 +161,15 @@ class FacebookImage extends Component {
 			onMouseLeave={ this.props.onMouseLeave }
 			onClick={ this.props.onImageClick }
 		>
-			<StyledImage
-				src={ this.props.src }
-				alt={ this.props.alt }
-				imageProperties={ imageProperties }
+			<SocialImage
+				imageProps={ {
+					src: this.props.src,
+					alt: this.props.alt,
+					aspectRatio: FACEBOOK_IMAGE_SIZES.aspectRatio,
+				} }
+				width={ imageProperties.width }
+				height={ imageProperties.height }
+				imageMode={ imageProperties.mode }
 			/>
 		</FacebookImageContainer>;
 	}
@@ -194,10 +187,10 @@ FacebookImage.propTypes = {
 FacebookImage.defaultProps = {
 	src: "",
 	alt: "",
-	onImageLoaded: () => {},
-	onImageClick: () => {},
-	onMouseEnter: () => {},
-	onMouseLeave: () => {},
+	onImageLoaded: noop,
+	onImageClick: noop,
+	onMouseEnter: noop,
+	onMouseLeave: noop,
 };
 
 export default FacebookImage;

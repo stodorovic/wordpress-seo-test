@@ -1,48 +1,41 @@
 import Assessor from "./assessor.js";
-import fleschReadingEase from "./assessments/readability/fleschReadingEaseAssessment.js";
-import paragraphTooLong from "./assessments/readability/paragraphTooLongAssessment.js";
-import SentenceLengthInText from "./assessments/readability/sentenceLengthInTextAssessment.js";
-import SubheadingDistributionTooLong from "./assessments/readability/subheadingDistributionTooLongAssessment.js";
-import transitionWords from "./assessments/readability/transitionWordsAssessment.js";
-import passiveVoice from "./assessments/readability/passiveVoiceAssessment.js";
-import sentenceBeginnings from "./assessments/readability/sentenceBeginningsAssessment.js";
-import textPresence from "./assessments/readability/textPresenceAssessment.js";
+import ParagraphTooLong from "./assessments/readability/ParagraphTooLongAssessment.js";
+import SentenceLengthInText from "./assessments/readability/SentenceLengthInTextAssessment.js";
+import SubheadingDistributionTooLong from "./assessments/readability/SubheadingDistributionTooLongAssessment.js";
+import TransitionWords from "./assessments/readability/TransitionWordsAssessment.js";
+import PassiveVoice from "./assessments/readability/PassiveVoiceAssessment.js";
+import SentenceBeginnings from "./assessments/readability/SentenceBeginningsAssessment.js";
+import TextPresence from "./assessments/readability/TextPresenceAssessment.js";
 
 /*
 	Temporarily disabled:
-
-	var wordComplexity = require( "./assessments/wordComplexityAssessment.js" );
 	var sentenceLengthInDescription = require( "./assessments/sentenceLengthInDescriptionAssessment.js" );
  */
 
 import scoreToRating from "./interpreters/scoreToRating";
 
-import { map } from "lodash-es";
-import { sum } from "lodash-es";
+import { map, sum } from "lodash-es";
 
 /**
  * Creates the Assessor
  *
- * @param {object}  i18n            The i18n object used for translations.
  * @param {object}  researcher      The researcher to use for the analysis.
  * @param {Object}  options         The options for this assessor.
  * @param {Object}  options.marker  The marker to pass the list of marks to.
  *
  * @constructor
  */
-const ContentAssessor = function( i18n, researcher, options = {} ) {
-	Assessor.call( this, i18n, researcher, options );
-	this.type = "ContentAssessor";
+const ContentAssessor = function( researcher, options = {} ) {
+	Assessor.call( this, researcher, options );
+	this.type = "contentAssessor";
 	this._assessments = [
-
-		fleschReadingEase,
 		new SubheadingDistributionTooLong(),
-		paragraphTooLong,
+		new ParagraphTooLong(),
 		new SentenceLengthInText(),
-		transitionWords,
-		passiveVoice,
-		textPresence,
-		sentenceBeginnings,
+		new TransitionWords(),
+		new PassiveVoice(),
+		new TextPresence(),
+		new SentenceBeginnings(),
 		// Temporarily disabled: wordComplexity,
 	];
 };
@@ -92,7 +85,7 @@ ContentAssessor.prototype.calculatePenaltyPointsPartialSupport = function( ratin
  * @returns {boolean} True if fully supported.
  */
 ContentAssessor.prototype._allAssessmentsSupported = function() {
-	const numberOfAssessments = 8;
+	const numberOfAssessments = this._assessments.length;
 	const applicableAssessments = this.getApplicableAssessments();
 	return applicableAssessments.length === numberOfAssessments;
 };

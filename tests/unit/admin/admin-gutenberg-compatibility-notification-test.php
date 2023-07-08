@@ -1,18 +1,15 @@
 <?php
-// phpcs:disable Yoast.NamingConventions.ObjectNameDepth.MaxExceeded -- WPSEO_Admin_Gutenberg_Compatibility_Notification_Test.
-
-/**
- * WPSEO plugin test file.
- *
- * @package WPSEO\Tests\Admin
- */
 
 namespace Yoast\WP\SEO\Tests\Unit\Admin;
 
 use Brain\Monkey;
 use Mockery;
+use WPSEO_Admin_Gutenberg_Compatibility_Notification;
+use WPSEO_Gutenberg_Compatibility;
 use Yoast\WP\SEO\Tests\Unit\Doubles\Admin\WPSEO_Admin_Gutenberg_Compatibility_Notification_Double;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
+use Yoast_Notification;
+use Yoast_Notification_Center;
 
 /**
  * Unit test class
@@ -20,6 +17,8 @@ use Yoast\WP\SEO\Tests\Unit\TestCase;
  * @group MyYoast
  *
  * @coversDefaultClass WPSEO_Admin_Gutenberg_Compatibility_Notification
+ *
+ * @phpcs:disable Yoast.NamingConventions.ObjectNameDepth.MaxExceeded
  */
 class WPSEO_Admin_Gutenberg_Compatibility_Notification_Test extends TestCase {
 
@@ -50,19 +49,11 @@ class WPSEO_Admin_Gutenberg_Compatibility_Notification_Test extends TestCase {
 	public function set_up() {
 		parent::set_up();
 
-		$this->gutenberg_compatibility_mock = Mockery::mock( 'WPSEO_Gutenberg_Compatibility' )->makePartial();
-		$this->notification_center_mock     = Mockery::mock( 'Yoast_Notification_Center' );
+		$this->gutenberg_compatibility_mock = Mockery::mock( WPSEO_Gutenberg_Compatibility::class )->makePartial();
+		$this->notification_center_mock     = Mockery::mock( Yoast_Notification_Center::class );
 
 		$this->gutenberg_notification = new WPSEO_Admin_Gutenberg_Compatibility_Notification_Double();
 		$this->gutenberg_notification->set_dependencies( $this->gutenberg_compatibility_mock, $this->notification_center_mock );
-	}
-
-	/**
-	 * Tear down the test mocks.
-	 */
-	public function tear_down() {
-		parent::tear_down();
-		Mockery::close();
 	}
 
 	/**
@@ -84,9 +75,12 @@ class WPSEO_Admin_Gutenberg_Compatibility_Notification_Test extends TestCase {
 				->andReturn( false );
 		}
 
-		$this->gutenberg_compatibility_mock->allows()->is_installed()->andReturns( $installed );
-
-		$this->gutenberg_compatibility_mock->allows()->is_fully_compatible()->andReturns( $fully_compatible );
+		$this->gutenberg_compatibility_mock->allows(
+			[
+				'is_installed'        => $installed,
+				'is_fully_compatible' => $fully_compatible,
+			]
+		);
 
 		$this->notification_center_mock->expects( 'remove_notification_by_id' )->once()->with( 'wpseo-outdated-gutenberg-plugin' );
 
@@ -135,17 +129,17 @@ class WPSEO_Admin_Gutenberg_Compatibility_Notification_Test extends TestCase {
 			]
 		);
 
-		$this->gutenberg_compatibility_mock->allows()->is_installed()->andReturns( true );
-
-		$this->gutenberg_compatibility_mock->allows()->is_fully_compatible()->andReturns( false );
+		$this->gutenberg_compatibility_mock->allows(
+			[
+				'is_installed'        => true,
+				'is_fully_compatible' => false,
+			]
+		);
 
 		$this->notification_center_mock->expects( 'add_notification' )->once()->withArgs(
 			static function ( $arg ) {
 				// Verify that the added notification is a Yoast_Notification object and has the correct id.
-				if ( \is_a( $arg, 'Yoast_Notification' ) && $arg->get_id() === 'wpseo-outdated-gutenberg-plugin' ) {
-					return true;
-				}
-				return false;
+				return ( \is_a( $arg, Yoast_Notification::class ) && $arg->get_id() === 'wpseo-outdated-gutenberg-plugin' );
 			}
 		);
 

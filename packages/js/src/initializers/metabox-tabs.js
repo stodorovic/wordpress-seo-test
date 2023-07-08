@@ -1,4 +1,5 @@
 /* Browser:true */
+import createCustomEvent from "../helpers/createCustomEvent";
 
 /**
  * @summary Initializes the metabox tabs script.
@@ -156,34 +157,6 @@ export default function initTabs( jQuery ) {
 	 * @returns {void}
 	 */
 	function wpseoInitTabs() {
-		// When there's only one add-on tab, change its link to a span element.
-		var addonsTabsLinks = jQuery( "#wpseo-meta-section-addons .wpseo_tablink" );
-		if ( addonsTabsLinks.length === 1 ) {
-			addonsTabsLinks.replaceWith( "<span class='" + addonsTabsLinks[ 0 ].className + "'>" + addonsTabsLinks.text() + "</span>" );
-		}
-
-		// Tabs within the main tabs, e.g.: Facebook, Twitter, Video, and News.
-		if ( jQuery( ".wpseo-metabox-tabs-div" ).length > 0 ) {
-			jQuery( ".wpseo-metabox-tabs" )
-				.on( "click", "a.wpseo_tablink", function( ev ) {
-					ev.preventDefault();
-
-					jQuery( ".wpseo-meta-section.active .wpseo-metabox-tabs li" ).removeClass( "active" );
-					jQuery( ".wpseo-meta-section.active .wpseotab" ).removeClass( "active" );
-
-					var targetElem = jQuery( jQuery( this ).attr( "href" ) );
-					targetElem.addClass( "active" );
-					jQuery( this ).parent( "li" ).addClass( "active" );
-
-					// Not used at the moment.
-					if ( jQuery( this ).hasClass( "scroll" ) ) {
-						jQuery( "html, body" ).animate( {
-							scrollTop: jQuery( targetElem ).offset().top,
-						}, 500 );
-					}
-				} );
-		}
-
 		// Main tabs.
 		if ( jQuery( ".wpseo-meta-section" ).length > 0 ) {
 			const tabLinks = jQuery( ".wpseo-meta-section-link" );
@@ -201,7 +174,8 @@ export default function initTabs( jQuery ) {
 
 			tabLinks
 				.on( "click", function( ev ) {
-					var targetTab = jQuery( this ).attr( "href" ),
+					var tabId = jQuery( this ).attr( "id" ),
+						targetTab = jQuery( this ).attr( "href" ),
 						targetTabElement = jQuery( targetTab );
 
 					ev.preventDefault();
@@ -222,12 +196,14 @@ export default function initTabs( jQuery ) {
 						.addClass( "active" )
 						.find( "[role='tab']" ).addClass( "yoast-active-tab" );
 
+					// Dispatch custom vanilla JS meta tab change event for usage in non jQuery code.
+					const metaSectionTabChangeEvent = createCustomEvent( "YoastSEO:metaTabChange", { metaTabId: tabId } );
+					window.dispatchEvent( metaSectionTabChangeEvent );
+
 					// Make the clicked tab focusable and set it to aria-selected=true.
 					wpseoAriaTabSetActiveAttributes( this, tabLinks );
 				} );
 		}
-
-		jQuery( ".wpseo-metabox-tabs" ).show();
 		// End Tabs code.
 	}
 
@@ -237,7 +213,6 @@ export default function initTabs( jQuery ) {
 
 	// Set up the first tab and panel within the main tabs.
 	jQuery( ".wpseo-meta-section" ).each( function( index, el ) {
-		jQuery( el ).find( ".wpseo-metabox-tabs li:first" ).addClass( "active" );
 		jQuery( el ).find( ".wpseotab:first" ).addClass( "active" );
 	} );
 

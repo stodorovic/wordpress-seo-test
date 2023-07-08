@@ -1,17 +1,16 @@
-import FleschReadingEaseAssessment from "./readability/fleschReadingEaseAssessment";
-import ParagraphTooLongAssessment from "./readability/paragraphTooLongAssessment";
-import PassiveVoiceAssessment from "./readability/passiveVoiceAssessment";
-import SentenceBeginningsAssessment from "./readability/sentenceBeginningsAssessment";
-import SentenceLengthInTextAssessment from "./readability/sentenceLengthInTextAssessment";
-import SubheadingDistributionTooLongAssessment from "./readability/subheadingDistributionTooLongAssessment";
-import TextPresenceAssessment from "./readability/textPresenceAssessment";
-import TransitionWordsAssessment from "./readability/transitionWordsAssessment";
-import WordComplexityAssessment from "./readability/wordComplexityAssessment";
+// Readbility assessments.
+import ParagraphTooLongAssessment from "./readability/ParagraphTooLongAssessment";
+import PassiveVoiceAssessment from "./readability/PassiveVoiceAssessment";
+import SentenceBeginningsAssessment from "./readability/SentenceBeginningsAssessment";
+import SentenceLengthInTextAssessment from "./readability/SentenceLengthInTextAssessment";
+import SubheadingDistributionTooLongAssessment from "./readability/SubheadingDistributionTooLongAssessment";
+import TextPresenceAssessment from "./readability/TextPresenceAssessment";
+import TransitionWordsAssessment from "./readability/TransitionWordsAssessment";
 
+// SEO assessments.
 import FunctionWordsInKeyphraseAssessment from "./seo/FunctionWordsInKeyphraseAssessment";
 import InternalLinksAssessment from "./seo/InternalLinksAssessment";
 import IntroductionKeywordAssessment from "./seo/IntroductionKeywordAssessment";
-import KeyphraseDistributionAssessment from "./seo/KeyphraseDistributionAssessment";
 import KeyphraseLengthAssessment from "./seo/KeyphraseLengthAssessment";
 import KeywordDensityAssessment from "./seo/KeywordDensityAssessment";
 import MetaDescriptionKeywordAssessment from "./seo/MetaDescriptionKeywordAssessment";
@@ -21,13 +20,15 @@ import PageTitleWidthAssessment from "./seo/PageTitleWidthAssessment";
 import SingleH1Assessment from "./seo/SingleH1Assessment";
 import SubheadingsKeywordAssessment from "./seo/SubHeadingsKeywordAssessment";
 import TextCompetingLinksAssessment from "./seo/TextCompetingLinksAssessment";
-import TextImagesAssessment from "./seo/TextImagesAssessment";
 import TextLengthAssessment from "./seo/TextLengthAssessment";
-import TitleKeywordAssessment from "./seo/TitleKeywordAssessment";
-import UrlKeywordAssessment from "./seo/UrlKeywordAssessment";
+import KeyphraseInSEOTitleAssessment from "./seo/KeyphraseInSEOTitleAssessment";
+import { SlugKeywordAssessment, UrlKeywordAssessment } from "./seo/UrlKeywordAssessment";
+import ImageKeyphraseAssessment from "./seo/KeyphraseInImageTextAssessment";
+import ImageCountAssessment from "./seo/ImageCountAssessment";
+
+import InclusiveLanguageAssessment from "./inclusiveLanguage/InclusiveLanguageAssessment";
 
 const readability = {
-	FleschReadingEaseAssessment,
 	ParagraphTooLongAssessment,
 	PassiveVoiceAssessment,
 	SentenceBeginningsAssessment,
@@ -35,16 +36,15 @@ const readability = {
 	SubheadingDistributionTooLongAssessment,
 	TextPresenceAssessment,
 	TransitionWordsAssessment,
-	WordComplexityAssessment,
 };
 
+// We expose the deprecated UrlKeywordAssessment for backwards compatibility.
 const seo = {
 	FunctionWordsInKeyphraseAssessment,
 	InternalLinksAssessment,
 	IntroductionKeywordAssessment,
 	KeyphraseLengthAssessment,
 	KeywordDensityAssessment,
-	KeyphraseDistributionAssessment,
 	MetaDescriptionKeywordAssessment,
 	MetaDescriptionLengthAssessment,
 	OutboundLinksAssessment,
@@ -52,13 +52,20 @@ const seo = {
 	SingleH1Assessment,
 	SubheadingsKeywordAssessment,
 	TextCompetingLinksAssessment,
-	TextImagesAssessment,
 	TextLengthAssessment,
-	TitleKeywordAssessment,
+	KeyphraseInSEOTitleAssessment,
+	SlugKeywordAssessment,
 	UrlKeywordAssessment,
+	ImageKeyphraseAssessment,
+	ImageCountAssessment,
+};
+
+const inclusiveLanguage = {
+	InclusiveLanguageAssessment,
 };
 
 export {
 	readability,
 	seo,
+	inclusiveLanguage,
 };

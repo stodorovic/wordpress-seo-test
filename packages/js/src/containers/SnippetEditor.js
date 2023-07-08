@@ -2,9 +2,10 @@ import { compose } from "@wordpress/compose";
 import { withDispatch, withSelect } from "@wordpress/data";
 import { __ } from "@wordpress/i18n";
 import { SnippetEditor } from "@yoast/search-metadata-previews";
-import { LocationConsumer } from "../components/contexts/location";
+import { LocationConsumer } from "@yoast/externals/contexts";
 import SnippetPreviewSection from "../components/SnippetPreviewSection";
 import { applyReplaceUsingPlugin } from "../helpers/replacementVariableHelpers";
+import getMemoizedFindCustomFields from "../helpers/getMemoizedFindCustomFields";
 
 /**
  * Process the snippet editor form data before it's being displayed in the snippet preview.
@@ -85,6 +86,10 @@ export function mapSelectToProps( select ) {
 		getSnippetEditorMode,
 		getSnippetEditorPreviewImageUrl,
 		getSnippetEditorWordsToHighlight,
+		isCornerstoneContent,
+		getIsTerm,
+		getContentLocale,
+		getSiteName,
 	} = select( "yoast-seo/editor" );
 
 	const replacementVariables = getReplaceVars();
@@ -108,6 +113,10 @@ export function mapSelectToProps( select ) {
 		replacementVariables,
 		shoppingData: getShoppingData(),
 		wordsToHighlight: getSnippetEditorWordsToHighlight(),
+		isCornerstone: isCornerstoneContent(),
+		isTaxonomy: getIsTerm(),
+		locale: getContentLocale(),
+		siteName: getSiteName(),
 	};
 }
 
@@ -115,16 +124,20 @@ export function mapSelectToProps( select ) {
  * Maps the dispatch function to props.
  *
  * @param {function} dispatch The dispatch function.
+ * @param {Object}   ownProps The component's own props.
+ * @param {function} select   The select function.
  *
  * @returns {Object} The props.
  */
-export function mapDispatchToProps( dispatch ) {
+export function mapDispatchToProps( dispatch, ownProps, { select } ) {
 	const {
 		updateData,
 		switchMode,
 		updateAnalysisData,
+		findCustomFields,
 	} = dispatch( "yoast-seo/editor" );
 	const coreEditorDispatch = dispatch( "core/editor" );
+	const postId = select( "yoast-seo/editor" ).getPostId();
 
 	return {
 		onChange: ( key, value ) => {
@@ -151,6 +164,7 @@ export function mapDispatchToProps( dispatch ) {
 			}
 		},
 		onChangeAnalysisData: updateAnalysisData,
+		onReplacementVariableSearchChange: getMemoizedFindCustomFields( postId, findCustomFields ),
 	};
 }
 

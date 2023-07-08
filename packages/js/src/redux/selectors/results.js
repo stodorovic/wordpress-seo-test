@@ -1,5 +1,8 @@
 import { get, isEmpty } from "lodash";
 
+const emptyArray = [];
+const emptyObject = {};
+
 /**
  * Gets the SEO results.
  *
@@ -8,9 +11,9 @@ import { get, isEmpty } from "lodash";
  * @returns {Object} The SEO results for all keywords.
  */
 export function getSeoResults( state ) {
-	const results = get( state, "analysis.seo", {} );
+	const results = get( state, "analysis.seo", emptyObject );
 
-	return isEmpty( results ) ? { results: [], overallScore: null } : results;
+	return isEmpty( results ) ? { results: emptyArray, overallScore: null } : results;
 }
 
 /**
@@ -24,11 +27,11 @@ export function getSeoResults( state ) {
 export function getResultsForKeyword( state, keyword ) {
 	const seoResults = getSeoResults( state );
 
-	return get( seoResults, keyword, {} );
+	return get( seoResults, keyword, emptyObject );
 }
 
 /**
- * Gets the readability results for the focus keyword.
+ * Gets the readability results.
  *
  * @param {object} state The state.
  *
@@ -37,7 +40,18 @@ export function getResultsForKeyword( state, keyword ) {
 export function getReadabilityResults( state ) {
 	const results = get( state, "analysis.readability", {} );
 
-	return isEmpty( results ) ? { results: [], overallScore: null } : results;
+	return isEmpty( results ) ? { results: emptyArray, overallScore: null } : results;
+}
+
+/**
+ * Gets the inclusive language results.
+ *
+ * @param {object} state The state.
+ *
+ * @returns {object} The results and overall score for the inclusive language analysis.
+ */
+export function getInclusiveLanguageResults( state ) {
+	return get( state, "analysis.inclusiveLanguage", { results: emptyArray, overallScore: null } );
 }
 
 /**
@@ -60,12 +74,14 @@ export function getResultsForFocusKeyword( state ) {
  * @returns {Object|null} The assessment result.
  */
 export function getResultById( state, id ) {
-	const focusKeywordResults = getResultsForFocusKeyword( state ).results || [];
-	const readabilityResults = getReadabilityResults( state ).results || [];
+	const focusKeywordResults = getResultsForFocusKeyword( state ).results || emptyArray;
+	const readabilityResults = getReadabilityResults( state ).results || emptyArray;
+	const inclusiveLanguageResults = getInclusiveLanguageResults( state ).results || emptyArray;
 
 	const allResults = [
 		...focusKeywordResults,
 		...readabilityResults,
+		...inclusiveLanguageResults,
 	];
 
 	return allResults.find( result => result._identifier === id );

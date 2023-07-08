@@ -2,9 +2,11 @@
 
 namespace Yoast\WP\SEO\Tests\Unit\Actions\Indexables;
 
+use Brain\Monkey;
 use Mockery;
 use Yoast\WP\SEO\Actions\Indexables\Indexable_Head_Action;
 use Yoast\WP\SEO\Surfaces\Meta_Surface;
+use Yoast\WP\SEO\Surfaces\Values\Meta;
 use Yoast\WP\SEO\Tests\Unit\TestCase;
 
 /**
@@ -68,22 +70,31 @@ class Indexable_Head_Action_Test extends TestCase {
 	 * @param string|int $input  The data to pass.
 	 */
 	public function test_retrieving_meta( $method, $input ) {
-		$meta = Mockery::mock();
+		$meta = Mockery::mock( Meta::class );
 		$meta
 			->expects( 'get_head' )
-			->andReturn( 'this is the head' );
+			->andReturn( $this->get_head() );
 
 		$this->meta_surface
 			->expects( $method )
 			->with( $input )
 			->andReturn( $meta );
 
+		if ( $method === 'for_url' ) {
+			Monkey\Functions\expect( 'get_home_url' )
+				->once()
+				->andReturn( 'https://homepage.org' );
+		}
+
+		$output = $this->instance->{$method}( $input );
+
 		$this->assertEquals(
 			(object) [
-				'head'   => 'this is the head',
+				'html'   => 'this is the head',
+				'json'   => [ 'key' => 'value' ],
 				'status' => 200,
 			],
-			$this->instance->{$method}( $input )
+			$output
 		);
 	}
 
@@ -93,10 +104,10 @@ class Indexable_Head_Action_Test extends TestCase {
 	 * @covers ::for_posts_page
 	 */
 	public function test_retrieving_meta_for_posts_page() {
-		$meta = Mockery::mock();
+		$meta = Mockery::mock( Meta::class );
 		$meta
 			->expects( 'get_head' )
-			->andReturn( 'this is the head' );
+			->andReturn( $this->get_head() );
 
 		$this->meta_surface
 			->expects( 'for_posts_page' )
@@ -104,7 +115,8 @@ class Indexable_Head_Action_Test extends TestCase {
 
 		$this->assertEquals(
 			(object) [
-				'head'   => 'this is the head',
+				'html'   => 'this is the head',
+				'json'   => [ 'key' => 'value' ],
 				'status' => 200,
 			],
 			$this->instance->for_posts_page()
@@ -127,10 +139,15 @@ class Indexable_Head_Action_Test extends TestCase {
 	 * @param string|int $input  The data to pass.
 	 */
 	public function test_retrieving_meta_with_meta_not_found( $method, $input ) {
-		$meta = Mockery::mock();
+		$meta = Mockery::mock( Meta::class );
 		$meta
 			->expects( 'get_head' )
-			->andReturn( 'this is the 404 head' );
+			->andReturn(
+				(object) [
+					'html' => 'this is the 404 head',
+					'json' => [ 'key' => 'value' ],
+				]
+			);
 
 		$this->meta_surface
 			->expects( $method )
@@ -141,9 +158,16 @@ class Indexable_Head_Action_Test extends TestCase {
 			->expects( 'for_404' )
 			->andReturn( $meta );
 
+		if ( $method === 'for_url' ) {
+			Monkey\Functions\expect( 'get_home_url' )
+				->once()
+				->andReturn( 'https://homepage.org' );
+		}
+
 		$this->assertEquals(
 			(object) [
-				'head'   => 'this is the 404 head',
+				'html'   => 'this is the 404 head',
+				'json'   => [ 'key' => 'value' ],
 				'status' => 404,
 			],
 			$this->instance->{$method}( $input )
@@ -156,10 +180,15 @@ class Indexable_Head_Action_Test extends TestCase {
 	 * @covers ::for_posts_page
 	 */
 	public function test_retrieving_meta_for_posts_page_with_meta_not_found() {
-		$meta = Mockery::mock();
+		$meta = Mockery::mock( Meta::class );
 		$meta
 			->expects( 'get_head' )
-			->andReturn( 'this is the 404 head' );
+			->andReturn(
+				(object) [
+					'html' => 'this is the 404 head',
+					'json' => [ 'key' => 'value' ],
+				]
+			);
 
 		$this->meta_surface
 			->expects( 'for_posts_page' )
@@ -171,7 +200,8 @@ class Indexable_Head_Action_Test extends TestCase {
 
 		$this->assertEquals(
 			(object) [
-				'head'   => 'this is the 404 head',
+				'html'   => 'this is the 404 head',
+				'json'   => [ 'key' => 'value' ],
 				'status' => 404,
 			],
 			$this->instance->for_posts_page()
@@ -190,6 +220,21 @@ class Indexable_Head_Action_Test extends TestCase {
 			[ 'for_term', 1 ],
 			[ 'for_author', 1 ],
 			[ 'for_post_type_archive', 'type' ],
+		];
+	}
+
+	/**
+	 * Stub the Meta result.
+	 *
+	 * @param string $html The HTML setup.
+	 * @param string $json The JSON setup.
+	 *
+	 * @return object The mocked result.
+	 */
+	protected function get_head( $html = 'this is the head', $json = [ 'key' => 'value' ] ) {
+		return (object) [
+			'html' => $html,
+			'json' => $json,
 		];
 	}
 }
