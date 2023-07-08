@@ -210,8 +210,6 @@ class WPSEO_Taxonomy {
 			if ( isset( $_POST[ $key ] ) && is_string( $_POST[ $key ] ) ) {
 				// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- We're preparing to do just that.
 				$data = wp_unslash( $_POST[ $key ] );
-
-				$new_meta_data[ $key ] = ( $key !== 'wpseo_canonical' ) ? WPSEO_Utils::sanitize_text_field( $data ) : WPSEO_Utils::sanitize_url( $data );
 			}
 
 			// If analysis is disabled remove that analysis score value from the DB.
